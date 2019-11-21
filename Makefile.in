@@ -25,7 +25,6 @@ INSTALL		=	@INSTALL@
 LDFLAGS		=	@LDFLAGS@
 LIBS		=	@LIBS@
 MKDIR           =       @MKDIR@ -p
-PAMLIBS		=	@PAMLIBS@
 RANLIB		=	@RANLIB@
 RM		=	@RM@ -f
 RMDIR		=	@RMDIR@

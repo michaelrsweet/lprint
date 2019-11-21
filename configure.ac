@@ -7,6 +7,10 @@ dnl Licensed under Apache License v2.0.  See the file "LICENSE" for more
 dnl information.
 dnl
 
+dnl We need at least autoconf 2.60...
+AC_PREREQ(2.60)
+
+dnl Package name and version...
 AC_INIT([lprint], [0.1], [https://github.com/michaelrsweet/lprint/issues], [lprint], [https://michaelrsweet.github.io/lprint])
 AC_CONFIG_HEADERS(config.h)
 
@@ -14,6 +18,10 @@ dnl Define the version number...
 MOAUTH_VERSION="AC_PACKAGE_VERSION"
 AC_SUBST(LPRINT_VERSION)
 AC_DEFINE_UNQUOTED(LPRINT_VERSION, "$LPRINT_VERSION")
+
+dnl Get the build and host platforms and split the host_os value
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
 
 dnl Standard programs...
 AC_PROG_CC(clang cc gcc)
@@ -38,6 +46,15 @@ else
     ARFLAGS="cr"
 fi
 AC_SUBST(ARFLAGS)
+
+dnl install-sh
+AC_MSG_CHECKING(for install-sh script)
+INSTALL="`pwd`/install-sh"
+AC_SUBST(INSTALL)
+AC_MSG_RESULT(using $INSTALL)
+
+dnl Check for pkg-config, which is used for some other tests later on...
+AC_PATH_TOOL(PKGCONFIG, pkg-config)
 
 dnl Compiler options...
 CFLAGS="${CFLAGS:=}"
@@ -65,14 +82,14 @@ else
 	LIBS="$LIBS `cups-config --image --libs`"
 fi
 
+
 dnl POSIX threads...
-AC_CHECK_HEADER(pthread.h, AC_DEFINE(HAVE_PTHREAD_H))
+AC_CHECK_HEADER(pthread.h)
 
 if test x$ac_cv_header_pthread_h != xyes; then
     AC_MSG_ERROR([Sorry, this software requires POSIX threading support.])
 fi
 
-dnl Check various threading options for the platforms we support
 for flag in -lpthreads -lpthread -pthread; do
     AC_MSG_CHECKING([for pthread_create using $flag])
     SAVELIBS="$LIBS"
@@ -92,32 +109,100 @@ for flag in -lpthreads -lpthread -pthread; do
     fi
 done
 
+
+dnl DNS-SD support...
+AC_ARG_WITH(dnssd, [  --with-dnssd=LIBRARY    set DNS-SD library (auto, avahi, mdnsresponder)])
+
+if test "x$with_dnssd" != xmdnsresponder -a "x$with_dnssd" != xno -a "x$PKGCONFIG" != x -a x$host_os_name != xdarwin; then
+	AC_MSG_CHECKING(for Avahi)
+	if $PKGCONFIG --exists avahi-client; then
+		AC_MSG_RESULT([yes])
+		CFLAGS="$CFLAGS `$PKGCONFIG --cflags avahi-client`"
+		LIBS="$LIBS `$PKGCONFIG --libs avahi-client`"
+		AC_DEFINE(HAVE_AVAHI)
+	else
+		AC_MSG_RESULT([no])
+		if test x$with_dnssd = xavahi; then
+			AC_MSG_ERROR([libavahi-client-dev needed for --with-dnssd=avahi.])
+		fi
+	fi
+elif test x$with_dnssd != xavahi -a "x$with_dnssd" != xno; then
+	AC_CHECK_HEADER(dns_sd.h, [
+		case "$host_os_name" in
+			darwin*)
+				# Darwin and macOS...
+				AC_DEFINE(HAVE_DNSSD)
+				LIBS="$LIBS -framework CoreFoundation -framework SystemConfiguration"
+				;;
+			*)
+				# All others...
+				AC_MSG_CHECKING(for current version of dns_sd library)
+				SAVELIBS="$LIBS"
+				LIBS="$LIBS -ldns_sd"
+				AC_TRY_COMPILE([#include <dns_sd.h>],[
+					int constant = kDNSServiceFlagsShareConnection;
+					unsigned char txtRecord[100];
+					uint8_t valueLen;
+					TXTRecordGetValuePtr(sizeof(txtRecord),
+					    txtRecord, "value", &valueLen);],[
+					AC_MSG_RESULT([yes])
+					AC_DEFINE(HAVE_DNSSD)],[
+					AC_MSG_RESULT([no])
+					LIBS="$SAVELIBS"
+					if test x$with_dnssd = xmdnsresponder; then
+						AC_MSG_ERROR([mDNSResponder required for --with-dnssd=mdnsresponder.])
+					fi])
+				;;
+		esac
+	])
+fi
+
+
+dnl libpng...
+AC_ARG_ENABLE(libpng, [  --enable-libpng         use libpng for PNG printing])
+
+if test x$enable_libpng != xno; then
+	AC_SEARCH_LIBS(png_set_tRNS_to_alpha, png, [AC_DEFINE(HAVE_LIBPNG)])
+
+	if test x$ac_png_set_tRNS_to_alpha = xno -a x$enable_libpng = xyes; then
+		AC_MSG_ERROR([libpng-dev 1.6 or later required for --enable-libpng.])
+	fi
+fi
+
+
+dnl libusb...
+AC_ARG_ENABLE(libusb, [  --enable-libusb         use libusb for USB printing])
+
+if test "x$PKGCONFIG" != x -a x$enable_libusb != xno; then
+	AC_MSG_CHECKING(for libusb-1.0)
+	if $PKGCONFIG --exists libusb-1.0; then
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(HAVE_LIBUSB)
+		CFLAGS="$CFLAGS `$PKGCONFIG --cflags libusb-1.0`"
+		LIBS="$LIBS `$PKGCONFIG --libs libusb-1.0`"
+	else
+		AC_MSG_RESULT(no)
+		if test x$enable_libusb = xyes; then
+			AC_MSG_ERROR([libusb-1.0-0-dev required for --enable-libusb.])
+		fi
+	fi
+fi
+
+
 dnl PAM support...
 AC_ARG_ENABLE(pam, [  --disable-pam           disable PAM support])
 
-PAMLIBS=""
-
 if test x$enable_pam != xno; then
-    SAVELIBS="$LIBS"
+	AC_CHECK_LIB(dl,dlopen)
+	AC_CHECK_LIB(pam,pam_start)
+	AC_CHECK_HEADER(security/pam_appl.h, AC_DEFINE(HAVE_SECURITY_PAM_APPL_H))
+	AC_CHECK_HEADER(pam/pam_appl.h, AC_DEFINE(HAVE_PAM_PAM_APPL_H))
 
-    AC_CHECK_LIB(dl,dlopen)
-    AC_CHECK_LIB(pam,pam_start)
-    AC_CHECK_HEADER(security/pam_appl.h, AC_DEFINE(HAVE_SECURITY_PAM_APPL_H))
-    AC_CHECK_HEADER(pam/pam_appl.h, AC_DEFINE(HAVE_PAM_PAM_APPL_H))
-
-    if test x$ac_cv_lib_pam_pam_start != xno; then
-	# Set the necessary libraries for PAM...
-	if test x$ac_cv_lib_dl_dlopen != xno; then
-	    PAMLIBS="-lpam -ldl"
-	else
-	    PAMLIBS="-lpam"
+	if test x$ac_pam_start = xno -a x$enable_pam = xyes; then
+		AC_MSG_ERROR([libpam-dev required for --enable-pam.])
 	fi
-    fi
-
-    LIBS="$SAVELIBS"
 fi
 
-AC_SUBST(PAMLIBS)
 
 dnl Generate the Makefile...
 AC_OUTPUT(Makefile)

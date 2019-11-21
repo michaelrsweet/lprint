@@ -7,15 +7,24 @@
 // information.
 //
 
-// Version number...
+// Version number
 #define LPRINT_VERSION ""
 
 
-// Do we have MuPDF?
-#undef HAVE_MUPDF
+// DNS-SD (mDNSResponder or Avahi)
+#undef HAVE_DNSSD
+#undef HAVE_AVAHI
 
 
-// PAM stuff...
+// libpng
+#undef HAVE_LIBPNG
+
+
+// libusb
+#undef HAVE_LIBUSB
+
+
+// PAM
 #undef HAVE_LIBPAM
 #undef HAVE_SECURITY_PAM_APPL_H
 #undef HAVE_PAM_PAM_APPL_H
