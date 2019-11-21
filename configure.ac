@@ -7,37 +7,39 @@ dnl Licensed under Apache License v2.0.  See the file "LICENSE" for more
 dnl information.
 dnl
 
+
 dnl We need at least autoconf 2.60...
 AC_PREREQ(2.60)
+
 
 dnl Package name and version...
 AC_INIT([lprint], [0.1], [https://github.com/michaelrsweet/lprint/issues], [lprint], [https://michaelrsweet.github.io/lprint])
 AC_CONFIG_HEADERS(config.h)
 
-dnl Define the version number...
-MOAUTH_VERSION="AC_PACKAGE_VERSION"
+LPRINT_VERSION="AC_PACKAGE_VERSION"
 AC_SUBST(LPRINT_VERSION)
 AC_DEFINE_UNQUOTED(LPRINT_VERSION, "$LPRINT_VERSION")
+
 
 dnl Get the build and host platforms and split the host_os value
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 
+[host_os_name=`echo $host_os | sed -e '1,$s/[0-9.]*$//g'`]
+[host_os_version=`echo $host_os | sed -e '1,$s/^[^0-9.]*//g' | awk -F. '{print $1 $2}'`]
+# Linux often does not yield an OS version we can use...
+if test "x$host_os_version" = x; then
+        host_os_version="0"
+fi
+
+
 dnl Standard programs...
 AC_PROG_CC(clang cc gcc)
 AC_PROG_RANLIB
 AC_PATH_PROG(AR,ar)
-AC_MSG_CHECKING(for install-sh script)
-INSTALL="`pwd`/install-sh"
-AC_SUBST(INSTALL)
-AC_MSG_RESULT(using $INSTALL)
 AC_PATH_PROG(MKDIR,mkdir)
 AC_PATH_PROG(RM,rm)
-AC_PATH_TOOL(CUPSCONFIG, cups-config)
 
-if test "x$CUPSCONFIG" = x; then
-    AC_MSG_ERROR([Sorry, this software requires CUPS.])
-fi
 
 dnl Figure out the correct "ar" command flags...
 if test "$ac_cv_prog_ranlib" = ":"; then
@@ -47,14 +49,25 @@ else
 fi
 AC_SUBST(ARFLAGS)
 
+
 dnl install-sh
 AC_MSG_CHECKING(for install-sh script)
 INSTALL="`pwd`/install-sh"
 AC_SUBST(INSTALL)
 AC_MSG_RESULT(using $INSTALL)
 
+
+dnl CUPS
+AC_PATH_TOOL(CUPSCONFIG, cups-config)
+
+if test "x$CUPSCONFIG" = x; then
+    AC_MSG_ERROR([Sorry, this software requires libcups-dev.])
+fi
+
+
 dnl Check for pkg-config, which is used for some other tests later on...
 AC_PATH_TOOL(PKGCONFIG, pkg-config)
+
 
 dnl Compiler options...
 CFLAGS="${CFLAGS:=}"
@@ -62,12 +75,12 @@ CXXFLAGS="${CXXFLAGS:=}"
 LDFLAGS="${LDFLAGS:=}"
 LIBS="${LIBS:=}"
 
-dnl Debugging...
-AC_ARG_ENABLE(debug, [  --enable-debug          turn on debugging, default=no],
-    [if eval "test x$enable_debug = xyes"; then
+AC_ARG_ENABLE(debug, [  --enable-debug          turn on debugging, default=no])
+if eval "test x$enable_debug = xyes"; then
 	CFLAGS="-g $(CFLAGS)"
 	LDFLAGS="-g $(LDFLAGS)"
-    fi])
+fi
+
 
 dnl CUPS library...
 AC_ARG_ENABLE(static_cups, [  --enable-static-cups    use static CUPS libraries, default=no])
@@ -126,6 +139,8 @@ if test "x$with_dnssd" != xmdnsresponder -a "x$with_dnssd" != xno -a "x$PKGCONFI
 			AC_MSG_ERROR([libavahi-client-dev needed for --with-dnssd=avahi.])
 		fi
 	fi
+elif test x$with_dnssd = xavahi; then
+	AC_MSG_ERROR([pkgconfig and libavahi-client-dev needed for --with-dnssd=avahi.])
 elif test x$with_dnssd != xavahi -a "x$with_dnssd" != xno; then
 	AC_CHECK_HEADER(dns_sd.h, [
 		case "$host_os_name" in
@@ -186,6 +201,8 @@ if test "x$PKGCONFIG" != x -a x$enable_libusb != xno; then
 			AC_MSG_ERROR([libusb-1.0-0-dev required for --enable-libusb.])
 		fi
 	fi
+elif test x$enable_libusb = xyes; then
+	AC_MSG_ERROR([pkgconfig and libusb-1.0-0-dev required for --enable-libusb.])
 fi
 
 

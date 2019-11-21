@@ -1,4 +1,6 @@
 *.o
 autom4te.cache
+config.h
+config.status
 lprint
 Makefile
