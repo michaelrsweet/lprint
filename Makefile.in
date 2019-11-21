@@ -63,7 +63,6 @@ BUILDROOT	=	$(DSTROOT)$(RPM_BUILD_ROOT)$(DESTDIR)
 
 # Targets...
 OBJS		=	\
-			device-serial.o \
 			device-socket.o \
 			device-usb.o \
 			driver-cpcl.o \

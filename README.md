@@ -2,7 +2,7 @@ LPrint - Label Printer Utility
 ==============================
 
 LPrint implements label printing for a variety of common label and receipt
-printers connected via network, serial, USB.  Features include:
+printers connected via network or USB.  Features include:
 
 - A single executable handles spooling, status, and server functionality.
 - Implements an IPP Everywhere print service.

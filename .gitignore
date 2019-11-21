@@ -1,3 +1,4 @@
 *.o
 autom4te.cache
 lprint
+Makefile
