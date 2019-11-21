@@ -1,0 +1,121 @@
+#
+# LPrint makefile
+#
+# Copyright © 2019 by Michael R Sweet
+#
+# Licensed under Apache License v2.0.  See the file "LICENSE" for more
+# information.
+#
+
+# Be silent...
+.SILENT:
+
+
+# Version number...
+LPRINT_VERSION	=	@LPRINT_VERSION@
+
+
+# Programs and options...
+AR		=	@AR@
+ARFLAGS		=	@ARFLAGS@
+CC		=	@CC@
+CFLAGS		=	-I.. @CFLAGS@
+CODESIGN_IDENTITY =	Developer ID
+INSTALL		=	@INSTALL@
+LDFLAGS		=	@LDFLAGS@
+LIBS		=	@LIBS@
+MKDIR           =       @MKDIR@ -p
+PAMLIBS		=	@PAMLIBS@
+RANLIB		=	@RANLIB@
+RM		=	@RM@ -f
+RMDIR		=	@RMDIR@
+SHELL		=	/bin/sh
+
+
+# Directories...
+bindir		=	@bindir@
+datadir		=	@datadir@
+datarootdir	=	@datarootdir@
+exec_prefix	=	@exec_prefix@
+includedir	=	@includedir@
+infodir		=	@infodir@
+libdir		=	@libdir@
+libexecdir	=	@libexecdir@
+localstatedir	=	@localstatedir@
+mandir		=	@mandir@
+oldincludedir	=	@oldincludedir@
+prefix		=	@prefix@
+privateinclude	=	@privateinclude@
+sbindir		=	@sbindir@
+sharedstatedir	=	@sharedstatedir@
+srcdir		=	@srcdir@
+sysconfdir	=	@sysconfdir@
+top_srcdir	=	@top_srcdir@
+
+BUILDROOT	=	$(DSTROOT)$(RPM_BUILD_ROOT)$(DESTDIR)
+
+
+# Build commands...
+.c.o:
+	echo Compiling $<...
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+
+# Targets...
+OBJS		=	\
+			device-serial.o \
+			device-socket.o \
+			device-usb.o \
+			driver-cpcl.o \
+			driver-dymo.o \
+			driver-epl1.o \
+			driver-epl2.o \
+			driver-fgl.o \
+			driver-pcl.o \
+			driver-zpl.o \
+			ipp.o \
+			job.o \
+			main.o \
+			print.o \
+			printer.o
+TARGETS		=	\
+			lprint
+
+
+# Make everything...
+all:	$(TARGETS)
+
+
+# Clean everything...
+clean:
+	$(RM) $(TARGETS) $(OBJS)
+
+
+# Install everything...
+install:	all
+	$(INSTALL) -d -m 755 $(BUILDROOT)$(bindir)
+	$(INSTALL) -c -m 755 lprint $(BUILDROOT)$(bindir)
+	$(INSTALL) -d -m 755 $(BUILDROOT)$(mandir)/man1
+	$(INSTALL) -c -m 644 lprint.1 $(BUILDROOT)$(mandir)/man1
+	$(INSTALL) -d -m 755 $(BUILDROOT)$(mandir)/man5
+	$(INSTALL) -c -m 644 lprint.conf.5 $(BUILDROOT)$(mandir)/man5
+	$(INSTALL) -d -m 755 $(BUILDROOT)$(sysconfdir)
+	$(INSTALL) -c -m 644 lprint.conf.default $(BUILDROOT)$(sysconfdir)
+
+
+# Test everything...
+test:	$(TARGETS)
+
+
+# LPrint program...
+lprint:	$(OBJS)
+	echo Linking $@...
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+	if test `uname` = Darwin; then \
+		echo Code-signing $@...; \
+		codesign -s "$(CODESIGN_IDENTITY)" $@; \
+	fi
+
+
+# Dependencies...
+$(OBJS):	config.h lprint.h Makefile

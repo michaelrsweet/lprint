@@ -1,0 +1,21 @@
+//
+// Configuration header file for LPrint, a Label Printer Utility
+//
+// Copyright © 2019 by Michael R Sweet.
+//
+// Licensed under Apache License v2.0.  See the file "LICENSE" for more
+// information.
+//
+
+// Version number...
+#define LPRINT_VERSION ""
+
+
+// Do we have MuPDF?
+#undef HAVE_MUPDF
+
+
+// PAM stuff...
+#undef HAVE_LIBPAM
+#undef HAVE_SECURITY_PAM_APPL_H
+#undef HAVE_PAM_PAM_APPL_H
