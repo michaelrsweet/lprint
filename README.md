@@ -9,7 +9,11 @@ connected via network or USB.  Features include:
 - Implements an IPP Everywhere print service.
 - Exposes printer-specific options such as print darkness, resolution, and
   speed.
-- Can print "raw", PWG Raster, and PNG files (with libpng).
+- Can print "raw", PWG Raster, and PNG files.
+
+LPrint depends on the [CUPS software](https://www.cups.org) to provide the
+HTTP, IPP, and PWG Raster support, and the
+[libpng library](https://www.libpng.org) to provide PNG printing support.
 
 
 Supported Printers
