@@ -14,3 +14,10 @@
 #include "lprint.h"
 
 
+//
+// Local functions...
+//
+
+static int		create_listener(const char *name, int port, int family);
+
+

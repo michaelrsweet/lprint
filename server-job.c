@@ -14,3 +14,8 @@
 #include "lprint.h"
 
 
+//
+// Local functions...
+//
+
+static int		compare_jobs(lprint_job_t *a, lprint_job_t *b);

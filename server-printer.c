@@ -14,3 +14,9 @@
 #include "lprint.h"
 
 
+//
+// Local functions...
+//
+
+static ipp_t		*create_media_col(const char *media, const char *source, const char *type, int width, int length, int bottom, int left, int right, int top);
+static ipp_t		*create_media_size(int width, int length);
