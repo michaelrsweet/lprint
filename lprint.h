@@ -15,12 +15,11 @@
 // Include necessary headers...
 //
 
-#  include "config.h"
-#  include <cups/cups.h>
-#  include <cups/raster.h>
+#  include "device-common.h"
+#  include "driver-common.h"
+
 #  include <limits.h>
 #  include <poll.h>
-#  include <pthread.h>
 #  include <sys/fcntl.h>
 #  include <sys/stat.h>
 #  include <sys/wait.h>
@@ -42,17 +41,25 @@ extern char **environ;
 //
 
 #  ifdef _LPRINT_C_
-#    VAR
-#    VALUE(...)		= __VA_ARGS__
+#    define VAR
+#    define VALUE(...)	= __VA_ARGS__
 #  else
-#    VAR		extern
-#    VALUE(...)
+#    define VAR		extern
+#    define VALUE(...)
 #  endif // _LPRINT_C_
 
 
 //
 // Constants...
 //
+
+typedef enum lprint_loglevel_e		// Log levels
+{
+  LPRINT_LOGLEVEL_DEBUG,
+  LPRINT_LOGLEVEL_INFO,
+  LPRINT_LOGLEVEL_WARN,
+  LPRINT_LOGLEVEL_ERROR
+} lprint_loglevel_t;
 
 enum lprint_preason_e			// printer-state-reasons bit values
 {
@@ -110,9 +117,6 @@ typedef struct lprint_filter_s		// Attribute filter
   ipp_tag_t		group_tag;	// Group to copy
 } lprint_filter_t;
 
-typedef struct lprint_printer_s lprint_printer_t;
-typedef struct lprint_job_s lprint_job_t;
-
 typedef struct lprint_system_s		// System data
 {
   pthread_rwlock_t	rwlock;		// Reader/writer lock
@@ -145,14 +149,17 @@ struct lprint_printer_s			// Printer data
 			*uri;		// printer-uri-supported
   size_t		urilen;		// Length of printer URI
   char			*device_uri,	// Device URI (if any)
-			*output_format;	// Output format
+			*driver_name;	// Driver name (if any)
+  lprint_driver_t	*driver;	// Driver
   ipp_t			*attrs;		// Static attributes
   time_t		start_time;	// Startup time
   time_t		config_time;	// printer-config-change-time
   ipp_pstate_t		state;		// printer-state value
   lprint_preason_t	state_reasons;	// printer-state-reasons values
   time_t		state_time;	// printer-state-change-time
-} lprint_printer_t;
+  time_t		status_time;	// Last time status was updated
+  int			impcompleted;	// printer-impressions-completed
+};
 
 struct lprint_job_s			// Job data
 {
@@ -199,44 +206,40 @@ typedef struct lprint_client_s		// Client data
 // Functions...
 //
 
-static void		lprintCleanJobs(lprint_system_t *system);
-static lprint_client_t	*lprintCreateClient(lprint_system_t *system, int sock);
-static lprint_job_t	*lprintCreateJob(lprint_client_t *client);
-static lprint_printer_t	*lprintCreatePrinter(lprint_client_t *client);
-static int		lprintCreateJobFile(lprint_job_t *job, char *fname, size_t fnamesize, const char *dir, const char *ext);
-static void		lprintLogAttributes(const char *title, ipp_t *ipp, int is_response);
-static void		lprintDeleteClient(lprint_client_t *client);
-static void		lprintDeleteJob(lprint_job_t *job);
-static void		lprintDeletePrinter(lprint_printer_t *printer);
-static void		lprintInitDNSSD(void);
-static lprint_job_t	*lprintFindJob(lprint_client_t *client);
-static lprint_printer_t	*lprintFindPrinter(lprint_client_t *client);
-static void		finish_document_data(lprint_client_t *client, lprint_job_t *job);
-static void		finish_document_uri(lprint_client_t *client, lprint_job_t *job);
-
-static ipp_t		*load_ippserver_attributes(const char *servername, int serverport, const char *filename, cups_array_t *docformats);
-static ipp_t		*load_legacy_attributes(const char *make, const char *model, int ppm, int ppm_color, int duplex, cups_array_t *docformats);
-#if !CUPS_LITE
-static ipp_t		*load_ppd_attributes(const char *ppdfile, cups_array_t *docformats);
-#endif // !CUPS_LITE
-static int		parse_options(lprint_client_t *client, cups_option_t **options);
-static void		process_attr_message(lprint_job_t *job, char *message);
-static void		*process_client(lprint_client_t *client);
-static int		process_http(lprint_client_t *client);
-static int		process_ipp(lprint_client_t *client);
-static void		*process_job(lprint_job_t *job);
-static void		process_state_message(lprint_job_t *job, char *message);
-static int		register_printer(lprint_printer_t *printer, const char *subtypes);
-static int		respond_http(lprint_client_t *client, http_status_t code, const char *content_coding, const char *type, size_t length);
-static void		respond_ipp(lprint_client_t *client, ipp_status_t status, const char *message, ...) _CUPS_FORMAT(3, 4);
-static void		respond_unsupported(lprint_client_t *client, ipp_attribute_t *attr);
-static void		run_printer(lprint_printer_t *printer);
-static int		show_media(lprint_client_t *client);
-static int		show_status(lprint_client_t *client);
-static int		show_supplies(lprint_client_t *client);
-static char		*time_string(time_t tv, char *buffer, size_t bufsize);
-static void		usage(int status) _CUPS_NORETURN;
-static int		valid_doc_attributes(lprint_client_t *client);
-static int		valid_job_attributes(lprint_client_t *client);
+extern void		lprintCleanJobs(lprint_system_t *system);
+extern http_t		*lprintConnect(void);
+extern lprint_client_t	*lprintCreateClient(lprint_system_t *system, int sock);
+extern lprint_job_t	*lprintCreateJob(lprint_client_t *client);
+extern int		lprintCreateJobFile(lprint_job_t *job, char *fname, size_t fnamesize, const char *dir, const char *ext);
+extern lprint_printer_t	*lprintCreatePrinter(lprint_client_t *client);
+extern void		lprintDeleteClient(lprint_client_t *client);
+extern void		lprintDeleteJob(lprint_job_t *job);
+extern void		lprintDeletePrinter(lprint_printer_t *printer);
+extern int		lprintDoCancel(int argc, char *argv[]);
+extern int		lprintDoConfig(int argc, char *argv[]);
+extern int		lprintDoJobs(int argc, char *argv[]);
+extern int		lprintDoPrinters(int argc, char *argv[]);
+extern int		lprintDoServer(int argc, char *argv[]);
+extern int		lprintDoShutdown(int argc, char *argv[]);
+extern int		lprintDoSubmit(int argc, char *argv[]);
+extern char		*lprintGetServerPath(char *buffer, size_t bufsize);
+extern void		lprintInitDNSSD(void);
+extern int		lprintIsServerRunning(void);
+extern lprint_job_t	*lprintFindJob(lprint_client_t *client);
+extern lprint_printer_t	*lprintFindPrinter(lprint_client_t *client);
+extern void		lprintLog(lprint_system_t *system, lprint_loglevel_t level, const char *message, ...);
+extern void		lprintLogAttributes(lprint_client_t *client, const char *title, ipp_t *ipp, int is_response);
+extern void		lprintLogClient(lprint_client_t *client, lprint_loglevel_t level, const char *message, ...) LPRINT_FORMAT(3, 4);
+extern void		lprintLogJob(lprint_job_t *job, lprint_loglevel_t level, const char *message, ...) LPRINT_FORMAT(3, 4);
+extern void		lprintLogPrinter(lprint_printer_t *printer, lprint_loglevel_t level, const char *message, ...) LPRINT_FORMAT(3, 4);
+extern void		*lprintProcessClient(lprint_client_t *client);
+extern int		lprintProcessHTTP(lprint_client_t *client);
+extern int		lprinterProcessIPP(lprint_client_t *client);
+extern void		*lprintProcessJob(lprint_job_t *job);
+extern int		lprintRegisterDNSSD(lprint_printer_t *printer, const char *subtypes);
+extern int		lprintRespondHTTP(lprint_client_t *client, http_status_t code, const char *content_coding, const char *type, size_t length);
+extern void		lprintRespondIPP(lprint_client_t *client, ipp_status_t status, const char *message, ...) LPRINT_FORMAT(3, 4);
+extern void		lprintRespondUnsupported(lprint_client_t *client, ipp_attribute_t *attr);
+extern void		lprintRunSystem(lprint_system_t *system);
 
 #endif // !_LPRINT_H_

@@ -1,5 +1,5 @@
 //
-// ??? for LPrint, a Label Printer Utility
+// Cancel sub-command for LPrint, a Label Printer Utility
 //
 // Copyright © 2019 by Michael R Sweet.
 //
@@ -14,3 +14,16 @@
 #include "lprint.h"
 
 
+//
+// 'lprintDoCancel()' - Do the cancel sub-command.
+//
+
+int					// O - Exit status
+lprintDoCancel(int  argc,		// I - Number of command-line arguments
+               char *argv[])		// I - Command-line arguments
+{
+  (void)argc;
+  (void)argv;
+
+  return (1);
+}

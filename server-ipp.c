@@ -21,6 +21,8 @@
 static void		copy_attributes(ipp_t *to, ipp_t *from, cups_array_t *ra, ipp_tag_t group_tag, int quickcopy);
 static void		copy_job_attributes(lprint_client_t *client, lprint_job_t *job, cups_array_t *ra);
 static int		filter_cb(lprint_filter_t *filter, ipp_t *dst, ipp_attribute_t *attr);
+static void		finish_document_data(lprint_client_t *client, lprint_job_t *job);
+static void		finish_document_uri(lprint_client_t *client, lprint_job_t *job);
 
 static void		ipp_cancel_job(lprint_client_t *client);
 static void		ipp_close_job(lprint_client_t *client);
@@ -34,3 +36,6 @@ static void		ipp_print_uri(lprint_client_t *client);
 static void		ipp_send_document(lprint_client_t *client);
 static void		ipp_send_uri(lprint_client_t *client);
 static void		ipp_validate_job(lprint_client_t *client);
+
+static int		valid_doc_attributes(lprint_client_t *client);
+static int		valid_job_attributes(lprint_client_t *client);

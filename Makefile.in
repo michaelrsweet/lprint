@@ -62,8 +62,10 @@ BUILDROOT	=	$(DSTROOT)$(RPM_BUILD_ROOT)$(DESTDIR)
 
 # Targets...
 OBJS		=	\
+			device-common.o \
 			device-socket.o \
 			device-usb.o \
+			driver-common.o \
 			driver-cpcl.o \
 			driver-dymo.o \
 			driver-epl1.o \
@@ -71,11 +73,20 @@ OBJS		=	\
 			driver-fgl.o \
 			driver-pcl.o \
 			driver-zpl.o \
-			ipp.o \
-			job.o \
-			main.o \
-			print.o \
-			printer.o
+			lprint.o \
+			lprint-cancel.o \
+			lprint-config.o \
+			lprint-jobs.o \
+			lprint-printers.o \
+			lprint-server.o \
+			lprint-shutdown.o \
+			lprint-status.o \
+			lprint-submit.o \
+			server-ipp.o \
+			server-job.o \
+			server-log.o \
+			server-print.o \
+			server-printer.o
 TARGETS		=	\
 			lprint
 
@@ -119,4 +130,4 @@ lprint:	$(OBJS)
 
 
 # Dependencies...
-$(OBJS):	config.h lprint.h Makefile
+$(OBJS):	common.h config.h device-common.h driver-common.h lprint.h Makefile

@@ -1,5 +1,5 @@
 //
-// Submit sub-command for LPrint, a Label Printer Utility
+// Status sub-command for LPrint, a Label Printer Utility
 //
 // Copyright © 2019 by Michael R Sweet.
 //
@@ -15,11 +15,11 @@
 
 
 //
-// 'lprintDoSubmit()' - Do the submit sub-command.
+// 'lprintDoStatus()' - Do the status sub-command.
 //
 
 int					// O - Exit status
-lprintDoSubmit(int  argc,		// I - Number of command-line arguments
+lprintDoStatus(int  argc,		// I - Number of command-line arguments
                char *argv[])		// I - Command-line arguments
 {
   (void)argc;
