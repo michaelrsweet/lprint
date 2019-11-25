@@ -3865,6 +3865,9 @@ $as_echo "yes" >&6; }
 
 		CFLAGS="$CFLAGS `$PKGCONFIG --cflags libusb-1.0`"
 		LIBS="$LIBS `$PKGCONFIG --libs libusb-1.0`"
+		if test "x$host_os_name" = xdarwin; then
+			LIBS="$LIBS -framework IOKit"
+		fi
 	else
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }

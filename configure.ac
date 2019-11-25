@@ -195,6 +195,9 @@ if test "x$PKGCONFIG" != x -a x$enable_libusb != xno; then
 		AC_DEFINE(HAVE_LIBUSB)
 		CFLAGS="$CFLAGS `$PKGCONFIG --cflags libusb-1.0`"
 		LIBS="$LIBS `$PKGCONFIG --libs libusb-1.0`"
+		if test "x$host_os_name" = xdarwin; then
+			LIBS="$LIBS -framework IOKit"
+		fi
 	else
 		AC_MSG_RESULT(no)
 		if test x$enable_libusb = xyes; then

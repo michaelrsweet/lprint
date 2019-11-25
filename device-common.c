@@ -269,7 +269,8 @@ lprint_find_usb(
   for (i = 0; i < num_udevs; i ++)
   {
     libusb_device *udevice = udevs[i];	// Current device
-    char	device_uri[1024];	// Current device URI
+    char	device_id[1024],	// Current device ID
+		device_uri[1024];	// Current device URI
     struct libusb_device_descriptor devdesc;
 					// Current device descriptor
     struct libusb_config_descriptor *confptr = NULL;
@@ -314,6 +315,9 @@ lprint_find_usb(
       // Some printers offer multiple interfaces...
       for (iface = confptr->bNumInterfaces, ifaceptr = confptr->interface; iface > 0; iface --, ifaceptr ++)
       {
+        if (!ifaceptr->altsetting)
+          continue;
+
 	for (altset = ifaceptr->num_altsetting, altptr = ifaceptr->altsetting; altset > 0; altset --, altptr ++)
 	{
 	  if (altptr->bInterfaceClass != LIBUSB_CLASS_PRINTER || altptr->bInterfaceSubClass != 1)
@@ -393,53 +397,90 @@ lprint_find_usb(
                 device->handle = NULL;
               }
             }
+
+            if (device->handle)
+            {
+              // Get the 1284 Device ID...
+              if (libusb_control_transfer(device->handle, LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_ENDPOINT_IN | LIBUSB_RECIPIENT_INTERFACE, 0, device->conf, (device->iface << 8) | device->altset, (unsigned char *)device_id, sizeof(device_id), 5000) < 0)
+              {
+                device_id[0] = '\0';
+                libusb_close(device->handle);
+                device->handle = NULL;
+              }
+              else
+              {
+                int length = ((device_id[0] & 255) << 8) | (device_id[1] & 255);
+                if (length < 14 || length > sizeof(device_id))
+                  length = ((device_id[1] & 255) << 8) | (device_id[0] & 255);
+
+                if (length > sizeof(device_id))
+                  length = sizeof(device_id);
+
+                length -= 2;
+                memmove(device_id, device_id + 2, (size_t)length);
+                device_id[length] = '\0';
+              }
+            }
+
+            if (device->handle)
+            {
+              // Build the device URI...
+              char	*make,		// Pointer to make
+			*model,		// Pointer to model
+			*serial = NULL,	// Pointer to serial number
+			*ptr,		// Pointer into device ID
+			temp[256];	// Temporary string for serial #
+
+              if ((make = strstr(device_id, "MANUFACTURER:")) != NULL)
+                make += 13;
+              else if ((make = strstr(device_id, "MFG:")) != NULL)
+                make += 4;
+              else
+                make = "Unknown";
+
+              if ((model = strstr(device_id, "MODEL:")) != NULL)
+                model += 6;
+              else if ((model = strstr(device_id, "MDL:")) != NULL)
+                model += 4;
+              else
+                model = "Unknown";
+
+              if ((serial = strstr(device_id, "SERIALNUMBER:")) != NULL)
+                serial += 12;
+              else if ((serial = strstr(device_id, "SERN:")) != NULL)
+                serial += 5;
+              else if ((serial = strstr(device_id, "SN:")) != NULL)
+                serial += 3;
+              else
+              {
+                int length = libusb_get_string_descriptor_ascii(device->handle, devdesc.iSerialNumber, (unsigned char *)temp, sizeof(temp) - 1);
+                if (length > 0)
+                {
+                  temp[length] = '\0';
+                  serial       = temp;
+                }
+              }
+
+              if (serial)
+                httpAssembleURIf(HTTP_URI_CODING_ALL, device_uri, sizeof(device_uri), "usb", NULL, make, 0, "/%s?serial=%s", model, serial);
+              else
+                httpAssembleURIf(HTTP_URI_CODING_ALL, device_uri, sizeof(device_uri), "usb", NULL, make, 0, "/%s", model);
+
+              if ((*cb)(device_uri, user_data))
+              {
+		if (device->read_endp != -1)
+		  device->read_endp = confptr->interface[device->iface].altsetting[device->altset].endpoint[device->read_endp].bEndpointAddress;
+
+		if (device->write_endp != -1)
+		  device->write_endp = confptr->interface[device->iface].altsetting[device->altset].endpoint[device->write_endp].bEndpointAddress;
+
+                break;
+              }
+
+	      libusb_close(device->handle);
+	      device->handle = NULL;
+            }
 	  }
-
-#if 0	// TODO: FIX ME
-	  get_device_id(&printer, device_id, sizeof(device_id));
-	  make_device_uri(&printer, device_id, device_uri,
-			  sizeof(device_uri));
-
-	  fprintf(stderr, "DEBUG2: Printer found with device ID: %s "
-		  "Device URI: %s\n",
-		  device_id, device_uri);
-
-	  if ((*cb)(&printer, device_uri, device_id, data))
-	  {
-	    fprintf(stderr, "DEBUG: Device protocol: %d\n",
-		    printer.protocol);
-	    if (printer.quirks & USB_QUIRK_UNIDIR)
-	    {
-	      printer.read_endp = -1;
-	      fprintf(stderr, "DEBUG: Printer reports bi-di support "
-		      "but in reality works only uni-directionally\n");
-	    }
-	    if (printer.read_endp != -1)
-	    {
-	      printer.read_endp = confptr->interface[printer.iface].
-					altsetting[printer.altset].
-					endpoint[printer.read_endp].
-					bEndpointAddress;
-	    }
-	    else
-	      fprintf(stderr, "DEBUG: Uni-directional USB communication "
-		      "only!\n");
-	    printer.write_endp = confptr->interface[printer.iface].
-				       altsetting[printer.altset].
-				       endpoint[printer.write_endp].
-				       bEndpointAddress;
-	    if (printer.quirks & USB_QUIRK_NO_REATTACH)
-	    {
-	      printer.usblp_attached = 0;
-	      fprintf(stderr, "DEBUG: Printer does not like usblp "
-		      "kernel module to be re-attached after job\n");
-	    }
-	    libusb_free_config_descriptor(confptr);
-	    return (&printer);
-	  }
-
-	  close_device(&printer);
-#endif // 0
 	}
 
 	libusb_free_config_descriptor(confptr);
