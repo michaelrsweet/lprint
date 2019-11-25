@@ -221,6 +221,7 @@ extern int		lprintDoJobs(int argc, char *argv[]);
 extern int		lprintDoPrinters(int argc, char *argv[]);
 extern int		lprintDoServer(int argc, char *argv[]);
 extern int		lprintDoShutdown(int argc, char *argv[]);
+extern int		lprintDoStatus(int argc, char *argv[]);
 extern int		lprintDoSubmit(int argc, char *argv[]);
 extern char		*lprintGetServerPath(char *buffer, size_t bufsize);
 extern void		lprintInitDNSSD(void);

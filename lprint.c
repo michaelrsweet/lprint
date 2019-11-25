@@ -20,8 +20,7 @@
 // Local globals...
 //
 
-static const char	*lprint_path = NULL;
-					// Path to self
+static char	*lprint_path = NULL;	// Path to self
 
 
 //
@@ -39,11 +38,40 @@ int					// O - Exit status
 main(int  argc,				// I - Number of command-line arguments
      char *argv[])			// I - Command-line arguments
 {
-  (void)argc;
-
   lprint_path = argv[0];
 
-  return (1);
+  if (argc > 1)
+  {
+    if (!strcmp(argv[1], "--help"))
+    {
+      usage(0);
+    }
+    else if (!strcmp(argv[1], "--version"))
+    {
+      puts(LPRINT_VERSION);
+      return (0);
+    }
+  }
+
+  if (argc == 1 || !strcmp(argv[1], "submit") || argv[1][0] == '-')
+    return (lprintDoSubmit(argc, argv));
+  else if (!strcmp(argv[1], "cancel"))
+    return (lprintDoCancel(argc, argv));
+  else if (!strcmp(argv[1], "config"))
+    return (lprintDoConfig(argc, argv));
+  else if (!strcmp(argv[1], "jobs"))
+    return (lprintDoJobs(argc, argv));
+  else if (!strcmp(argv[1], "printers"))
+    return (lprintDoPrinters(argc, argv));
+  else if (!strcmp(argv[1], "server"))
+    return (lprintDoServer(argc, argv));
+  else if (!strcmp(argv[1], "shutdown"))
+    return (lprintDoShutdown(argc, argv));
+  else if (!strcmp(argv[1], "status"))
+    return (lprintDoStatus(argc, argv));
+
+  fprintf(stderr, "lprint: Unknown sub-command '%s'.\n", argv[1]);
+  usage(1);
 }
 
 
@@ -63,8 +91,8 @@ lprintConnect(void)
     // Nope, start it now...
     pid_t	server_pid;		// Server process ID
     posix_spawnattr_t server_attrs;	// Server process attributes
-    const char	*server_argv[] =
-    {					// Server command-line
+    char	* const server_argv[] =	// Server command-line
+    {
       lprint_path,
       "server",
       NULL
