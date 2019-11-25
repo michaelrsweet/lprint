@@ -1,7 +1,8 @@
 //
-// ??? for LPrint, a Label Printer Utility
+// Common device support code for LPrint, a Label Printer Utility
 //
 // Copyright © 2019 by Michael R Sweet.
+// Copyright © 2007-2019 by Apple Inc.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -13,6 +14,16 @@
 
 #include "lprint.h"
 #include <stdarg.h>
+
+
+//
+// Local functions...
+//
+
+#ifdef HAVE_LIBUSB
+static int	lprint_find_usb(lprint_device_cb_t cb, const void *user_data, lprint_device_t *device);
+static int	lprint_open_cb(const char *device_uri, const void *user_data);
+#endif // HAVE_LIBUSB
 
 
 //
@@ -34,6 +45,24 @@ lprintCloseDevice(
 
     free(device);
   }
+}
+
+
+//
+// 'lprintListDevices()' - List available devices.
+//
+
+void
+lprintListDevices(
+    lprint_device_cb_t cb,		// I - Callback function
+    const void         *user_data)	// I - User data for callback
+{
+#ifdef HAVE_LIBUSB
+  lprint_device_t	junk;		// Dummy device data
+
+
+  lprint_find_usb(cb, user_data, &junk);
+#endif /* HAVE_LIBUSB */
 }
 
 
@@ -199,3 +228,241 @@ lprintWriteDevice(
   // TODO: Implement USB writes
   return (-1);
 }
+
+
+#ifdef HAVE_LIBUSB
+//
+// 'lprint_find_usb()' - Find a USB printer.
+//
+
+static int				// O - 1 if found, 0 if not
+lprint_find_usb(
+    lprint_device_cb_t cb,		// I - Callback function
+    const void         *user_data,	// I - User data pointer
+    lprint_device_t    *device)		// O - Device info
+{
+  ssize_t	err = 0,		// Current error
+		i,			// Looping var
+		num_udevs;		// Number of USB devices
+  libusb_device	**udevs;		// USB devices
+
+
+ /*
+  * Get the list of connected USB devices...
+  */
+
+  device->device = NULL;
+  device->handle = NULL;
+
+  if ((err = libusb_init(NULL)) != 0)
+  {
+    fprintf(stderr, "lprint: Unable to initialize USB access: %s\n", libusb_strerror(err));
+    return (0);
+  }
+
+  num_udevs = libusb_get_device_list(NULL, &udevs);
+
+ /*
+  * Find the printers and do the callback until we find a match.
+  */
+
+  for (i = 0; i < num_udevs; i ++)
+  {
+    libusb_device *udevice = udevs[i];	// Current device
+    char	device_uri[1024];	// Current device URI
+    struct libusb_device_descriptor devdesc;
+					// Current device descriptor
+    struct libusb_config_descriptor *confptr = NULL;
+					// Pointer to current configuration
+    const struct libusb_interface *ifaceptr = NULL;
+					// Pointer to current interface
+    const struct libusb_interface_descriptor *altptr = NULL;
+					// Pointer to current alternate setting
+    const struct libusb_endpoint_descriptor *endpptr = NULL;
+					// Pointer to current endpoint
+    uint8_t	conf,			// Current configuration
+		iface,			// Current interface
+		altset,			// Current alternate setting
+		endp,			// Current endpoint
+		read_endp,		// Current read endpoint
+		write_endp;		// Current write endpoint
+
+    // Ignore devices with no configuration data and anything that is not
+    // a printer...
+    if (libusb_get_device_descriptor(udevice, &devdesc) < 0)
+      continue;
+
+    if (!devdesc.bNumConfigurations || !devdesc.idVendor || !devdesc.idProduct)
+      continue;
+
+    device->device     = udevice;
+    device->handle     = NULL;
+    device->conf       = -1;
+    device->origconf   = -1;
+    device->iface      = -1;
+    device->ifacenum   = -1;
+    device->altset     = -1;
+    device->write_endp = -1;
+    device->read_endp  = -1;
+    device->protocol   = 0;
+
+    for (conf = 0; conf < devdesc.bNumConfigurations; conf ++)
+    {
+      if (libusb_get_config_descriptor(udevice, conf, &confptr) < 0)
+	continue;
+
+      // Some printers offer multiple interfaces...
+      for (iface = confptr->bNumInterfaces, ifaceptr = confptr->interface; iface > 0; iface --, ifaceptr ++)
+      {
+	for (altset = ifaceptr->num_altsetting, altptr = ifaceptr->altsetting; altset > 0; altset --, altptr ++)
+	{
+	  if (altptr->bInterfaceClass != LIBUSB_CLASS_PRINTER || altptr->bInterfaceSubClass != 1)
+	    continue;
+
+	  if (altptr->bInterfaceProtocol != 1 && altptr->bInterfaceProtocol != 2)
+	    continue;
+
+	  if (altptr->bInterfaceProtocol < device->protocol)
+	    continue;
+
+	  read_endp  = 0xff;
+	  write_endp = 0xff;
+
+	  for (endp = 0, endpptr = altptr->endpoint; endp < altptr->bNumEndpoints; endp ++, endpptr ++)
+	  {
+	    if ((endpptr->bmAttributes & LIBUSB_TRANSFER_TYPE_MASK) == LIBUSB_TRANSFER_TYPE_BULK)
+	    {
+	      if (endpptr->bEndpointAddress & LIBUSB_ENDPOINT_DIR_MASK)
+		read_endp = endp;
+	      else
+		write_endp = endp;
+	    }
+	  }
+
+	  if (write_endp != 0xff)
+	  {
+	    // Save the best match so far...
+	    device->protocol   = altptr->bInterfaceProtocol;
+	    device->altset     = altptr->bAlternateSetting;
+	    device->ifacenum   = altptr->bInterfaceNumber;
+	    device->write_endp = write_endp;
+	    if (device->protocol > 1)
+	      device->read_endp = read_endp;
+	  }
+	}
+
+	if (device->protocol > 0)
+	{
+	  device->conf  = conf;
+	  device->iface = ifaceptr - confptr->interface;
+
+	  if (!libusb_open(udevice, &device->handle))
+	  {
+	    uint8_t	current;	// Current configuration
+
+	    // Opened the device, try to set the configuration...
+	    if (libusb_control_transfer(device->handle, LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_ENDPOINT_IN | LIBUSB_RECIPIENT_DEVICE, 8, /* GET_CONFIGURATION */ 0, 0, (unsigned char *)&current, 1, 5000) < 0)
+	      current = 0;
+
+            if (confptr->bConfigurationValue != current)
+            {
+              // Select the configuration we want...
+              if (libusb_set_configuration(device->handle, confptr->bConfigurationValue) < 0)
+              {
+                libusb_close(device->handle);
+                device->handle = NULL;
+              }
+            }
+
+            if (device->handle)
+            {
+              // Claim the interface...
+              if (libusb_claim_interface(device->handle, device->ifacenum) < 0)
+              {
+                libusb_close(device->handle);
+                device->handle = NULL;
+              }
+            }
+
+            if (device->handle && ifaceptr->num_altsetting > 1)
+            {
+              // Set the alternate setting as needed...
+              if (libusb_set_interface_alt_setting(device->handle, device->ifacenum, device->altset) < 0)
+              {
+                libusb_close(device->handle);
+                device->handle = NULL;
+              }
+            }
+	  }
+
+#if 0	// TODO: FIX ME
+	  get_device_id(&printer, device_id, sizeof(device_id));
+	  make_device_uri(&printer, device_id, device_uri,
+			  sizeof(device_uri));
+
+	  fprintf(stderr, "DEBUG2: Printer found with device ID: %s "
+		  "Device URI: %s\n",
+		  device_id, device_uri);
+
+	  if ((*cb)(&printer, device_uri, device_id, data))
+	  {
+	    fprintf(stderr, "DEBUG: Device protocol: %d\n",
+		    printer.protocol);
+	    if (printer.quirks & USB_QUIRK_UNIDIR)
+	    {
+	      printer.read_endp = -1;
+	      fprintf(stderr, "DEBUG: Printer reports bi-di support "
+		      "but in reality works only uni-directionally\n");
+	    }
+	    if (printer.read_endp != -1)
+	    {
+	      printer.read_endp = confptr->interface[printer.iface].
+					altsetting[printer.altset].
+					endpoint[printer.read_endp].
+					bEndpointAddress;
+	    }
+	    else
+	      fprintf(stderr, "DEBUG: Uni-directional USB communication "
+		      "only!\n");
+	    printer.write_endp = confptr->interface[printer.iface].
+				       altsetting[printer.altset].
+				       endpoint[printer.write_endp].
+				       bEndpointAddress;
+	    if (printer.quirks & USB_QUIRK_NO_REATTACH)
+	    {
+	      printer.usblp_attached = 0;
+	      fprintf(stderr, "DEBUG: Printer does not like usblp "
+		      "kernel module to be re-attached after job\n");
+	    }
+	    libusb_free_config_descriptor(confptr);
+	    return (&printer);
+	  }
+
+	  close_device(&printer);
+#endif // 0
+	}
+
+	libusb_free_config_descriptor(confptr);
+      }
+    }
+  }
+
+  // Clean up ....
+  if (num_udevs >= 0)
+    libusb_free_device_list(udevs, 1);
+
+  return (device->handle != NULL);
+}
+
+
+//
+// 'lprint_open_cb()' - Look for a matching device URI.
+//
+
+static int				// O - 1 on match, 0 otherwise
+lprint_open_cb(const char *device_uri,	// I - This device's URI
+	       const void *user_data)	// I - URI we are looking for
+{
+  return (!strcmp(device_uri, (const char *)user_data));
+}
+#endif // HAVE_LIBUSB

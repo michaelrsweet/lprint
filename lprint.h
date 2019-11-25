@@ -217,6 +217,7 @@ extern void		lprintDeleteJob(lprint_job_t *job);
 extern void		lprintDeletePrinter(lprint_printer_t *printer);
 extern int		lprintDoCancel(int argc, char *argv[]);
 extern int		lprintDoConfig(int argc, char *argv[]);
+extern int		lprintDoDevices(int argc, char *argv[]);
 extern int		lprintDoJobs(int argc, char *argv[]);
 extern int		lprintDoPrinters(int argc, char *argv[]);
 extern int		lprintDoServer(int argc, char *argv[]);

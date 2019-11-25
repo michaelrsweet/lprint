@@ -59,6 +59,8 @@ main(int  argc,				// I - Number of command-line arguments
     return (lprintDoCancel(argc, argv));
   else if (!strcmp(argv[1], "config"))
     return (lprintDoConfig(argc, argv));
+  else if (!strcmp(argv[1], "devices"))
+    return (lprintDoDevices(argc, argv));
   else if (!strcmp(argv[1], "jobs"))
     return (lprintDoJobs(argc, argv));
   else if (!strcmp(argv[1], "printers"))
@@ -172,6 +174,7 @@ usage(int status)			// O - Exit status
   puts("Commands:");
   puts("  cancel    Cancel one or more jobs.");
   puts("  config    Add, modify, or delete a printer.");
+  puts("  devices   List devices.");
   puts("  jobs      List jobs.");
   puts("  printers  List printers.");
   puts("  server    Run a server.");

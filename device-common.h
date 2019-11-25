@@ -21,17 +21,28 @@
 
 
 //
-// Device data...
+// Types...
 //
 
 typedef struct lprint_device_s		// Device connection data
 {
-  int				fd;	// File descriptor connection to device
+  int			fd;		// File descriptor connection to device
 #ifdef HAVE_LIBUSB
-  struct libusb_device		*device;// Device info
-  struct libusb_device_handle	*handle;// Open handle to device
+  struct libusb_device	*device;	// Device info
+  struct libusb_device_handle *handle;	// Open handle to device
+  int			conf,		// Configuration
+			origconf,	// Original configuration
+			iface,		// Interface
+			ifacenum,	// Interface number
+			altset,		// Alternate setting
+			write_endp,	// Write endpoint
+			read_endp,	// Read endpoint
+			protocol;	// Protocol: 1 = Uni-di, 2 = Bi-di.
 #endif // HAVE_LIBUSB
 } lprint_device_t;
+
+// Device callback - return 1 to stop, 0 to continue
+typedef int (*lprint_device_cb_t)(const char *device_uri, const void *user_data);
 
 
 //
@@ -39,6 +50,7 @@ typedef struct lprint_device_s		// Device connection data
 //
 
 extern void		lprintCloseDevice(lprint_device_t *device);
+extern void		lprintListDevices(lprint_device_cb_t cb, const void *user_data);
 extern lprint_device_t	*lprintOpenDevice(const char *device_uri);
 extern ssize_t		lprintPrintfDevice(lprint_device_t *device, const char *format, ...) LPRINT_FORMAT(2, 3);
 extern ssize_t		lprintReadDevice(lprint_device_t *device, void *buffer, size_t bytes);

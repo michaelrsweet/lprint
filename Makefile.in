@@ -63,8 +63,6 @@ BUILDROOT	=	$(DSTROOT)$(RPM_BUILD_ROOT)$(DESTDIR)
 # Targets...
 OBJS		=	\
 			device-common.o \
-			device-socket.o \
-			device-usb.o \
 			driver-common.o \
 			driver-cpcl.o \
 			driver-dymo.o \
@@ -76,6 +74,7 @@ OBJS		=	\
 			lprint.o \
 			lprint-cancel.o \
 			lprint-config.o \
+			lprint-devices.o \
 			lprint-jobs.o \
 			lprint-printers.o \
 			lprint-server.o \
@@ -106,11 +105,15 @@ install:	all
 	$(INSTALL) -c -m 755 lprint $(BUILDROOT)$(bindir)
 	$(INSTALL) -d -m 755 $(BUILDROOT)$(mandir)/man1
 	$(INSTALL) -c -m 644 lprint.1 $(BUILDROOT)$(mandir)/man1
+	$(INSTALL) -c -m 644 lprint-cancel.1 $(BUILDROOT)$(mandir)/man1
 	$(INSTALL) -c -m 644 lprint-config.1 $(BUILDROOT)$(mandir)/man1
+	$(INSTALL) -c -m 644 lprint-devices.1 $(BUILDROOT)$(mandir)/man1
 	$(INSTALL) -c -m 644 lprint-jobs.1 $(BUILDROOT)$(mandir)/man1
 	$(INSTALL) -c -m 644 lprint-printers.1 $(BUILDROOT)$(mandir)/man1
 	$(INSTALL) -c -m 644 lprint-send.1 $(BUILDROOT)$(mandir)/man1
 	$(INSTALL) -c -m 644 lprint-server.1 $(BUILDROOT)$(mandir)/man1
+	$(INSTALL) -c -m 644 lprint-shutdown.1 $(BUILDROOT)$(mandir)/man1
+	$(INSTALL) -c -m 644 lprint-status.1 $(BUILDROOT)$(mandir)/man1
 	$(INSTALL) -d -m 755 $(BUILDROOT)$(mandir)/man5
 	$(INSTALL) -c -m 644 lprint.conf.5 $(BUILDROOT)$(mandir)/man5
 
