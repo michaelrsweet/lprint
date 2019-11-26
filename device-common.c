@@ -40,7 +40,10 @@ lprintCloseDevice(
       close(device->fd);
 #ifdef HAVE_LIBUSB
     else if (device->handle)
+    {
       libusb_close(device->handle);
+      libusb_unref_device(device->device);
+    }
 #endif /* HAVE_LIBUSB */
 
     free(device);
@@ -125,7 +128,8 @@ lprintOpenDevice(
     else if (!strcmp(scheme, "usb"))
     {
       // USB printer class device
-      goto error;
+      if (!lprint_find_usb(lprint_open_cb, device_uri, device))
+        goto error;
     }
   }
 
@@ -484,6 +488,8 @@ lprint_find_usb(
 
               if ((*cb)(device_uri, user_data))
               {
+		libusb_ref_device(device->device);
+
 		if (device->read_endp != -1)
 		  device->read_endp = confptr->interface[device->iface].altsetting[device->altset].endpoint[device->read_endp].bEndpointAddress;
 
