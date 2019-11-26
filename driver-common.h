@@ -23,8 +23,10 @@
 //
 
 #  define LPRINT_MAX_MEDIA	100	// Maximum number of media sizes
+#  define LPRINT_MAX_RESOLUTION	4	// Maximum number of printer resolutions
 #  define LPRINT_MAX_SOURCE	4	// Maximum number of sources/rolls
 #  define LPRINT_MAX_SUPPLY	4	// Maximum number of supplies
+#  define LPRINT_MAX_TYPE	4	// Maximum number of media types
 
 
 //
@@ -36,8 +38,6 @@ typedef struct lprint_printer_s lprint_printer_t;
 typedef struct lprint_job_s lprint_job_t;
 					// Forward defined job
 
-typedef int (*lprint_initfunc_t)(lprint_printer_t *printer);
-					// Initialize printer attributes
 typedef int (*lprint_printfunc_t)(lprint_printer_t *printer, lprint_job_t *job);
 					// Print a job
 typedef int (*lprint_statusfunc_t)(lprint_printer_t *printer);
@@ -56,18 +56,27 @@ typedef struct lprint_driver_s		// Driver data
 {
   pthread_rwlock_t	rwlock;		// Reader/writer lock
   lprint_device_t	*device;	// Connection to device
-  lprint_initfunc_t	initfunc;	// Initialization function
   lprint_printfunc_t	printfunc;	// Print function
   lprint_statusfunc_t	statusfunc;	// Status function
+  const char		*format;	// Printer-specific format
+  int			num_resolution,	// Number of printer resolutions
+			x_resolution[LPRINT_MAX_RESOLUTION],
+			y_resolution[LPRINT_MAX_RESOLUTION];
+					// Printer resolutions
   int			num_media;	// Number of supported media
   const char		*media[LPRINT_MAX_MEDIA];
 					// Supported media
+  char			custom_media[LPRINT_MAX_SOURCE][32];
+					// Custom media sizes
   int			num_ready;	// Number of ready media
   const char		*ready[LPRINT_MAX_SOURCE];
 					// Ready media
-  int			num_sources;	// Number of media sources (rolls)
-  const char		*sources[LPRINT_MAX_SOURCE];
+  int			num_source;	// Number of media sources (rolls)
+  const char		*source[LPRINT_MAX_SOURCE];
 					// Media sources
+  int			num_type;	// Number of media types
+  const char		*type[LPRINT_MAX_TYPE];
+					// Media types
   int			num_supply;	// Number of supplies
   lprint_supply_t	supply[LPRINT_MAX_SUPPLY];
 					// Supplies
@@ -80,5 +89,12 @@ typedef struct lprint_driver_s		// Driver data
 
 extern lprint_driver_t	*lprintCreateDriver(lprint_printer_t *printer);
 extern void		lprintDeleteDriver(lprint_driver_t *driver);
+extern void		lprintInitCPCL(lprint_driver_t *driver);
+extern void		lprintInitDymo(lprint_driver_t *driver);
+extern void		lprintInitEPL1(lprint_driver_t *driver);
+extern void		lprintInitEPL2(lprint_driver_t *driver);
+extern void		lprintInitFGL(lprint_driver_t *driver);
+extern void		lprintInitPCL(lprint_driver_t *driver);
+extern void		lprintInitZPL(lprint_driver_t *driver);
 
 #endif // !_DRIVER_COMMON_H_
