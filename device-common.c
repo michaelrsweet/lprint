@@ -183,8 +183,16 @@ lprintReadDevice(
 
     return (count);
   }
+  else if (device->handle)
+  {
+    int	count;				// Bytes that were read
 
-  // TODO: Implement USB
+    if (libusb_bulk_transfer(device->handle, device->read_endp, buffer, bytes, &count, 0) < 0)
+      return (-1);
+    else
+      return (count);
+  }
+
   return (-1);
 }
 
@@ -224,8 +232,16 @@ lprintWriteDevice(
 
     return ((ssize_t)total);
   }
+  else if (device->handle)
+  {
+    int	count;				// Bytes that were written
 
-  // TODO: Implement USB writes
+    if (libusb_bulk_transfer(device->handle, device->write_endp, (unsigned char *)buffer, bytes, &count, 0) < 0)
+      return (-1);
+    else
+      return (count);
+  }
+
   return (-1);
 }
 
