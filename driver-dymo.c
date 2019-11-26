@@ -20,81 +20,43 @@
 
 static const char * const lprint_dymo_media[] =
 {					// Supported media sizes
-  "oe_1.25x0.25-label_1.25x0.25in",
-  "oe_1.25x2.25-label_1.25x2.25in",
+  "oe_thin-multipurpose-label_0.375x2.8125in",
+  "oe_library-barcode-label_0.5x1.875in",
+  "oe_hanging-file-tab-insert_0.5625x2in",
+  "oe_file-folder-label_0.5625x3.4375in",
+  "oe_return-address-label_0.75x2in",
+  "oe_barcode-label_0.75x2.5in",
+  "oe_video-spine-label_0.75x5.875in",
+  "oe_price-tag-label_0.9375x0.875in",
+  "oe_square-multipurpose-label_1x1in",
+  "oe_book-spine-label_1x1.5in",
+  "oe_sm-multipurpose-label_1x2.125in",
+  "oe_2-up-file-folder-label_1.125x3.4375in",
+  "oe_internet-postage-label_1.25x1.625in",
+  "oe_address-label_1.25x3.5in",
+  "oe_lg-address-label_1.4x3.5in",
+  "oe_video-top-label_1.8x3.1in",
+  "oe_multipurpose-label_2x2.3125in",
+  "oe_md-appointment-card_2x3.5in",
+  "oe_lg-multipurpose-label_2.125x.75in",
+  "oe_shipping-label_2.125x4in",
+  "oe_continuous-label_2.125x3600in",
+  "oe_md-multipurpose-label_2.25x1.25in",
+  "oe_media-label_2.25x2.25in",
+  "oe_2-up-address-label_2.25x3.5in",
+  "oe_name-badge-label_2.25x4in",
+  "oe_3-part-postage-label_2.25x7in",
+  "oe_2-part-internet-postage-label_2.25x7.5in",
+  "oe_shipping-label_2.3125x4in",
+  "oe_internet-postage-label_2.3125x7in",
+  "oe_internet-postage-confirmation-label_2.3125x10.5in",
+  "oe_name-badge-label_2.4375x4.3125in",
+  "oe_hc-address-label_3.5x1.125in",
+  "oe_hc-shipping-label_4x2.3.125in",
+  "oe_xl-shipping-label_4x6in",
 
-  "oe_1.5x0.25-label_1.5x0.25in",
-  "oe_1.5x0.5-label_1.5x0.5in",
-  "oe_1.5x1-label_1.5x1in",
-  "oe_1.5x2-label_1.5x2in",
-
-  "oe_2x0.37-label_2x0.37in",
-  "oe_2x0.5-label_2x0.5in",
-  "oe_2x1-label_2x1in",
-  "oe_2x1.25-label_2x1.25in",
-  "oe_2x2-label_2x2in",
-  "oe_2x3-label_2x3in",
-  "oe_2x4-label_2x4in",
-  "oe_2x5.5-label_2x5.5in",
-
-  "oe_2.25x0.5-label_2.25xin",
-  "oe_2.25x1.25-label_2.25xin",
-  "oe_30859-paint-can-label_2.25x3.125in",
-  "oe_2.25x4-label_2.25x4in",
-  "oe_2.25x5.5-label_2.25x5.5in",
-
-  "oe_2.38x5.5-label_2.38x5.5in",
-
-  "oe_2.5x1-label_2.5x1in",
-  "oe_2.5x2-label_2.5x2in",
-
-  "oe_2.75x1.25-label_2.75x1.25in",
-
-  "oe_2.9x1-label_2.9x1in",
-
-  "oe_3x1-label_3x1in",
-  "oe_3x1.25-label_3x1.25in",
-  "oe_3x2-label_3x2in",
-  "oe_3x3-label_3x3in",
-  "oe_3x5-label_3x5in",
-
-  "oe_3.25x2-label_3.25x2in",
-  "oe_3.25x5-label_3.25x5in",
-  "oe_3.25x5.5-label_3.25x5.5in",
-  "oe_3.25x5.83-label_3.25x5.83in",
-  "oe_3.25x7.83-label_3.25x7.83in",
-
-  "oe_3.5x1-label_3.5x1in",
-
-  "oe_4x1-label_4x1in",
-  "oe_4x2-label_4x2in",
-  "oe_4x3-label_4x3in",
-  "oe_4x4-label_4x4in",
-  "oe_4x5-label_4x5in",
-  "oe_4x6-label_4x6in",
-  "oe_4x6.5-label_4x6.5in",
-  "oe_4x13-label_4x13in",
-
-  "oe_6x1-label_6x1in",
-  "oe_6x2-label_6x2in",
-  "oe_6x3-label_6x3in",
-  "oe_6x4-label_6x4in",
-  "oe_6x5-label_6x5in",
-  "oe_6x6-label_6x6in",
-  "oe_6x6.5-label_6x6.5in",
-  "oe_6x13-label_6x13in",
-
-  "oe_8x1-label_8x1in",
-  "oe_8x2-label_8x2in",
-  "oe_8x3-label_8x3in",
-  "oe_8x4-label_8x4in",
-  "oe_8x5-label_8x5in",
-  "oe_8x6-label_8x6in",
-  "oe_8x6.5-label_8x6.5in",
-  "oe_8x13-label_8x13in",
-
-  "roll_max_8x100in",
-  "roll_min_1.25x0.25in"
+  "roll_max_2.3125x3600in",
+  "roll_min_0.25x0.25in"
 };
 
 

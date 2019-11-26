@@ -55,6 +55,7 @@ typedef struct lprint_supply_s		// Supply data
 typedef struct lprint_driver_s		// Driver data
 {
   pthread_rwlock_t	rwlock;		// Reader/writer lock
+  char			*name;		// Name of driver
   lprint_device_t	*device;	// Connection to device
   lprint_printfunc_t	printfunc;	// Print function
   lprint_statusfunc_t	statusfunc;	// Status function
@@ -66,7 +67,7 @@ typedef struct lprint_driver_s		// Driver data
   int			num_media;	// Number of supported media
   const char		*media[LPRINT_MAX_MEDIA];
 					// Supported media
-  char			custom_media[LPRINT_MAX_SOURCE][32];
+  char			custom_media[LPRINT_MAX_SOURCE][64];
 					// Custom media sizes
   int			num_ready;	// Number of ready media
   const char		*ready[LPRINT_MAX_SOURCE];
@@ -89,6 +90,8 @@ typedef struct lprint_driver_s		// Driver data
 
 extern lprint_driver_t	*lprintCreateDriver(lprint_printer_t *printer);
 extern void		lprintDeleteDriver(lprint_driver_t *driver);
+extern const char * const *lprintGetDrivers(int *num_drivers);
+extern const char	*lprintGetMakeAndModel(lprint_driver_t *driver);
 extern void		lprintInitCPCL(lprint_driver_t *driver);
 extern void		lprintInitDymo(lprint_driver_t *driver);
 extern void		lprintInitEPL1(lprint_driver_t *driver);
