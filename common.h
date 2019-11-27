@@ -24,6 +24,17 @@
 
 
 //
+// Debug macro...
+//
+
+#  ifdef DEBUG
+#    define LPRINT_DEBUG(format,...) fprintf(stderr, format, __VA_ARGS__)
+#  else
+#    define LPRINT_DEBUG(format,...)
+#  endif // DEBUG
+
+
+//
 // Function annotations...
 //
 
