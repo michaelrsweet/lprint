@@ -73,7 +73,7 @@ static int	lprint_dymo_status(lprint_printer_t *printer);
 //
 
 void
-lprintInitDymo(
+lprintInitDYMO(
     lprint_driver_t *driver)		// I - Driver
 {
   pthread_rwlock_wrlock(&driver->rwlock);

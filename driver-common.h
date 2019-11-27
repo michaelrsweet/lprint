@@ -40,6 +40,12 @@ typedef struct lprint_job_s lprint_job_t;
 
 typedef int (*lprint_printfunc_t)(lprint_printer_t *printer, lprint_job_t *job);
 					// Print a job
+typedef int (*lprint_rendfunc_t)(lprint_printer_t *printer, lprint_job_t *job, cups_page_header2_t *header, void *user_data, unsigned page);
+					// End a raster job
+typedef int (*lprint_rstartfunc_t)(lprint_printer_t *printer, lprint_job_t *job, cups_page_header2_t *header, void *user_data, unsigned page);
+					// Start a raster job
+typedef int (*lprint_rwritefunc_t)(lprint_printer_t *printer, lprint_job_t *job, cups_page_header2_t *header, void *user_data, unsigned y, const unsigned char *line);
+					// Write a line of raster graphics
 typedef int (*lprint_statusfunc_t)(lprint_printer_t *printer);
 					// Update printer status
 
@@ -57,7 +63,10 @@ typedef struct lprint_driver_s		// Driver data
   pthread_rwlock_t	rwlock;		// Reader/writer lock
   char			*name;		// Name of driver
   lprint_device_t	*device;	// Connection to device
-  lprint_printfunc_t	printfunc;	// Print function
+  lprint_printfunc_t	printfunc;	// Print (file) function
+  lprint_rendfunc_t	rendfunc;	// End raster job function
+  lprint_rstartfunc_t	rstartfunc;	// Start raster job function
+  lprint_rwritefunc_t	rwritefunc;	// Write raster line function
   lprint_statusfunc_t	statusfunc;	// Status function
   const char		*format;	// Printer-specific format
   int			num_resolution,	// Number of printer resolutions
@@ -93,7 +102,7 @@ extern void		lprintDeleteDriver(lprint_driver_t *driver);
 extern const char * const *lprintGetDrivers(int *num_drivers);
 extern const char	*lprintGetMakeAndModel(lprint_driver_t *driver);
 extern void		lprintInitCPCL(lprint_driver_t *driver);
-extern void		lprintInitDymo(lprint_driver_t *driver);
+extern void		lprintInitDYMO(lprint_driver_t *driver);
 extern void		lprintInitEPL1(lprint_driver_t *driver);
 extern void		lprintInitEPL2(lprint_driver_t *driver);
 extern void		lprintInitFGL(lprint_driver_t *driver);

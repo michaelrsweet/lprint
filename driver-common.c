@@ -87,9 +87,100 @@ lprint_driver_t	*			// O - New driver structure
 lprintCreateDriver(
     lprint_printer_t *printer)		// I - Printer
 {
-  (void)printer;
+  int			i, j;		// Looping vars
+  const char		*name;		// Driver name
+  lprint_driver_t	*driver = NULL;	// New driver
+  ipp_attribute_t	*attr;		// Printer attribute
 
-  return (NULL);
+
+  pthread_rwlock_wrlock(&printer->rwlock);
+
+  if ((name = ippGetString(ippFindAttribute(printer->attrs, "lprint-driver", IPP_TAG_KEYWORD), 0, NULL)) != NULL)
+  {
+    for (i = 0; i < (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])); i ++)
+    {
+      if (!strcmp(name, lprint_drivers[i]))
+      {
+	if ((driver = calloc(1, sizeof(lprint_driver_t))) != NULL)
+	{
+	  // Initialize the driver structure...
+	  pthread_rwlock_init(&driver->rwlock, NULL);
+
+	  driver->name = strdup(name);
+
+          if (!strncmp(name, "cpcl_", 5))
+            lprintInitCPCL(driver);
+          else if (!strncmp(name, "dymo_", 5))
+            lprintInitDYMO(driver);
+          else if (!strncmp(name, "epl1_", 5))
+            lprintInitEPL1(driver);
+          else if (!strncmp(name, "epl2_", 5))
+            lprintInitEPL2(driver);
+          else if (!strncmp(name, "fgl_", 4))
+            lprintInitFGL(driver);
+          else if (!strncmp(name, "pcl_", 4))
+            lprintInitPCL(driver);
+          else
+            lprintInitZPL(driver);
+
+          // Assign to printer and copy capabilities...
+          printer->driver = driver;
+
+          // printer-make-and-model
+          if ((attr = ippFindAttribute(printer->attrs, "printer-make-and-model", IPP_TAG_TEXT)) != NULL)
+            ippSetString(printer->attrs, &attr, 0, lprint_models[i]);
+          else
+            ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-make-and-model", NULL, lprint_models[i]);
+
+          // printer-resolution-supported, -default
+          if ((attr = ippFindAttribute(printer->attrs, "printer-resolution-default", IPP_TAG_RESOLUTION)) != NULL)
+            ippDeleteAttribute(printer->attrs, attr);
+          if ((attr = ippFindAttribute(printer->attrs, "printer-resolution-supported", IPP_TAG_RESOLUTION)) != NULL)
+            ippDeleteAttribute(printer->attrs, attr);
+
+          if (driver->num_resolution > 0)
+          {
+	    ippAddResolution(printer->attrs, IPP_TAG_PRINTER, "printer-resolution-default", IPP_RES_PER_INCH, driver->x_resolution[driver->num_resolution - 1], driver->y_resolution[driver->num_resolution - 1]);
+	    ippAddResolutions(printer->attrs, IPP_TAG_PRINTER, "printer-resolution-supported", driver->num_resolution, IPP_RES_PER_INCH, driver->x_resolution, driver->y_resolution);
+          }
+
+          // pwg-raster-document-resolution-supported
+          if ((attr = ippFindAttribute(printer->attrs, "pwg-raster-document-resolution-supported", IPP_TAG_RESOLUTION)) != NULL)
+            ippDeleteAttribute(printer->attrs, attr);
+
+          if (driver->num_resolution > 0)
+	    ippAddResolutions(printer->attrs, IPP_TAG_PRINTER, "pwg-raster-document-resolution-supported", driver->num_resolution, IPP_RES_PER_INCH, driver->x_resolution, driver->y_resolution);
+
+          // urf-supported
+          if ((attr = ippFindAttribute(printer->attrs, "urf-supported", IPP_TAG_KEYWORD)) != NULL)
+            ippDeleteAttribute(printer->attrs, attr);
+
+          if (driver->num_resolution > 0)
+          {
+            const char	*values[3];		// urf-supported values
+            char	rs[32];			// RS value
+
+            if (driver->num_resolution == 1)
+              snprintf(rs, sizeof(rs), "RS%d", driver->x_resolution[0]);
+            else
+              snprintf(rs, sizeof(rs), "RS%d-%d", driver->x_resolution[driver->num_resolution - 2], driver->x_resolution[driver->num_resolution - 1]);
+
+            values[0] = "V1.4";
+            values[1] = "W8";
+            values[2] = rs;
+
+            ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "urf-supported", 3, NULL, values);
+          }
+	}
+
+	break;
+      }
+    }
+  }
+
+  pthread_rwlock_unlock(&printer->rwlock);
+
+  return (driver);
 }
 
 
