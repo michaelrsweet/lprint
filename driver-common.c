@@ -12,6 +12,7 @@
 //
 
 #include "lprint.h"
+#include <assert.h>
 
 
 //
@@ -115,6 +116,8 @@ lprintDeleteDriver(
 const char * const *			// O - Driver keywords
 lprintGetDrivers(int *num_drivers)	// O - Number of drivers
 {
+  assert(sizeof(lprint_drivers) == sizeof(lprint_models));
+
   *num_drivers = (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0]));
 
   return (lprint_drivers);
@@ -132,10 +135,13 @@ lprintGetMakeAndModel(
   int	i;				// Looping var
 
 
-  for (i = 0; i < (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])); i ++)
+  if (driver && driver->name)
   {
-    if (!strcmp(lprint_drivers[i], driver->name))
-      return (lprint_models[i]);
+    for (i = 0; i < (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])); i ++)
+    {
+      if (!strcmp(lprint_drivers[i], driver->name))
+	return (lprint_models[i]);
+    }
   }
 
   return ("Unknown");

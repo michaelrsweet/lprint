@@ -12,6 +12,7 @@
 // Include necessary headers...
 //
 
+//#define DEBUG
 #include "lprint.h"
 #include <stdarg.h>
 
@@ -282,6 +283,8 @@ lprint_find_usb(
 
   num_udevs = libusb_get_device_list(NULL, &udevs);
 
+  LPRINT_DEBUG("lprint_find_usb: num_udevs=%d\n", (int)num_udevs);
+
  /*
   * Find the printers and do the callback until we find a match.
   */
@@ -311,10 +314,32 @@ lprint_find_usb(
     // Ignore devices with no configuration data and anything that is not
     // a printer...
     if (libusb_get_device_descriptor(udevice, &devdesc) < 0)
+    {
+      LPRINT_DEBUG("lprint_find_usb: udev%d - no descriptor.\n", (int)i);
       continue;
+    }
+
+    LPRINT_DEBUG("lprint_find_usb: udev%d -\n", (int)i);
+    LPRINT_DEBUG("lprint_find_usb:     bLength=%d\n", devdesc.bLength);
+    LPRINT_DEBUG("lprint_find_usb:     bDescriptorType=%d\n", devdesc.bDescriptorType);
+    LPRINT_DEBUG("lprint_find_usb:     bcdUSB=%04x\n", devdesc.bcdUSB);
+    LPRINT_DEBUG("lprint_find_usb:     bDeviceClass=%d\n", devdesc.bDeviceClass);
+    LPRINT_DEBUG("lprint_find_usb:     bDeviceSubClass=%d\n", devdesc.bDeviceSubClass);
+    LPRINT_DEBUG("lprint_find_usb:     bDeviceProtocol=%d\n", devdesc.bDeviceProtocol);
+    LPRINT_DEBUG("lprint_find_usb:     bMaxPacketSize0=%d\n", devdesc.bMaxPacketSize0);
+    LPRINT_DEBUG("lprint_find_usb:     idVendor=0x%04x\n", devdesc.idVendor);
+    LPRINT_DEBUG("lprint_find_usb:     idProduct=0x%04x\n", devdesc.idProduct);
+    LPRINT_DEBUG("lprint_find_usb:     bcdDevice=%04x\n", devdesc.bcdDevice);
+    LPRINT_DEBUG("lprint_find_usb:     iManufacturer=%d\n", devdesc.iManufacturer);
+    LPRINT_DEBUG("lprint_find_usb:     iProduct=%d\n", devdesc.iProduct);
+    LPRINT_DEBUG("lprint_find_usb:     iSerialNumber=%d\n", devdesc.iSerialNumber);
+    LPRINT_DEBUG("lprint_find_usb:     bNumConfigurations=%d\n", devdesc.bNumConfigurations);
 
     if (!devdesc.bNumConfigurations || !devdesc.idVendor || !devdesc.idProduct)
       continue;
+
+    if (devdesc.idVendor == 0x05ac)
+      continue;				// Skip Apple devices...
 
     device->device     = udevice;
     device->handle     = NULL;
@@ -327,19 +352,44 @@ lprint_find_usb(
     device->read_endp  = -1;
     device->protocol   = 0;
 
-    for (conf = 0; conf < devdesc.bNumConfigurations; conf ++)
+    for (conf = 0; conf < devdesc.bNumConfigurations && !device->handle; conf ++)
     {
       if (libusb_get_config_descriptor(udevice, conf, &confptr) < 0)
+      {
+        LPRINT_DEBUG("lprint_find_usb:     conf%d - no descriptor\n", conf);
 	continue;
+      }
+
+      LPRINT_DEBUG("lprint_find_usb:     conf%d -\n", conf);
+      LPRINT_DEBUG("lprint_find_usb:         bLength=%d\n", confptr->bLength);
+      LPRINT_DEBUG("lprint_find_usb:         bDescriptorType=%d\n", confptr->bDescriptorType);
+      LPRINT_DEBUG("lprint_find_usb:         wTotalLength=%d\n", confptr->wTotalLength);
+      LPRINT_DEBUG("lprint_find_usb:         bNumInterfaces=%d\n", confptr->bNumInterfaces);
+      LPRINT_DEBUG("lprint_find_usb:         bConfigurationValue=%d\n", confptr->bConfigurationValue);
+      LPRINT_DEBUG("lprint_find_usb:         iConfiguration=%d\n", confptr->iConfiguration);
+      LPRINT_DEBUG("lprint_find_usb:         bmAttributes=%d\n", confptr->bmAttributes);
+      LPRINT_DEBUG("lprint_find_usb:         MaxPower=%d\n", confptr->MaxPower);
+      LPRINT_DEBUG("lprint_find_usb:         interface=%p\n", confptr->interface);
+      LPRINT_DEBUG("lprint_find_usb:         extra=%p\n", confptr->extra);
+      LPRINT_DEBUG("lprint_find_usb:         extra_length=%d\n", confptr->extra_length);
 
       // Some printers offer multiple interfaces...
-      for (iface = confptr->bNumInterfaces, ifaceptr = confptr->interface; iface > 0; iface --, ifaceptr ++)
+      for (iface = 0, ifaceptr = confptr->interface; iface < confptr->bNumInterfaces; iface ++, ifaceptr ++)
       {
         if (!ifaceptr->altsetting)
+        {
+          LPRINT_DEBUG("lprint_find_usb:         iface%d - no alternate setting\n", iface);
           continue;
+        }
 
-	for (altset = ifaceptr->num_altsetting, altptr = ifaceptr->altsetting; altset > 0; altset --, altptr ++)
+	LPRINT_DEBUG("lprint_find_usb:         iface%d -\n", iface);
+	LPRINT_DEBUG("lprint_find_usb:             num_altsetting=%d\n", ifaceptr->num_altsetting);
+	LPRINT_DEBUG("lprint_find_usb:             altsetting=%p\n", ifaceptr->altsetting);
+
+	for (altset = 0, altptr = ifaceptr->altsetting; altset < ifaceptr->num_altsetting; altset ++, altptr ++)
 	{
+	  LPRINT_DEBUG("lprint_find_usb:             altset%d - bInterfaceClass=%d, bInterfaceSubClass=%d, bInterfaceProtocol=%d\n", altset, altptr->bInterfaceClass, altptr->bInterfaceSubClass, altptr->bInterfaceProtocol);
+
 	  if (altptr->bInterfaceClass != LIBUSB_CLASS_PRINTER || altptr->bInterfaceSubClass != 1)
 	    continue;
 
@@ -439,6 +489,8 @@ lprint_find_usb(
                 length -= 2;
                 memmove(device_id, device_id + 2, (size_t)length);
                 device_id[length] = '\0';
+
+                LPRINT_DEBUG("lprint_find_usb:     device_id=\"%s\"\n", device_id);
               }
             }
 
@@ -455,15 +507,11 @@ lprint_find_usb(
                 make += 13;
               else if ((make = strstr(device_id, "MFG:")) != NULL)
                 make += 4;
-              else
-                make = "Unknown";
 
               if ((model = strstr(device_id, "MODEL:")) != NULL)
                 model += 6;
               else if ((model = strstr(device_id, "MDL:")) != NULL)
                 model += 4;
-              else
-                model = "Unknown";
 
               if ((serial = strstr(device_id, "SERIALNUMBER:")) != NULL)
                 serial += 12;
@@ -471,6 +519,12 @@ lprint_find_usb(
                 serial += 5;
               else if ((serial = strstr(device_id, "SN:")) != NULL)
                 serial += 3;
+
+              if (serial)
+              {
+                if ((ptr = strchr(serial, ';')) != NULL)
+                  *ptr = '\0';
+              }
               else
               {
                 int length = libusb_get_string_descriptor_ascii(device->handle, devdesc.iSerialNumber, (unsigned char *)temp, sizeof(temp) - 1);
@@ -480,6 +534,22 @@ lprint_find_usb(
                   serial       = temp;
                 }
               }
+
+              if (make)
+              {
+                if ((ptr = strchr(make, ';')) != NULL)
+                  *ptr = '\0';
+              }
+              else
+                make = "Unknown";
+
+              if (model)
+              {
+                if ((ptr = strchr(model, ';')) != NULL)
+                  *ptr = '\0';
+              }
+              else
+                model = "Unknown";
 
               if (serial)
                 httpAssembleURIf(HTTP_URI_CODING_ALL, device_uri, sizeof(device_uri), "usb", NULL, make, 0, "/%s?serial=%s", model, serial);
@@ -504,10 +574,10 @@ lprint_find_usb(
             }
 	  }
 	}
+      } // iface loop
 
-	libusb_free_config_descriptor(confptr);
-      }
-    }
+      libusb_free_config_descriptor(confptr);
+    } // conf loop
   }
 
   // Clean up ....
