@@ -16,6 +16,14 @@
 
 
 //
+// Local functions...
+//
+
+static void	lprint_copy_media(lprint_printer_t *printer, lprint_driver_t *driver);
+static ipp_t	*lprint_create_media_size(const char *size_name);
+
+
+//
 // Local globals...
 //
 
@@ -126,6 +134,9 @@ lprintCreateDriver(
           // Assign to printer and copy capabilities...
           printer->driver = driver;
 
+          // media-xxx
+          lprint_copy_media(printer, driver);
+
           // printer-make-and-model
           if ((attr = ippFindAttribute(printer->attrs, "printer-make-and-model", IPP_TAG_TEXT)) != NULL)
             ippSetString(printer->attrs, &attr, 0, lprint_models[i]);
@@ -185,6 +196,42 @@ lprintCreateDriver(
 
 
 //
+// 'lprintCreateMediaCol()' - Create a media-col collection.
+//
+
+ipp_t *					// O - Collection value
+lprintCreateMediaCol(
+    const char *size_name,		// I - Media size name
+    const char *source,			// I - Media source, if any
+    const char *type,			// I - Media type, if any
+    int        left_right,		// I - Left and right margins
+    int        bottom_top)		// I - Bottom and top margins
+{
+  ipp_t		*col = ippNew(),	// Collection value
+		*size = lprint_create_media_size(size_name);
+					// media-size value
+
+
+  ippAddString(col, IPP_TAG_ZERO, IPP_TAG_KEYWORD, "media-size-name", NULL, size_name);
+  ippAddCollection(col, IPP_TAG_ZERO, "media-size", size);
+  ippDelete(size);
+
+  ippAddInteger(col, IPP_TAG_ZERO, IPP_TAG_INTEGER, "media-bottom-margin", bottom_top);
+  ippAddInteger(col, IPP_TAG_ZERO, IPP_TAG_INTEGER, "media-left-margin", left_right);
+  ippAddInteger(col, IPP_TAG_ZERO, IPP_TAG_INTEGER, "media-right-margin", left_right);
+  ippAddInteger(col, IPP_TAG_ZERO, IPP_TAG_INTEGER, "media-top-margin", bottom_top);
+
+  if (source)
+    ippAddString(col, IPP_TAG_ZERO, IPP_TAG_KEYWORD, "media-source", NULL, source);
+
+  if (type)
+    ippAddString(col, IPP_TAG_ZERO, IPP_TAG_KEYWORD, "media-type", NULL, type);
+
+  return (col);
+}
+
+
+//
 // 'lprintDeleteDriver()' - Delete a driver for a printer.
 //
 
@@ -236,4 +283,184 @@ lprintGetMakeAndModel(
   }
 
   return ("Unknown");
+}
+
+
+//
+// 'lprint_copy_media()' - Copy media capability attributes.
+//
+
+static void
+lprint_copy_media(
+    lprint_printer_t *printer,		// I - Printer
+    lprint_driver_t  *driver)		// I - Driver
+{
+  int			i,		// Looping var
+			count;		// Number of values
+  ipp_attribute_t	*attr;		// Current attribute
+  ipp_t			*col;		// Media collection value
+  const char		*maxname = NULL,// Maximum size name
+			*minname = NULL;// Minimum size name
+
+
+  // media-bottom-margin-supported
+  if ((attr = ippFindAttribute(printer->attrs, "media-bottom-margin-supported", IPP_TAG_INTEGER)) != NULL)
+    ippDeleteAttribute(printer->attrs, attr);
+
+  ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "media-bottom-margin-supported", driver->bottom_top);
+
+  // media-col-database
+  if ((attr = ippFindAttribute(printer->attrs, "media-col-database", IPP_TAG_BEGIN_COLLECTION)) != NULL)
+    ippDeleteAttribute(printer->attrs, attr);
+
+  for (i = 0, count = 0; i < driver->num_media; i ++)
+    if (strncmp(driver->media[i], "roll_max_", 9))
+      count ++;
+
+  attr = ippAddCollections(printer->attrs, IPP_TAG_PRINTER, "media-col-database", count, NULL);
+
+  for (i = 0, count = 0; i < driver->num_media; i ++)
+  {
+    if (!strncmp(driver->media[i], "roll_max_", 9))
+    {
+      // Save the maximum size...
+      maxname = driver->media[i];
+    }
+    else if (!strncmp(driver->media[i], "roll_min_", 9))
+    {
+      // Save the minimum size...
+      minname = driver->media[i];
+    }
+    else
+    {
+      // Add the fixed size...
+      col = lprintCreateMediaCol(driver->media[i], NULL, NULL, driver->left_right, driver->bottom_top);
+      ippSetCollection(printer->attrs, &attr, count, col);
+      ippDelete(col);
+      count ++;
+    }
+  }
+
+  if (minname && maxname)
+  {
+    ipp_t	*size = ippNew();
+    pwg_media_t	*maxpwg = pwgMediaForPWG(maxname),
+					// Maximum size
+		*minpwg = pwgMediaForPWG(minname);
+					// Minimum size
+
+    ippAddRange(size, IPP_TAG_ZERO, "x-dimension", minpwg->width, maxpwg->width);
+    ippAddRange(size, IPP_TAG_ZERO, "y-dimension", minpwg->length, maxpwg->length);
+
+    col = ippNew();
+    ippAddCollection(col, IPP_TAG_ZERO, "media-size", size);
+    ippDelete(size);
+
+    ippSetCollection(printer->attrs, &attr, count, col);
+    ippDelete(col);
+  }
+
+  // media-left-margin-supported
+  if ((attr = ippFindAttribute(printer->attrs, "media-left-margin-supported", IPP_TAG_INTEGER)) != NULL)
+    ippDeleteAttribute(printer->attrs, attr);
+
+  ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "media-left-margin-supported", driver->left_right);
+
+  // media-right-margin-supported
+  if ((attr = ippFindAttribute(printer->attrs, "media-right-margin-supported", IPP_TAG_INTEGER)) != NULL)
+    ippDeleteAttribute(printer->attrs, attr);
+
+  ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "media-right-margin-supported", driver->left_right);
+
+  // media-size-supported
+  if ((attr = ippFindAttribute(printer->attrs, "media-size-supported", IPP_TAG_BEGIN_COLLECTION)) != NULL)
+    ippDeleteAttribute(printer->attrs, attr);
+
+  for (i = 0, count = 0; i < driver->num_media; i ++)
+    if (strncmp(driver->media[i], "roll_max_", 9))
+      count ++;
+
+  attr = ippAddCollections(printer->attrs, IPP_TAG_PRINTER, "media-size-supported", count, NULL);
+
+  for (i = 0, count = 0; i < driver->num_media; i ++)
+  {
+    if (!strncmp(driver->media[i], "roll_max_", 9))
+    {
+      // Save the maximum size...
+      maxname = driver->media[i];
+    }
+    else if (!strncmp(driver->media[i], "roll_min_", 9))
+    {
+      // Save the minimum size...
+      minname = driver->media[i];
+    }
+    else
+    {
+      // Add the fixed size...
+      col = lprint_create_media_size(driver->media[i]);
+      ippSetCollection(printer->attrs, &attr, count, col);
+      ippDelete(col);
+      count ++;
+    }
+  }
+
+  if (minname && maxname)
+  {
+    ipp_t	*size = ippNew();
+    pwg_media_t	*maxpwg = pwgMediaForPWG(maxname),
+					// Maximum size
+		*minpwg = pwgMediaForPWG(minname);
+					// Minimum size
+
+    ippAddRange(size, IPP_TAG_ZERO, "x-dimension", minpwg->width, maxpwg->width);
+    ippAddRange(size, IPP_TAG_ZERO, "y-dimension", minpwg->length, maxpwg->length);
+
+    ippSetCollection(printer->attrs, &attr, count, size);
+    ippDelete(size);
+  }
+
+  // media-source-supported
+  if ((attr = ippFindAttribute(printer->attrs, "media-source-supported", IPP_TAG_KEYWORD)) != NULL)
+    ippDeleteAttribute(printer->attrs, attr);
+
+  if (driver->num_source)
+    ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-source-supported", driver->num_source, NULL, driver->source);
+
+  // media-supported
+  if ((attr = ippFindAttribute(printer->attrs, "media-supported", IPP_TAG_KEYWORD)) != NULL)
+    ippDeleteAttribute(printer->attrs, attr);
+
+  ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-supported", driver->num_media, NULL, driver->media);
+
+  // media-top-margin-supported
+  if ((attr = ippFindAttribute(printer->attrs, "media-top-margin-supported", IPP_TAG_INTEGER)) != NULL)
+    ippDeleteAttribute(printer->attrs, attr);
+
+  ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "media-top-margin-supported", driver->bottom_top);
+
+  // media-type-supported
+  if ((attr = ippFindAttribute(printer->attrs, "media-type-supported", IPP_TAG_KEYWORD)) != NULL)
+    ippDeleteAttribute(printer->attrs, attr);
+
+  if (driver->num_type)
+    ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-type-supported", driver->num_type, NULL, driver->type);
+}
+
+
+//
+// 'lprint_create_media_size()' - Create a media-size collection.
+//
+
+static ipp_t *				// O - Collection value
+lprint_create_media_size(
+    const char *size_name)		// I - Media size name
+{
+  ipp_t		*col = ippNew();	// Collection value
+  pwg_media_t	*pwg = pwgMediaForPWG(size_name);
+					// Size information
+
+  ippAddInteger(col, IPP_TAG_ZERO, IPP_TAG_INTEGER, "x-dimension", pwg->width);
+  ippAddInteger(col, IPP_TAG_ZERO, IPP_TAG_INTEGER, "y-dimension", pwg->length);
+
+  return (col);
 }

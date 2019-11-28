@@ -73,11 +73,14 @@ typedef struct lprint_driver_s		// Driver data
 			x_resolution[LPRINT_MAX_RESOLUTION],
 			y_resolution[LPRINT_MAX_RESOLUTION];
 					// Printer resolutions
+  int			left_right,	// Left and right margins (1/2540ths)
+			bottom_top;	// Bottom and top margins (1/2540ths)
   int			num_media;	// Number of supported media
   const char		*media[LPRINT_MAX_MEDIA];
 					// Supported media
   char			custom_media[LPRINT_MAX_SOURCE][64];
 					// Custom media sizes
+  const char		*default_media;	// Default media
   int			num_ready;	// Number of ready media
   const char		*ready[LPRINT_MAX_SOURCE];
 					// Ready media
@@ -98,6 +101,7 @@ typedef struct lprint_driver_s		// Driver data
 //
 
 extern lprint_driver_t	*lprintCreateDriver(lprint_printer_t *printer);
+extern ipp_t		*lprintCreateMediaCol(const char *size_name, const char *source, const char *type, int left_right, int bottom_top);
 extern void		lprintDeleteDriver(lprint_driver_t *driver);
 extern const char * const *lprintGetDrivers(int *num_drivers);
 extern const char	*lprintGetMakeAndModel(lprint_driver_t *driver);
