@@ -78,8 +78,10 @@ typedef struct lprint_driver_s		// Driver data
   int			num_media;	// Number of supported media
   const char		*media[LPRINT_MAX_MEDIA];
 					// Supported media
-  char			custom_media[LPRINT_MAX_SOURCE][64];
+  char			custom_media[LPRINT_MAX_SOURCE][64],
 					// Custom media sizes
+			max_media[64],	// Maximum media size
+			min_media[64];	// Minimum media size
   const char		*default_media;	// Default media
   int			num_ready;	// Number of ready media
   const char		*ready[LPRINT_MAX_SOURCE];

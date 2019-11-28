@@ -299,8 +299,6 @@ lprint_copy_media(
 			count;		// Number of values
   ipp_attribute_t	*attr;		// Current attribute
   ipp_t			*col;		// Media collection value
-  const char		*maxname = NULL,// Maximum size name
-			*minname = NULL;// Minimum size name
 
 
   // media-bottom-margin-supported
@@ -314,39 +312,32 @@ lprint_copy_media(
     ippDeleteAttribute(printer->attrs, attr);
 
   for (i = 0, count = 0; i < driver->num_media; i ++)
-    if (strncmp(driver->media[i], "roll_max_", 9))
+    if (strncmp(driver->media[i], "roll_", 5))
       count ++;
+
+  if (driver->max_media[0] && driver->min_media[0])
+    count ++;
 
   attr = ippAddCollections(printer->attrs, IPP_TAG_PRINTER, "media-col-database", count, NULL);
 
   for (i = 0, count = 0; i < driver->num_media; i ++)
   {
-    if (!strncmp(driver->media[i], "roll_max_", 9))
-    {
-      // Save the maximum size...
-      maxname = driver->media[i];
-    }
-    else if (!strncmp(driver->media[i], "roll_min_", 9))
-    {
-      // Save the minimum size...
-      minname = driver->media[i];
-    }
-    else
-    {
-      // Add the fixed size...
-      col = lprintCreateMediaCol(driver->media[i], NULL, NULL, driver->left_right, driver->bottom_top);
-      ippSetCollection(printer->attrs, &attr, count, col);
-      ippDelete(col);
-      count ++;
-    }
+    if (!strncmp(driver->media[i], "roll_", 5))
+      continue;
+
+    // Add the fixed size...
+    col = lprintCreateMediaCol(driver->media[i], NULL, NULL, driver->left_right, driver->bottom_top);
+    ippSetCollection(printer->attrs, &attr, count, col);
+    ippDelete(col);
+    count ++;
   }
 
-  if (minname && maxname)
+  if (driver->max_media[0] && driver->min_media[0])
   {
     ipp_t	*size = ippNew();
-    pwg_media_t	*maxpwg = pwgMediaForPWG(maxname),
+    pwg_media_t	*maxpwg = pwgMediaForPWG(driver->max_media),
 					// Maximum size
-		*minpwg = pwgMediaForPWG(minname);
+		*minpwg = pwgMediaForPWG(driver->min_media);
 					// Minimum size
 
     ippAddRange(size, IPP_TAG_ZERO, "x-dimension", minpwg->width, maxpwg->width);
@@ -377,39 +368,32 @@ lprint_copy_media(
     ippDeleteAttribute(printer->attrs, attr);
 
   for (i = 0, count = 0; i < driver->num_media; i ++)
-    if (strncmp(driver->media[i], "roll_max_", 9))
+    if (strncmp(driver->media[i], "roll_", 5))
       count ++;
+
+  if (driver->max_media[0] && driver->min_media[0])
+    count ++;
 
   attr = ippAddCollections(printer->attrs, IPP_TAG_PRINTER, "media-size-supported", count, NULL);
 
   for (i = 0, count = 0; i < driver->num_media; i ++)
   {
-    if (!strncmp(driver->media[i], "roll_max_", 9))
-    {
-      // Save the maximum size...
-      maxname = driver->media[i];
-    }
-    else if (!strncmp(driver->media[i], "roll_min_", 9))
-    {
-      // Save the minimum size...
-      minname = driver->media[i];
-    }
-    else
-    {
-      // Add the fixed size...
-      col = lprint_create_media_size(driver->media[i]);
-      ippSetCollection(printer->attrs, &attr, count, col);
-      ippDelete(col);
-      count ++;
-    }
+    if (!strncmp(driver->media[i], "roll_", 5))
+      continue;
+
+    // Add the fixed size...
+    col = lprint_create_media_size(driver->media[i]);
+    ippSetCollection(printer->attrs, &attr, count, col);
+    ippDelete(col);
+    count ++;
   }
 
-  if (minname && maxname)
+  if (driver->max_media[0] && driver->min_media[0])
   {
     ipp_t	*size = ippNew();
-    pwg_media_t	*maxpwg = pwgMediaForPWG(maxname),
+    pwg_media_t	*maxpwg = pwgMediaForPWG(driver->max_media),
 					// Maximum size
-		*minpwg = pwgMediaForPWG(minname);
+		*minpwg = pwgMediaForPWG(driver->min_media);
 					// Minimum size
 
     ippAddRange(size, IPP_TAG_ZERO, "x-dimension", minpwg->width, maxpwg->width);
