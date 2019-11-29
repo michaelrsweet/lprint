@@ -1,8 +1,7 @@
 //
-// Job object for LPrint, a Label Printer Utility
+// ??? for LPrint, a Label Printer Utility
 //
 // Copyright © 2019 by Michael R Sweet.
-// Copyright © 2010-2019 by Apple Inc.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -15,8 +14,3 @@
 #include "lprint.h"
 
 
-//
-// Local functions...
-//
-
-static int		compare_jobs(lprint_job_t *a, lprint_job_t *b);

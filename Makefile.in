@@ -81,11 +81,14 @@ OBJS		=	\
 			lprint-shutdown.o \
 			lprint-status.o \
 			lprint-submit.o \
+			server-client.o \
+			server-dnssd.o \
 			server-ipp.o \
 			server-job.o \
 			server-log.o \
 			server-print.o \
-			server-printer.o
+			server-printer.o \
+			server-system.o
 TARGETS		=	\
 			lprint
 

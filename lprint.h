@@ -120,12 +120,15 @@ typedef struct lprint_filter_s		// Attribute filter
 typedef struct lprint_system_s		// System data
 {
   pthread_rwlock_t	rwlock;		// Reader/writer lock
+  int			shutdown_requested;
+					// Shutdown requested?
   char			*hostname;	// Hostname
   int			port;		// Port number, if any
   char			*directory;	// Spool directory
-  int			domain,		// UNIX domain socket listener
-			ipv4,		// IPv4 listener, if any
-			ipv6;		// IPv6 listener, if any
+  FILE			*logfile;	// Log file, if any
+  lprint_loglevel_t	loglevel;	// Log level
+  int			num_listeners;	// Number of listener sockets
+  struct pollfd		listeners[3];	// Listener sockets
   cups_array_t		*clients;	// Array of client connections
   cups_array_t		*printers;	// Array of printers
   int			default_printer,// Default printer-id
@@ -187,6 +190,7 @@ struct lprint_job_s			// Job data
 typedef struct lprint_client_s		// Client data
 {
   lprint_system_t	*system;	// Containing system
+  pthread_t		thread_id;	// Thread ID
   http_t		*http;		// HTTP connection
   ipp_t			*request,	// IPP request
 			*response;	// IPP response
@@ -212,9 +216,11 @@ extern lprint_client_t	*lprintCreateClient(lprint_system_t *system, int sock);
 extern lprint_job_t	*lprintCreateJob(lprint_client_t *client);
 extern int		lprintCreateJobFile(lprint_job_t *job, char *fname, size_t fnamesize, const char *dir, const char *ext);
 extern lprint_printer_t	*lprintCreatePrinter(lprint_client_t *client);
+extern lprint_system_t	*lprintCreateSystem(const char *name, int port, FILE *logfile, lprint_loglevel_t loglevel);
 extern void		lprintDeleteClient(lprint_client_t *client);
 extern void		lprintDeleteJob(lprint_job_t *job);
 extern void		lprintDeletePrinter(lprint_printer_t *printer);
+extern void		lprintDeleteSystem(lprint_system_t *system);
 extern int		lprintDoCancel(int argc, char *argv[]);
 extern int		lprintDoConfig(int argc, char *argv[]);
 extern int		lprintDoDevices(int argc, char *argv[]);
