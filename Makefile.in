@@ -135,5 +135,15 @@ lprint:	$(OBJS)
 	fi
 
 
+# lprint-png.h from lprint.png
+pngheaders:
+	echo "Generating lprint-png.h from lprint.png..."
+	echo "static const unsigned char lprint_png[] =" >lprint-png.h
+	echo "{" >>lprint-png.h
+	od -t x1 lprint.png | cut -b12- | awk '{printf("  "); for (i = 1; i <= NF; i ++) printf("0x%s,", $$i); print "";}' >>lprint-png.h
+	echo "};" >>lprint-png.h
+
+
 # Dependencies...
 $(OBJS):	common.h config.h device-common.h driver-common.h lprint.h Makefile
+server-client.o: lprint-png.h

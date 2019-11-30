@@ -13,6 +13,8 @@
 //
 
 #include "lprint.h"
+#include "lprint-png.h"
+#include <ctype.h>
 
 
 //
@@ -23,76 +25,63 @@ static void		html_escape(lprint_client_t *client, const char *s, size_t slen);
 static void		html_footer(lprint_client_t *client);
 static void		html_header(lprint_client_t *client, const char *title, int refresh);
 static void		html_printf(lprint_client_t *client, const char *format, ...) _CUPS_FORMAT(2, 3);
-static int		parse_options(lprint_client_t *client, cups_option_t **options);
-static int		show_media(lprint_client_t *client);
-static int		show_status(lprint_client_t *client);
-static int		show_supplies(lprint_client_t *client);
-static char		*time_string(time_t tv, char *buffer, size_t bufsize);
+//static int		parse_options(lprint_client_t *client, cups_option_t **options);
+//static int		show_media(lprint_client_t *client);
+//static int		show_status(lprint_client_t *client);
+//static int		show_supplies(lprint_client_t *client);
+//static char		*time_string(time_t tv, char *buffer, size_t bufsize);
 
 
-/*
- * 'lprintCreateClient()' - Accept a new network connection and create a client
- *                     object.
- */
+//
+// 'lprintCreateClient()' - Accept a new network connection and create a client object.
+//
 
-static lprint_client_t *			/* O - Client */
-lprintCreateClient(lprint_printer_t *printer,	/* I - Printer */
-              int            sock)	/* I - Listen socket */
+lprint_client_t *			// O - Client
+lprintCreateClient(
+    lprint_system_t *system,		// I - Printer
+    int             sock)		// I - Listen socket
 {
-  lprint_client_t	*client;		/* Client */
+  lprint_client_t	*client;	// Client
 
 
   if ((client = calloc(1, sizeof(lprint_client_t))) == NULL)
   {
-    perror("Unable to allocate memory for client");
+    lprintLog(system, LPRINT_LOGLEVEL_ERROR, "Unable to allocate memory for client connection: %s", strerror(errno));
     return (NULL);
   }
 
-  client->printer = printer;
+  client->system = system;
 
- /*
-  * Accept the client and get the remote address...
-  */
-
+  // Accept the client and get the remote address...
   if ((client->http = httpAcceptConnection(sock, 1)) == NULL)
   {
-    perror("Unable to accept client connection");
-
+    lprintLog(system, LPRINT_LOGLEVEL_ERROR, "Unable to accept client connection: %s", strerror(errno));
     free(client);
-
     return (NULL);
   }
 
   httpGetHostname(client->http, client->hostname, sizeof(client->hostname));
 
-  if (Verbosity)
-    fprintf(stderr, "Accepted connection from %s\n", client->hostname);
+  lprintLogClient(client, LPRINT_LOGLEVEL_INFO, "Accepted connection from '%s'.", client->hostname);
 
   return (client);
 }
 
 
-/*
- * 'lprintDeleteClient()' - Close the socket and free all memory used by a client
- *                     object.
- */
+//
+// 'lprintDeleteClient()' - Close the socket and free all memory used by a client object.
+//
 
-static void
-lprintDeleteClient(lprint_client_t *client)	/* I - Client */
+void
+lprintDeleteClient(
+    lprint_client_t *client)		// I - Client
 {
-  if (Verbosity)
-    fprintf(stderr, "Closing connection from %s\n", client->hostname);
+  lprintLogClient(client, LPRINT_LOGLEVEL_INFO, "Closing connection from '%s'.", client->hostname);
 
- /*
-  * Flush pending writes before closing...
-  */
-
+  // Flush pending writes before closing...
   httpFlushWrite(client->http);
 
- /*
-  * Free memory...
-  */
-
+  // Free memory...
   httpClose(client->http);
 
   ippDelete(client->request);
@@ -102,81 +91,71 @@ lprintDeleteClient(lprint_client_t *client)	/* I - Client */
 }
 
 
-/*
- * 'lprintProcessClient()' - Process client requests on a thread.
- */
+//
+// 'lprintProcessClient()' - Process client requests on a thread.
+//
 
-static void *				/* O - Exit status */
-lprintProcessClient(lprint_client_t *client)	/* I - Client */
+void *					// O - Exit status
+lprintProcessClient(
+    lprint_client_t *client)		// I - Client
 {
- /*
-  * Loop until we are out of requests or timeout (30 seconds)...
-  */
+  int first_time = 1;			// First time request?
 
-#ifdef HAVE_SSL
-  int first_time = 1;			/* First time request? */
-#endif /* HAVE_SSL */
 
+  // Loop until we are out of requests or timeout (30 seconds)...
   while (httpWait(client->http, 30000))
   {
-#ifdef HAVE_SSL
     if (first_time)
     {
-     /*
-      * See if we need to negotiate a TLS connection...
-      */
-
-      char buf[1];			/* First byte from client */
+      // See if we need to negotiate a TLS connection...
+      char buf[1];			// First byte from client
 
       if (recv(httpGetFd(client->http), buf, 1, MSG_PEEK) == 1 && (!buf[0] || !strchr("DGHOPT", buf[0])))
       {
-        fprintf(stderr, "%s Starting HTTPS session.\n", client->hostname);
+        lprintLogClient(client, LPRINT_LOGLEVEL_INFO, "Starting HTTPS session.");
 
 	if (httpEncryption(client->http, HTTP_ENCRYPTION_ALWAYS))
 	{
-	  fprintf(stderr, "%s Unable to encrypt connection: %s\n", client->hostname, cupsLastErrorString());
+          lprintLogClient(client, LPRINT_LOGLEVEL_ERROR, "Unable to encrypt connection: %s", cupsLastErrorString());
 	  break;
         }
 
-        fprintf(stderr, "%s Connection now encrypted.\n", client->hostname);
+        lprintLogClient(client, LPRINT_LOGLEVEL_INFO, "Connection now encrypted.");
       }
 
       first_time = 0;
     }
-#endif /* HAVE_SSL */
 
     if (!lprintProcessHTTP(client))
       break;
   }
 
- /*
-  * Close the conection to the client and return...
-  */
-
+  // Close the conection to the client and return...
   lprintDeleteClient(client);
 
   return (NULL);
 }
 
 
-/*
- * 'lprintProcessHTTP()' - Process a HTTP request.
- */
+//
+// 'lprintProcessHTTP()' - Process a HTTP request.
+//
 
-int					/* O - 1 on success, 0 on failure */
-lprintProcessHTTP(lprint_client_t *client)	/* I - Client connection */
+int					// O - 1 on success, 0 on failure
+lprintProcessHTTP(
+    lprint_client_t *client)		// I - Client connection
 {
-  char			uri[1024];	/* URI */
-  http_state_t		http_state;	/* HTTP state */
-  http_status_t		http_status;	/* HTTP status */
-  ipp_state_t		ipp_state;	/* State of IPP transfer */
-  char			scheme[32],	/* Method/scheme */
-			userpass[128],	/* Username:password */
+  char			uri[1024];	// URI
+  http_state_t		http_state;	// HTTP state
+  http_status_t		http_status;	// HTTP status
+  ipp_state_t		ipp_state;	// State of IPP transfer
+  char			scheme[32],	// Method/scheme
+			userpass[128],	// Username:password
 			hostname[HTTP_MAX_HOST];
-					/* Hostname */
-  int			port;		/* Port number */
+					// Hostname
+  int			port;		// Port number
   static const char * const http_states[] =
-  {					/* Strings for logging HTTP method */
+  {					// Strings for logging HTTP method
     "WAITING",
     "OPTIONS",
     "GET",
@@ -196,10 +175,7 @@ lprintProcessHTTP(lprint_client_t *client)	/* I - Client connection */
   };
 
 
- /*
-  * Clear state variables...
-  */
-
+  // Clear state variables...
   ippDelete(client->request);
   ippDelete(client->response);
 
@@ -207,53 +183,39 @@ lprintProcessHTTP(lprint_client_t *client)	/* I - Client connection */
   client->response  = NULL;
   client->operation = HTTP_STATE_WAITING;
 
- /*
-  * Read a request from the connection...
-  */
-
-  while ((http_state = httpReadRequest(client->http, uri,
-                                       sizeof(uri))) == HTTP_STATE_WAITING)
+  // Read a request from the connection...
+  while ((http_state = httpReadRequest(client->http, uri, sizeof(uri))) == HTTP_STATE_WAITING)
     usleep(1);
 
- /*
-  * Parse the request line...
-  */
-
+  // Parse the request line...
   if (http_state == HTTP_STATE_ERROR)
   {
     if (httpError(client->http) == EPIPE)
-      fprintf(stderr, "%s Client closed connection.\n", client->hostname);
+      lprintLogClient(client, LPRINT_LOGLEVEL_INFO, "Client closed connection.");
     else
-      fprintf(stderr, "%s Bad request line (%s).\n", client->hostname, strerror(httpError(client->http)));
+      lprintLogClient(client, LPRINT_LOGLEVEL_DEBUG, "Bad request line (%s).", strerror(httpError(client->http)));
 
     return (0);
   }
   else if (http_state == HTTP_STATE_UNKNOWN_METHOD)
   {
-    fprintf(stderr, "%s Bad/unknown operation.\n", client->hostname);
+    lprintLogClient(client, LPRINT_LOGLEVEL_ERROR, "Bad/unknown operation.");
     lprintRespondHTTP(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
     return (0);
   }
   else if (http_state == HTTP_STATE_UNKNOWN_VERSION)
   {
-    fprintf(stderr, "%s Bad HTTP version.\n", client->hostname);
+    lprintLogClient(client, LPRINT_LOGLEVEL_ERROR, "Bad HTTP version.");
     lprintRespondHTTP(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
     return (0);
   }
 
-  fprintf(stderr, "%s %s %s\n", client->hostname, http_states[http_state], uri);
+  lprintLogClient(client, LPRINT_LOGLEVEL_DEBUG, "%s %s", http_states[http_state], uri);
 
- /*
-  * Separate the URI into its components...
-  */
-
-  if (httpSeparateURI(HTTP_URI_CODING_MOST, uri, scheme, sizeof(scheme),
-		      userpass, sizeof(userpass),
-		      hostname, sizeof(hostname), &port,
-		      client->uri, sizeof(client->uri)) < HTTP_URI_STATUS_OK &&
-      (http_state != HTTP_STATE_OPTIONS || strcmp(uri, "*")))
+  // Separate the URI into its components...
+  if (httpSeparateURI(HTTP_URI_CODING_MOST, uri, scheme, sizeof(scheme), userpass, sizeof(userpass), hostname, sizeof(hostname), &port, client->uri, sizeof(client->uri)) < HTTP_URI_STATUS_OK && (http_state != HTTP_STATE_OPTIONS || strcmp(uri, "*")))
   {
-    fprintf(stderr, "%s Bad URI \"%s\".\n", client->hostname, uri);
+    lprintLogClient(client, LPRINT_LOGLEVEL_ERROR, "Bad URI '%s'.", uri);
     lprintRespondHTTP(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
     return (0);
   }
@@ -261,17 +223,11 @@ lprintProcessHTTP(lprint_client_t *client)	/* I - Client connection */
   if ((client->options = strchr(client->uri, '?')) != NULL)
     *(client->options)++ = '\0';
 
- /*
-  * Process the request...
-  */
-
+  // Process the request...
   client->start     = time(NULL);
   client->operation = httpGetState(client->http);
 
- /*
-  * Parse incoming parameters until the status changes...
-  */
-
+  // Parse incoming parameters until the status changes...
   while ((http_status = httpUpdate(client->http)) == HTTP_STATUS_CONTINUE);
 
   if (http_status != HTTP_STATUS_OK)
@@ -280,141 +236,80 @@ lprintProcessHTTP(lprint_client_t *client)	/* I - Client connection */
     return (0);
   }
 
-  if (!httpGetField(client->http, HTTP_FIELD_HOST)[0] &&
-      httpGetVersion(client->http) >= HTTP_VERSION_1_1)
+  if (!httpGetField(client->http, HTTP_FIELD_HOST)[0] && httpGetVersion(client->http) >= HTTP_VERSION_1_1)
   {
-   /*
-    * HTTP/1.1 and higher require the "Host:" field...
-    */
-
+    // HTTP/1.1 and higher require the "Host:" field...
     lprintRespondHTTP(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
     return (0);
   }
 
- /*
-  * Handle HTTP Upgrade...
-  */
-
-  if (!strcasecmp(httpGetField(client->http, HTTP_FIELD_CONNECTION),
-                        "Upgrade"))
+  // Handle HTTP Upgrade...
+  if (!strcasecmp(httpGetField(client->http, HTTP_FIELD_CONNECTION), "Upgrade"))
   {
-#ifdef HAVE_SSL
     if (strstr(httpGetField(client->http, HTTP_FIELD_UPGRADE), "TLS/") != NULL && !httpIsEncrypted(client->http))
     {
       if (!lprintRespondHTTP(client, HTTP_STATUS_SWITCHING_PROTOCOLS, NULL, NULL, 0))
         return (0);
 
-      fprintf(stderr, "%s Upgrading to encrypted connection.\n", client->hostname);
+      lprintLogClient(client, LPRINT_LOGLEVEL_INFO, "Upgrading to encrypted connection.");
 
       if (httpEncryption(client->http, HTTP_ENCRYPTION_REQUIRED))
       {
-        fprintf(stderr, "%s Unable to encrypt connection: %s\n", client->hostname, cupsLastErrorString());
+	lprintLogClient(client, LPRINT_LOGLEVEL_ERROR, "Unable to encrypt connection: %s", cupsLastErrorString());
 	return (0);
       }
 
-      fprintf(stderr, "%s Connection now encrypted.\n", client->hostname);
+      lprintLogClient(client, LPRINT_LOGLEVEL_INFO, "Connection now encrypted.");
     }
-    else
-#endif /* HAVE_SSL */
-
-    if (!lprintRespondHTTP(client, HTTP_STATUS_NOT_IMPLEMENTED, NULL, NULL, 0))
+    else if (!lprintRespondHTTP(client, HTTP_STATUS_NOT_IMPLEMENTED, NULL, NULL, 0))
       return (0);
   }
 
- /*
-  * Handle HTTP Expect...
-  */
-
-  if (httpGetExpect(client->http) &&
-      (client->operation == HTTP_STATE_POST ||
-       client->operation == HTTP_STATE_PUT))
+  // Handle HTTP Expect...
+  if (httpGetExpect(client->http) && (client->operation == HTTP_STATE_POST || client->operation == HTTP_STATE_PUT))
   {
     if (httpGetExpect(client->http) == HTTP_STATUS_CONTINUE)
     {
-     /*
-      * Send 100-continue header...
-      */
-
+      // Send 100-continue header...
       if (!lprintRespondHTTP(client, HTTP_STATUS_CONTINUE, NULL, NULL, 0))
 	return (0);
     }
     else
     {
-     /*
-      * Send 417-expectation-failed header...
-      */
-
+      // Send 417-expectation-failed header...
       if (!lprintRespondHTTP(client, HTTP_STATUS_EXPECTATION_FAILED, NULL, NULL, 0))
 	return (0);
     }
   }
 
- /*
-  * Handle new transfers...
-  */
-
+  // Handle new transfers...
   switch (client->operation)
   {
     case HTTP_STATE_OPTIONS :
-       /*
-	* Do OPTIONS command...
-	*/
-
+        // Do OPTIONS command...
 	return (lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, NULL, 0));
 
     case HTTP_STATE_HEAD :
-        if (!strcmp(client->uri, "/icon.png"))
+        if (!strcmp(client->uri, "/lprint.png"))
 	  return (lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "image/png", 0));
+#if 0
 	else if (!strcmp(client->uri, "/") || !strcmp(client->uri, "/media") || !strcmp(client->uri, "/supplies"))
 	  return (lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/html", 0));
+#endif // 0
 	else
 	  return (lprintRespondHTTP(client, HTTP_STATUS_NOT_FOUND, NULL, NULL, 0));
 
     case HTTP_STATE_GET :
-        if (!strcmp(client->uri, "/icon.png"))
+        if (!strcmp(client->uri, "/lprint.png"))
 	{
-	 /*
-	  * Send PNG icon file.
-	  */
+	  // Send PNG icon file.
+	  if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "image/png", sizeof(lprint_png)))
+	    return (0);
 
-          if (client->printer->icon)
-          {
-	    int		fd;		/* Icon file */
-	    struct stat	fileinfo;	/* Icon file information */
-	    char	buffer[4096];	/* Copy buffer */
-	    ssize_t	bytes;		/* Bytes */
-
-	    fprintf(stderr, "Icon file is \"%s\".\n", client->printer->icon);
-
-	    if (!stat(client->printer->icon, &fileinfo) && (fd = open(client->printer->icon, O_RDONLY)) >= 0)
-	    {
-	      if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "image/png", (size_t)fileinfo.st_size))
-	      {
-		close(fd);
-		return (0);
-	      }
-
-	      while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
-		httpWrite2(client->http, buffer, (size_t)bytes);
-
-	      httpFlushWrite(client->http);
-
-	      close(fd);
-	    }
-	    else
-	      return (lprintRespondHTTP(client, HTTP_STATUS_NOT_FOUND, NULL, NULL, 0));
-	  }
-	  else
-	  {
-	    fputs("Icon file is internal printer.png.\n", stderr);
-
-	    if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "image/png", sizeof(printer_png)))
-	      return (0);
-
-            httpWrite2(client->http, (const char *)printer_png, sizeof(printer_png));
-	    httpFlushWrite(client->http);
-	  }
+	  httpWrite2(client->http, (const char *)lprint_png, sizeof(lprint_png));
+	  httpFlushWrite(client->http);
 	}
+#if 0
 	else if (!strcmp(client->uri, "/"))
 	{
 	 /*
@@ -439,6 +334,7 @@ lprintProcessHTTP(lprint_client_t *client)	/* I - Client connection */
 
           return (show_supplies(client));
 	}
+#endif // 0
 	else
 	  return (lprintRespondHTTP(client, HTTP_STATUS_NOT_FOUND, NULL, NULL, 0));
 	break;
@@ -574,7 +470,7 @@ lprintRespondHTTP(
     * Send an IPP response...
     */
 
-    debug_attributes("Response", client->response, 2);
+    lprintLogAttributes(client, "Response", client->response, 2);
 
     ippSetState(client->response, IPP_STATE_IDLE);
 
@@ -916,6 +812,7 @@ html_printf(lprint_client_t *client,	/* I - Client */
 }
 
 
+#if 0
 /*
  * 'parse_options()' - Parse URL options into CUPS options.
  *
@@ -1575,3 +1472,4 @@ time_string(time_t tv,			/* I - Time value */
 
   return (buffer);
 }
+#endif // 0

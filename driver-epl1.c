@@ -127,8 +127,6 @@ lprintInitEPL1(
   driver->num_media = (int)(sizeof(lprint_epl1_media) / sizeof(lprint_epl1_media[0]));
   memcpy(driver->media, lprint_epl1_media, sizeof(lprint_epl1_media));
 
-  driver->num_ready = 0;
-
   driver->num_source = 1;
   driver->source[0]  = "main-roll";
 

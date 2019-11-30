@@ -55,10 +55,12 @@ extern char **environ;
 
 typedef enum lprint_loglevel_e		// Log levels
 {
-  LPRINT_LOGLEVEL_DEBUG,
-  LPRINT_LOGLEVEL_INFO,
-  LPRINT_LOGLEVEL_WARN,
-  LPRINT_LOGLEVEL_ERROR
+  LPRINT_LOGLEVEL_UNSPEC = -1,		// Not specified
+  LPRINT_LOGLEVEL_DEBUG,		// Debug message
+  LPRINT_LOGLEVEL_INFO,			// Informational message
+  LPRINT_LOGLEVEL_WARN,			// Warning message
+  LPRINT_LOGLEVEL_ERROR,		// Error message
+  LPRINT_LOGLEVEL_FATAL			// Fatal message
 } lprint_loglevel_t;
 
 enum lprint_preason_e			// printer-state-reasons bit values
@@ -120,13 +122,16 @@ typedef struct lprint_filter_s		// Attribute filter
 typedef struct lprint_system_s		// System data
 {
   pthread_rwlock_t	rwlock;		// Reader/writer lock
-  int			shutdown_requested;
+  int			save_needed,	// Do we need to save the config?
+			shutdown_requested;
 					// Shutdown requested?
   char			*hostname;	// Hostname
   int			port;		// Port number, if any
   char			*directory;	// Spool directory
-  FILE			*logfile;	// Log file, if any
+  char			*logfile;	// Log filename, if any
+  FILE			*logfp;		// Log file, if any
   lprint_loglevel_t	loglevel;	// Log level
+  char			*subtypes;	// DNS-SD sub-types, if any
   int			num_listeners;	// Number of listener sockets
   struct pollfd		listeners[3];	// Listener sockets
   cups_array_t		*clients;	// Array of client connections
@@ -216,7 +221,7 @@ extern lprint_client_t	*lprintCreateClient(lprint_system_t *system, int sock);
 extern lprint_job_t	*lprintCreateJob(lprint_client_t *client);
 extern int		lprintCreateJobFile(lprint_job_t *job, char *fname, size_t fnamesize, const char *dir, const char *ext);
 extern lprint_printer_t	*lprintCreatePrinter(lprint_client_t *client);
-extern lprint_system_t	*lprintCreateSystem(const char *name, int port, FILE *logfile, lprint_loglevel_t loglevel);
+extern lprint_system_t	*lprintCreateSystem(const char *hostname, int port, const char *subtypes, const char *logfile, lprint_loglevel_t loglevel);
 extern void		lprintDeleteClient(lprint_client_t *client);
 extern void		lprintDeleteJob(lprint_job_t *job);
 extern void		lprintDeletePrinter(lprint_printer_t *printer);
@@ -231,7 +236,7 @@ extern int		lprintDoShutdown(int argc, char *argv[]);
 extern int		lprintDoStatus(int argc, char *argv[]);
 extern int		lprintDoSubmit(int argc, char *argv[]);
 extern char		*lprintGetServerPath(char *buffer, size_t bufsize);
-extern void		lprintInitDNSSD(void);
+extern void		lprintInitDNSSD(lprint_system_t *system);
 extern int		lprintIsServerRunning(void);
 extern lprint_job_t	*lprintFindJob(lprint_client_t *client);
 extern lprint_printer_t	*lprintFindPrinter(lprint_client_t *client);
@@ -242,12 +247,13 @@ extern void		lprintLogJob(lprint_job_t *job, lprint_loglevel_t level, const char
 extern void		lprintLogPrinter(lprint_printer_t *printer, lprint_loglevel_t level, const char *message, ...) LPRINT_FORMAT(3, 4);
 extern void		*lprintProcessClient(lprint_client_t *client);
 extern int		lprintProcessHTTP(lprint_client_t *client);
-extern int		lprinterProcessIPP(lprint_client_t *client);
+extern int		lprintProcessIPP(lprint_client_t *client);
 extern void		*lprintProcessJob(lprint_job_t *job);
 extern int		lprintRegisterDNSSD(lprint_printer_t *printer, const char *subtypes);
 extern int		lprintRespondHTTP(lprint_client_t *client, http_status_t code, const char *content_coding, const char *type, size_t length);
 extern void		lprintRespondIPP(lprint_client_t *client, ipp_status_t status, const char *message, ...) LPRINT_FORMAT(3, 4);
 extern void		lprintRespondUnsupported(lprint_client_t *client, ipp_attribute_t *attr);
 extern void		lprintRunSystem(lprint_system_t *system);
+extern void		lprintUnregisterDNSSD(lprint_printer_t *printer);
 
 #endif // !_LPRINT_H_

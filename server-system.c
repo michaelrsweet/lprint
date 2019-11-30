@@ -20,6 +20,9 @@
 //
 
 static int		create_listener(const char *name, int port, int family);
+static char		*get_config_file(char *buffer, size_t bufsize);
+static int		load_config(lprint_system_t *system);
+static int		save_config(lprint_system_t *system);
 
 
 //
@@ -28,28 +31,114 @@ static int		create_listener(const char *name, int port, int family);
 
 lprint_system_t *			// O - System object
 lprintCreateSystem(
-    const char        *name,		// I - Hostname or `NULL` for none
+    const char        *hostname,	// I - Hostname or `NULL` for none
     int               port,		// I - Port number or `0` for none
-    FILE              *logfile,		// I - Log file or `NULL` for syslog
+    const char        *subtypes,	// I - DNS-SD sub-types or `NULL` for none
+    const char        *logfile,		// I - Log file or `NULL` for syslog
     lprint_loglevel_t loglevel)		// I - Log level
 {
+  lprint_system_t	*system;	// System object
+  const char		*tmpdir;	// TMPDIR environment variable
+  char			spooldir[256],	// Spool directory
+			sockname[256];	// Domain socket
 
 
-#if 0
-  // Setup poll() data for the Bonjour service socket and IPv4/6 listeners...
-  num_fds = 1;
+  // See if the spool directory can be created...
+  if ((tmpdir = getenv("TMPDIR")) == NULL)
+#ifdef __APPLE__
+    tmpdir = "/private/tmp";
+#else
+    tmpdir = "/tmp";
+#endif // __APPLE__
 
-  if ()
-  polldata[0].fd     = system->ipv4;
-  polldata[0].events = POLLIN;
+  snprintf(spooldir, sizeof(spooldir), "%s/lprint.%d", tmpdir, getpid());
+  if (mkdir(spooldir, 0700))
+  {
+    perror(spooldir);
+    return (NULL);
+  }
 
-  polldata[1].fd     = system->ipv6;
-  polldata[1].events = POLLIN;
+  // Allocate memory...
+  if ((system = (lprint_system_t *)calloc(1, sizeof(lprint_system_t))) == NULL)
+    return (NULL);
 
-  num_fds = 2;
-#endif // 0
+  // Initialize values...
+  pthread_rwlock_init(&system->rwlock, NULL);
 
+  if (hostname)
+  {
+    system->hostname = strdup(hostname);
+    system->port     = port ? port : 8000 + (getuid() % 1000);
+  }
 
+  system->directory = strdup(spooldir);
+
+  if (logfile)
+  {
+    system->logfile = strdup(logfile);
+
+    if (!strcmp(logfile, "-"))
+    {
+      system->logfp = stderr;
+    }
+    else if ((system->logfp = fopen(logfile, "a")) == NULL)
+    {
+      system->logfp = stderr;
+      perror(logfile);
+    }
+  }
+
+  system->loglevel = loglevel;
+
+  if (subtypes)
+    system->subtypes = strdup(subtypes);
+
+  // Setup listeners...
+  if ((system->listeners[0].fd = lprint_create_listener(lprintGetServerPath(sockname, sizeof(sockname)), 0, AF_LOCAL)) < 0)
+  {
+    lprintLog(system, LPRINT_LOGLEVEL_FATAL, "Unable to create domain socket listener for %s: %s", sockname, strerror(errno));
+    goto fatal;
+  }
+  else
+    system->listeners[0].events = POLLIN;
+
+  system->num_listeners = 1;
+
+  if (system->hostname)
+  {
+    if ((system->listeners[system->num_listeners].fd = lprint_create_listener(system->hostname, system->port, AF_INET)) < 0)
+    {
+      lprintLog(system, LPRINT_LOGLEVEL_FATAL, "Unable to create IPv4 listener for %s:%d: %s", system->hostname, system->port, strerror(errno));
+      goto fatal;
+    }
+    else
+      system->listeners[system->num_listeners ++].events = POLLIN;
+
+    if ((system->listeners[system->num_listeners].fd = lprint_create_listener(system->hostname, system->port, AF_INET6)) < 0)
+    {
+      lprintLog(system, LPRINT_LOGLEVEL_FATAL, "Unable to create IPv6 listener for %s:%d: %s", system->hostname, system->port, strerror(errno));
+      goto fatal;
+    }
+    else
+      system->listeners[system->num_listeners ++].events = POLLIN;
+  }
+
+  // Initialize DNS-SD as needed...
+  if (system->subtypes)
+    lprintInitDNSSD(system);
+
+  // Load printers
+  if (!load_config(system))
+    goto fatal;
+
+  return (system);
+
+  // If we get here, something went wrong...
+  fatal:
+
+  lprintDeleteSystem(system);
+
+  return (NULL);
 }
 
 
@@ -61,6 +150,31 @@ void
 lprintDeleteSystem(
     lprint_system_t *system)		// I - System object
 {
+  int	i;				// Looping var
+
+
+  if (!system)
+    return;
+
+  free(system->hostname);
+  free(system->directory);
+  free(system->logfile);
+  free(system->subtypes);
+
+  if (system->logfp && system->logfp != stderr)
+    fclose(system->logfp);
+
+  for (i = 0; i < system->num_listeners; i ++)
+    close(system->listeners[i].fd);
+
+  cupsArrayDelete(system->clients);
+  cupsArrayDelete(system->printers);
+  cupsArrayDelete(system->jobs);
+  cupsArrayDelete(system->active_jobs);
+
+  pthread_rwlock_destroy(&system->rwlock);
+
+  free(system);
 }
 
 
@@ -80,8 +194,8 @@ lprintRunSystem(lprint_system_t *system)// I - System
   // Loop until we are shutdown or have a hard error...
   for (;;)
   {
-    if (cupsArrayCount(system->jobs) || system->shutdown_requested)
-      timeout = 10;
+    if (cupsArrayCount(system->jobs) || system->save_needed || system->shutdown_requested)
+      timeout = 5;
     else
       timeout = -1;
 
@@ -115,35 +229,39 @@ lprintRunSystem(lprint_system_t *system)// I - System
 	}
       }
     }
-    else
+
+    if (system->save_needed)
     {
-      // See if we are expected to shutdown...
-      if (system->shutdown_requested)
+      // Save the configuration...
+      save_config(system);
+      system->save_needed = 0;
+    }
+
+    if (system->shutdown_requested)
+    {
+      // Shutdown requested, see if we can do so safely...
+      if (cupsArrayCount(system->active_jobs) == 0)
         break;
+    }
 
-
-
-   /*
-    * Clean out old jobs...
-    */
-
+    // Clean out old jobs...
     lprintCleanJobs(system);
   }
 }
 
 
-/*
- * 'create_listener()' - Create a listener socket.
- */
+//
+// 'create_listener()' - Create a listener socket.
+//
 
-static int				/* O - Listener socket or -1 on error */
-create_listener(const char *name,	/* I - Host name (`NULL` for any address) */
-                int        port,	/* I - Port number */
-                int        family)	/* I - Address family */
+static int				// O - Listener socket or -1 on error
+create_listener(const char *name,	// I - Host name or `NULL` for any address
+                int        port,	// I - Port number
+                int        family)	// I - Address family
 {
-  int			sock;		/* Listener socket */
-  http_addrlist_t	*addrlist;	/* Listen address */
-  char			service[255];	/* Service port */
+  int			sock;		// Listener socket
+  http_addrlist_t	*addrlist;	// Listen address
+  char			service[255];	// Service port
 
 
   snprintf(service, sizeof(service), "%d", port);
@@ -155,4 +273,70 @@ create_listener(const char *name,	/* I - Host name (`NULL` for any address) */
   httpAddrFreeList(addrlist);
 
   return (sock);
+}
+
+
+//
+// 'get_config_file()' - Get the configuration filename.
+//
+// The configuration filename is, by convention, "~/.lprintrc".
+//
+
+static char *				// O - Filename
+get_config_file(char   *buffer,		// I - Filename buffer
+                size_t bufsize)		// I - Size of buffer
+{
+  const char	*home = getenv("HOME");	// HOME environment variable
+
+
+  if (home)
+    snprintf(buffer, bufsize, "%s/.lprintrc", home);
+  else
+#ifdef __APPLE__
+    snprintf(buffer, bufsize, "/private/tmp/lprintrc.%d", getuid());
+#else
+    snprintf(buffer, bufsize, "/tmp/lprintrc.%d", getuid());
+#endif // __APPLE__
+
+  return (buffer);
+}
+
+
+//
+// 'load_config()' - Load the configuration file.
+//
+
+static int				// O - 1 on success, 0 on failure
+load_config(lprint_system_t *system)	// I - System
+{
+  char		configfile[256];	// Configuration filename
+#if 0
+  cups_file_t	*fp;			// File pointer
+  char		line[1024],		// Line from file
+		*value;			// Value from line
+#endif // 0
+
+  printf("LOAD: %s\n", get_config_file(configfile, sizeof(configfile));
+
+  (void)system;
+  return (1);
+}
+
+
+//
+// 'save_config()' - Save the configuration file.
+//
+
+static int				// O - 1 on success, 0 on failure
+save_config(lprint_system_t *system)	// I - System
+{
+  char		configfile[256];	// Configuration filename
+#if 0
+  cups_file_t	*fp;			// File pointer
+#endif // 0
+
+  printf("LOAD: %s\n", get_config_file(configfile, sizeof(configfile));
+
+  (void)system;
+  return (1);
 }

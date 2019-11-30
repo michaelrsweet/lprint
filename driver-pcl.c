@@ -127,8 +127,6 @@ lprintInitPCL(
   driver->num_media = (int)(sizeof(lprint_pcl_media) / sizeof(lprint_pcl_media[0]));
   memcpy(driver->media, lprint_pcl_media, sizeof(lprint_pcl_media));
 
-  driver->num_ready = 0;
-
   driver->num_source = 1;
   driver->source[0]  = "main-roll";
 
