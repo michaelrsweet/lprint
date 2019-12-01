@@ -128,9 +128,6 @@ typedef struct lprint_system_s		// System data
   cups_array_t		*printers;	// Array of printers
   int			default_printer,// Default printer-id
 			next_printer_id;// Next printer-id
-  cups_array_t		*active_jobs,	// Array of active jobs
-			*jobs;		// Array of all jobs
-  int			next_job_id;	// Next job-id
 } lprint_system_t;
 
 struct lprint_printer_s			// Printer data
@@ -141,13 +138,16 @@ struct lprint_printer_s			// Printer data
 			ipps_ref,	// Bonjour IPPS service
 			http_ref,	// Bonjour HTTP service
 			printer_ref;	// Bonjour LPD service
-  char			*dnssd_name,	// printer-dnssd-name
-			*name,		// printer-name
-			*icon,		// Icon filename
-			*uri;		// printer-uri-supported
-  size_t		urilen;		// Length of printer URI
-  char			*device_uri,	// Device URI (if any)
-			*driver_name;	// Driver name (if any)
+  char			*name,		// printer-name
+			*dnssd_name,	// printer-dnssd-name
+			*location,	// Human-readable location
+			*geo_location,	// Geographic location (geo: URI)
+			*organization,	// Organization
+			*org_unit,	// Organizational unit
+			*resource;	// Resource path of printer
+  size_t		resourcelen;	// Length of resource path
+  char			*device_uri,	// Device URI
+			*driver_name;	// Driver name
   lprint_driver_t	*driver;	// Driver
   ipp_t			*attrs;		// Static attributes
   time_t		start_time;	// Startup time
@@ -156,7 +156,11 @@ struct lprint_printer_s			// Printer data
   lprint_preason_t	state_reasons;	// printer-state-reasons values
   time_t		state_time;	// printer-state-change-time
   time_t		status_time;	// Last time status was updated
-  lprint_job_t		*active_job;	// Currently printing job, if any
+  lprint_job_t		*processing_job;// Currently printing job, if any
+  cups_array_t		*active_jobs,	// Array of active jobs
+			*completed_jobs,// Array of completed jobs
+			*jobs;		// Array of all jobs
+  int			next_job_id;	// Next job-id
   int			impcompleted;	// printer-impressions-completed
 };
 
@@ -213,7 +217,7 @@ extern void		lprintCopyAttributes(ipp_t *to, ipp_t *from, cups_array_t *ra, ipp_
 extern lprint_client_t	*lprintCreateClient(lprint_system_t *system, int sock);
 extern lprint_job_t	*lprintCreateJob(lprint_client_t *client);
 extern int		lprintCreateJobFile(lprint_job_t *job, char *fname, size_t fnamesize, const char *dir, const char *ext);
-extern lprint_printer_t	*lprintCreatePrinter(lprint_client_t *client);
+extern lprint_printer_t	*lprintCreatePrinter(lprint_system_t *system, int printer_id, const char *printer_name, const char *driver_name, const char *device_uri, const char *location, const char *geo_location, const char *organization, const char *org_unit);
 extern lprint_system_t	*lprintCreateSystem(const char *hostname, int port, const char *subtypes, const char *logfile, lprint_loglevel_t loglevel);
 extern void		lprintDeleteClient(lprint_client_t *client);
 extern void		lprintDeleteJob(lprint_job_t *job);
@@ -239,11 +243,12 @@ extern void		lprintLogAttributes(lprint_client_t *client, const char *title, ipp
 extern void		lprintLogClient(lprint_client_t *client, lprint_loglevel_t level, const char *message, ...) LPRINT_FORMAT(3, 4);
 extern void		lprintLogJob(lprint_job_t *job, lprint_loglevel_t level, const char *message, ...) LPRINT_FORMAT(3, 4);
 extern void		lprintLogPrinter(lprint_printer_t *printer, lprint_loglevel_t level, const char *message, ...) LPRINT_FORMAT(3, 4);
+extern char		*lprintMakeUUID(lprint_system_t *system, const char *printer_name, int job_id, char *buffer, size_t bufsize);
 extern void		*lprintProcessClient(lprint_client_t *client);
 extern int		lprintProcessHTTP(lprint_client_t *client);
 extern int		lprintProcessIPP(lprint_client_t *client);
 extern void		*lprintProcessJob(lprint_job_t *job);
-extern int		lprintRegisterDNSSD(lprint_printer_t *printer, const char *subtypes);
+extern int		lprintRegisterDNSSD(lprint_printer_t *printer);
 extern int		lprintRespondHTTP(lprint_client_t *client, http_status_t code, const char *content_coding, const char *type, size_t length);
 extern void		lprintRespondIPP(lprint_client_t *client, ipp_status_t status, const char *message, ...) LPRINT_FORMAT(3, 4);
 extern void		lprintRespondUnsupported(lprint_client_t *client, ipp_attribute_t *attr);

@@ -62,6 +62,7 @@ typedef struct lprint_driver_s		// Driver data
 {
   pthread_rwlock_t	rwlock;		// Reader/writer lock
   char			*name;		// Name of driver
+  ipp_t			*attrs;		// Capability attributes
   lprint_device_t	*device;	// Connection to device
   lprint_printfunc_t	printfunc;	// Print (file) function
   lprint_rendfunc_t	rendfunc;	// End raster job function
@@ -99,7 +100,7 @@ typedef struct lprint_driver_s		// Driver data
 // Functions...
 //
 
-extern lprint_driver_t	*lprintCreateDriver(lprint_printer_t *printer);
+extern lprint_driver_t	*lprintCreateDriver(const char *driver_name);
 extern ipp_t		*lprintCreateMediaCol(const char *size_name, const char *source, const char *type, int left_right, int bottom_top);
 extern void		lprintDeleteDriver(lprint_driver_t *driver);
 extern const char * const *lprintGetDrivers(int *num_drivers);

@@ -19,7 +19,7 @@
 // Local functions...
 //
 
-static void	lprint_copy_media(lprint_printer_t *printer, lprint_driver_t *driver);
+static void	lprint_copy_media(lprint_driver_t *driver);
 static ipp_t	*lprint_create_media_size(const char *size_name);
 
 
@@ -93,7 +93,7 @@ static const char * const lprint_models[] =
 
 lprint_driver_t	*			// O - New driver structure
 lprintCreateDriver(
-    lprint_printer_t *printer)		// I - Printer
+    const char *driver_name)		// I - Driver name
 {
   int			i, j;		// Looping vars
   const char		*name;		// Driver name
@@ -101,95 +101,70 @@ lprintCreateDriver(
   ipp_attribute_t	*attr;		// Printer attribute
 
 
-  pthread_rwlock_wrlock(&printer->rwlock);
-
-  if ((name = ippGetString(ippFindAttribute(printer->attrs, "lprint-driver", IPP_TAG_KEYWORD), 0, NULL)) != NULL)
+  for (i = 0; i < (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])); i ++)
   {
-    for (i = 0; i < (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])); i ++)
+    if (!strcmp(driver_name, lprint_drivers[i]))
     {
-      if (!strcmp(name, lprint_drivers[i]))
+      if ((driver = calloc(1, sizeof(lprint_driver_t))) != NULL)
       {
-	if ((driver = calloc(1, sizeof(lprint_driver_t))) != NULL)
+	// Initialize the driver structure...
+	driver->name  = strdup(name);
+	driver->attrs = ippNew();
+
+	if (!strncmp(driver_name, "cpcl_", 5))
+	  lprintInitCPCL(driver);
+	else if (!strncmp(driver_name, "dymo_", 5))
+	  lprintInitDYMO(driver);
+	else if (!strncmp(driver_name, "epl1_", 5))
+	  lprintInitEPL1(driver);
+	else if (!strncmp(driver_name, "epl2_", 5))
+	  lprintInitEPL2(driver);
+	else if (!strncmp(driver_name, "fgl_", 4))
+	  lprintInitFGL(driver);
+	else if (!strncmp(driver_name, "pcl_", 4))
+	  lprintInitPCL(driver);
+	else
+	  lprintInitZPL(driver);
+
+	// media-xxx
+	lprint_copy_media(driver);
+
+	// printer-make-and-model
+	ippAddString(driver->attrs, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-make-and-model", NULL, lprint_models[i]);
+
+	// printer-resolution-supported, -default
+	if (driver->num_resolution > 0)
 	{
-	  // Initialize the driver structure...
-	  pthread_rwlock_init(&driver->rwlock, NULL);
+	  ippAddResolution(driver->attrs, IPP_TAG_PRINTER, "printer-resolution-default", IPP_RES_PER_INCH, driver->x_resolution[driver->num_resolution - 1], driver->y_resolution[driver->num_resolution - 1]);
+	  ippAddResolutions(driver->attrs, IPP_TAG_PRINTER, "printer-resolution-supported", driver->num_resolution, IPP_RES_PER_INCH, driver->x_resolution, driver->y_resolution);
+	}
 
-	  driver->name = strdup(name);
+	// pwg-raster-document-resolution-supported
+	if (driver->num_resolution > 0)
+	  ippAddResolutions(driver->attrs, IPP_TAG_PRINTER, "pwg-raster-document-resolution-supported", driver->num_resolution, IPP_RES_PER_INCH, driver->x_resolution, driver->y_resolution);
 
-          if (!strncmp(name, "cpcl_", 5))
-            lprintInitCPCL(driver);
-          else if (!strncmp(name, "dymo_", 5))
-            lprintInitDYMO(driver);
-          else if (!strncmp(name, "epl1_", 5))
-            lprintInitEPL1(driver);
-          else if (!strncmp(name, "epl2_", 5))
-            lprintInitEPL2(driver);
-          else if (!strncmp(name, "fgl_", 4))
-            lprintInitFGL(driver);
-          else if (!strncmp(name, "pcl_", 4))
-            lprintInitPCL(driver);
-          else
-            lprintInitZPL(driver);
+	// urf-supported
+	if (driver->num_resolution > 0)
+	{
+	  const char	*values[3];		// urf-supported values
+	  char		rs[32];			// RS value
 
-          // Assign to printer and copy capabilities...
-          printer->driver = driver;
+	  if (driver->num_resolution == 1)
+	    snprintf(rs, sizeof(rs), "RS%d", driver->x_resolution[0]);
+	  else
+	    snprintf(rs, sizeof(rs), "RS%d-%d", driver->x_resolution[driver->num_resolution - 2], driver->x_resolution[driver->num_resolution - 1]);
 
-          // media-xxx
-          lprint_copy_media(printer, driver);
+	  values[0] = "V1.4";
+	  values[1] = "W8";
+	  values[2] = rs;
 
-          // printer-make-and-model
-          if ((attr = ippFindAttribute(printer->attrs, "printer-make-and-model", IPP_TAG_TEXT)) != NULL)
-            ippSetString(printer->attrs, &attr, 0, lprint_models[i]);
-          else
-            ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-make-and-model", NULL, lprint_models[i]);
-
-          // printer-resolution-supported, -default
-          if ((attr = ippFindAttribute(printer->attrs, "printer-resolution-default", IPP_TAG_RESOLUTION)) != NULL)
-            ippDeleteAttribute(printer->attrs, attr);
-          if ((attr = ippFindAttribute(printer->attrs, "printer-resolution-supported", IPP_TAG_RESOLUTION)) != NULL)
-            ippDeleteAttribute(printer->attrs, attr);
-
-          if (driver->num_resolution > 0)
-          {
-	    ippAddResolution(printer->attrs, IPP_TAG_PRINTER, "printer-resolution-default", IPP_RES_PER_INCH, driver->x_resolution[driver->num_resolution - 1], driver->y_resolution[driver->num_resolution - 1]);
-	    ippAddResolutions(printer->attrs, IPP_TAG_PRINTER, "printer-resolution-supported", driver->num_resolution, IPP_RES_PER_INCH, driver->x_resolution, driver->y_resolution);
-          }
-
-          // pwg-raster-document-resolution-supported
-          if ((attr = ippFindAttribute(printer->attrs, "pwg-raster-document-resolution-supported", IPP_TAG_RESOLUTION)) != NULL)
-            ippDeleteAttribute(printer->attrs, attr);
-
-          if (driver->num_resolution > 0)
-	    ippAddResolutions(printer->attrs, IPP_TAG_PRINTER, "pwg-raster-document-resolution-supported", driver->num_resolution, IPP_RES_PER_INCH, driver->x_resolution, driver->y_resolution);
-
-          // urf-supported
-          if ((attr = ippFindAttribute(printer->attrs, "urf-supported", IPP_TAG_KEYWORD)) != NULL)
-            ippDeleteAttribute(printer->attrs, attr);
-
-          if (driver->num_resolution > 0)
-          {
-            const char	*values[3];		// urf-supported values
-            char	rs[32];			// RS value
-
-            if (driver->num_resolution == 1)
-              snprintf(rs, sizeof(rs), "RS%d", driver->x_resolution[0]);
-            else
-              snprintf(rs, sizeof(rs), "RS%d-%d", driver->x_resolution[driver->num_resolution - 2], driver->x_resolution[driver->num_resolution - 1]);
-
-            values[0] = "V1.4";
-            values[1] = "W8";
-            values[2] = rs;
-
-            ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "urf-supported", 3, NULL, values);
-          }
+	  ippAddStrings(driver->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "urf-supported", 3, NULL, values);
 	}
 
 	break;
       }
     }
   }
-
-  pthread_rwlock_unlock(&printer->rwlock);
 
   return (driver);
 }
@@ -292,7 +267,6 @@ lprintGetMakeAndModel(
 
 static void
 lprint_copy_media(
-    lprint_printer_t *printer,		// I - Printer
     lprint_driver_t  *driver)		// I - Driver
 {
   int			i,		// Looping var
@@ -302,15 +276,9 @@ lprint_copy_media(
 
 
   // media-bottom-margin-supported
-  if ((attr = ippFindAttribute(printer->attrs, "media-bottom-margin-supported", IPP_TAG_INTEGER)) != NULL)
-    ippDeleteAttribute(printer->attrs, attr);
-
-  ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "media-bottom-margin-supported", driver->bottom_top);
+  ippAddInteger(driver->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "media-bottom-margin-supported", driver->bottom_top);
 
   // media-col-database
-  if ((attr = ippFindAttribute(printer->attrs, "media-col-database", IPP_TAG_BEGIN_COLLECTION)) != NULL)
-    ippDeleteAttribute(printer->attrs, attr);
-
   for (i = 0, count = 0; i < driver->num_media; i ++)
     if (strncmp(driver->media[i], "roll_", 5))
       count ++;
@@ -318,7 +286,7 @@ lprint_copy_media(
   if (driver->max_media[0] && driver->min_media[0])
     count ++;
 
-  attr = ippAddCollections(printer->attrs, IPP_TAG_PRINTER, "media-col-database", count, NULL);
+  attr = ippAddCollections(driver->attrs, IPP_TAG_PRINTER, "media-col-database", count, NULL);
 
   for (i = 0, count = 0; i < driver->num_media; i ++)
   {
@@ -327,7 +295,7 @@ lprint_copy_media(
 
     // Add the fixed size...
     col = lprintCreateMediaCol(driver->media[i], NULL, NULL, driver->left_right, driver->bottom_top);
-    ippSetCollection(printer->attrs, &attr, count, col);
+    ippSetCollection(driver->attrs, &attr, count, col);
     ippDelete(col);
     count ++;
   }
@@ -347,26 +315,17 @@ lprint_copy_media(
     ippAddCollection(col, IPP_TAG_ZERO, "media-size", size);
     ippDelete(size);
 
-    ippSetCollection(printer->attrs, &attr, count, col);
+    ippSetCollection(driver->attrs, &attr, count, col);
     ippDelete(col);
   }
 
   // media-left-margin-supported
-  if ((attr = ippFindAttribute(printer->attrs, "media-left-margin-supported", IPP_TAG_INTEGER)) != NULL)
-    ippDeleteAttribute(printer->attrs, attr);
-
-  ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "media-left-margin-supported", driver->left_right);
+  ippAddInteger(driver->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "media-left-margin-supported", driver->left_right);
 
   // media-right-margin-supported
-  if ((attr = ippFindAttribute(printer->attrs, "media-right-margin-supported", IPP_TAG_INTEGER)) != NULL)
-    ippDeleteAttribute(printer->attrs, attr);
-
-  ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "media-right-margin-supported", driver->left_right);
+  ippAddInteger(driver->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "media-right-margin-supported", driver->left_right);
 
   // media-size-supported
-  if ((attr = ippFindAttribute(printer->attrs, "media-size-supported", IPP_TAG_BEGIN_COLLECTION)) != NULL)
-    ippDeleteAttribute(printer->attrs, attr);
-
   for (i = 0, count = 0; i < driver->num_media; i ++)
     if (strncmp(driver->media[i], "roll_", 5))
       count ++;
@@ -374,7 +333,7 @@ lprint_copy_media(
   if (driver->max_media[0] && driver->min_media[0])
     count ++;
 
-  attr = ippAddCollections(printer->attrs, IPP_TAG_PRINTER, "media-size-supported", count, NULL);
+  attr = ippAddCollections(driver->attrs, IPP_TAG_PRINTER, "media-size-supported", count, NULL);
 
   for (i = 0, count = 0; i < driver->num_media; i ++)
   {
@@ -383,7 +342,7 @@ lprint_copy_media(
 
     // Add the fixed size...
     col = lprint_create_media_size(driver->media[i]);
-    ippSetCollection(printer->attrs, &attr, count, col);
+    ippSetCollection(driver->attrs, &attr, count, col);
     ippDelete(col);
     count ++;
   }
@@ -399,35 +358,23 @@ lprint_copy_media(
     ippAddRange(size, IPP_TAG_ZERO, "x-dimension", minpwg->width, maxpwg->width);
     ippAddRange(size, IPP_TAG_ZERO, "y-dimension", minpwg->length, maxpwg->length);
 
-    ippSetCollection(printer->attrs, &attr, count, size);
+    ippSetCollection(driver->attrs, &attr, count, size);
     ippDelete(size);
   }
 
   // media-source-supported
-  if ((attr = ippFindAttribute(printer->attrs, "media-source-supported", IPP_TAG_KEYWORD)) != NULL)
-    ippDeleteAttribute(printer->attrs, attr);
-
   if (driver->num_source)
-    ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-source-supported", driver->num_source, NULL, driver->source);
+    ippAddStrings(driver->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-source-supported", driver->num_source, NULL, driver->source);
 
   // media-supported
-  if ((attr = ippFindAttribute(printer->attrs, "media-supported", IPP_TAG_KEYWORD)) != NULL)
-    ippDeleteAttribute(printer->attrs, attr);
-
-  ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-supported", driver->num_media, NULL, driver->media);
+  ippAddStrings(driver->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-supported", driver->num_media, NULL, driver->media);
 
   // media-top-margin-supported
-  if ((attr = ippFindAttribute(printer->attrs, "media-top-margin-supported", IPP_TAG_INTEGER)) != NULL)
-    ippDeleteAttribute(printer->attrs, attr);
-
-  ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "media-top-margin-supported", driver->bottom_top);
+  ippAddInteger(driver->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "media-top-margin-supported", driver->bottom_top);
 
   // media-type-supported
-  if ((attr = ippFindAttribute(printer->attrs, "media-type-supported", IPP_TAG_KEYWORD)) != NULL)
-    ippDeleteAttribute(printer->attrs, attr);
-
   if (driver->num_type)
-    ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-type-supported", driver->num_type, NULL, driver->type);
+    ippAddStrings(driver->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-type-supported", driver->num_type, NULL, driver->type);
 }
 
 

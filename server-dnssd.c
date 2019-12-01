@@ -80,8 +80,7 @@ lprintInitDNSSD(lprint_system_t *system)// I - System
 
 int					// O - 1 on success, 0 on failure
 lprintRegisterDNSSD(
-    lprint_printer_t *printer,		// I - Printer
-    const char       *subtypes)		// I - Subtypes
+    lprint_printer_t *printer)		// I - Printer
 {
   (void)printer;
 

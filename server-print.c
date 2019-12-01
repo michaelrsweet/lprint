@@ -29,6 +29,7 @@ lprintProcessJob(lprint_job_t *job)	// I - Job
   job->state          = IPP_JSTATE_PROCESSING;
   job->printer->state = IPP_PSTATE_PROCESSING;
   job->processing     = time(NULL);
+  job->printer->processing_job = job;
 
   while (job->printer->state_reasons & LPRINT_PREASON_MEDIA_EMPTY)
   {
@@ -47,9 +48,9 @@ lprintProcessJob(lprint_job_t *job)	// I - Job
   else if (job->state == IPP_JSTATE_PROCESSING)
     job->state = IPP_JSTATE_COMPLETED;
 
-  job->completed           = time(NULL);
-  job->printer->state      = IPP_PSTATE_IDLE;
-  job->printer->active_job = NULL;
+  job->completed               = time(NULL);
+  job->printer->state          = IPP_PSTATE_IDLE;
+  job->printer->processing_job = NULL;
 
   return (NULL);
 }

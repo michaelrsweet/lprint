@@ -174,8 +174,6 @@ lprintDeleteSystem(
 
   cupsArrayDelete(system->clients);
   cupsArrayDelete(system->printers);
-  cupsArrayDelete(system->jobs);
-  cupsArrayDelete(system->active_jobs);
 
   pthread_rwlock_destroy(&system->rwlock);
 
@@ -199,10 +197,12 @@ lprintRunSystem(lprint_system_t *system)// I - System
   // Loop until we are shutdown or have a hard error...
   for (;;)
   {
-    if (cupsArrayCount(system->jobs) || system->save_needed || system->shutdown_requested)
+    // TODO: Fix "pending jobs" logic
+//    if (cupsArrayCount(system->jobs) || system->save_needed || system->shutdown_requested)
+    if (system->save_needed || system->shutdown_requested)
       timeout = 5;
     else
-      timeout = -1;
+      timeout = 60;
 
     if ((count = poll(system->listeners, (nfds_t)system->num_listeners, timeout)) < 0 && errno != EINTR && errno != EAGAIN)
     {
@@ -245,7 +245,8 @@ lprintRunSystem(lprint_system_t *system)// I - System
     if (system->shutdown_requested)
     {
       // Shutdown requested, see if we can do so safely...
-      if (cupsArrayCount(system->active_jobs) == 0)
+      // TODO: Fix active job logic
+//      if (cupsArrayCount(system->active_jobs) == 0)
         break;
     }
 

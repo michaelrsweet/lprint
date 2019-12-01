@@ -17,13 +17,6 @@
 
 
 //
-// Local functions...
-//
-
-static int		compare_jobs(lprint_job_t *a, lprint_job_t *b);
-
-
-//
 // 'lprintCleanJobs()' - Clean out old (completed) jobs.
 //
 
@@ -31,33 +24,42 @@ void
 lprintCleanJobs(
     lprint_system_t *system)		// I - System
 {
-  lprint_job_t	*job;			// Current job
-  time_t	cleantime;		// Clean time
+  lprint_printer_t	*printer;	// Current printer
+  lprint_job_t		*job;		// Current job
+  time_t		cleantime;	// Clean time
 
-
-  if (cupsArrayCount(system->jobs) == 0)
-    return;
 
   cleantime = time(NULL) - 60;
 
-  pthread_rwlock_wrlock(&(system->rwlock));
-  for (job = (lprint_job_t *)cupsArrayFirst(system->jobs); job; job = (lprint_job_t *)cupsArrayNext(system->jobs))
+  pthread_rwlock_rdlock(&system->rwlock);
+
+  for (printer = (lprint_printer_t *)cupsArrayFirst(system->printers); printer; printer = (lprint_printer_t *)cupsArrayNext(system->printers))
   {
-    if (job->completed && job->completed < cleantime)
+    if (cupsArrayCount(printer->completed_jobs) == 0)
+      continue;
+
+    pthread_rwlock_wrlock(&printer->rwlock);
+
+    for (job = (lprint_job_t *)cupsArrayFirst(printer->completed_jobs); job; job = (lprint_job_t *)cupsArrayNext(printer->completed_jobs))
     {
-      cupsArrayRemove(system->jobs, job);
-      lprintDeleteJob(job);
+      if (job->completed && job->completed < cleantime)
+      {
+	cupsArrayRemove(printer->completed_jobs, job);
+	cupsArrayRemove(printer->jobs, job);
+      }
+      else
+	break;
     }
-    else
-      break;
+
+    pthread_rwlock_unlock(&printer->rwlock);
   }
-  pthread_rwlock_unlock(&(system->rwlock));
+
+  pthread_rwlock_unlock(&system->rwlock);
 }
 
 
 //
-// 'lprintCreateJob()' - Create a new job object from a Print-Job or Create-Job
-//                  request.
+// 'lprintCreateJob()' - Create a new job object from a Print-Job or Create-Job request.
 //
 
 lprint_job_t *				// O - Job
@@ -66,8 +68,10 @@ lprintCreateJob(
 {
   lprint_job_t		*job;		// Job
   ipp_attribute_t	*attr;		// Job attribute
-  char			uri[1024],	// job-uri value
-			uuid[64];	// job-uuid value
+  char			job_printer_uri[1024],
+					// job-printer-uri value
+			job_uri[1024],	// job-uri value
+			job_uuid[64];	// job-uuid value
 
 
   // Allocate and initialize the job object...
@@ -110,28 +114,36 @@ lprintCreateJob(
     job->name = ippGetString(attr, 0, NULL);
 
   // Add job description attributes and add to the jobs array...
-  pthread_rwlock_wrlock(&client->system->rwlock);
+  pthread_rwlock_wrlock(&client->printer->rwlock);
 
-  job->id = client->system->next_job_id ++;
+  job->id = client->printer->next_job_id ++;
 
-  snprintf(uri, sizeof(uri), "%s/%d", client->printer->uri, job->id);
-  httpAssembleUUID(client->system->hostname, client->system->port, client->printer->name, job->id, uuid, sizeof(uuid));
+  if ((attr = ippFindAttribute(client->request, "printer-uri", IPP_TAG_URI)) != NULL)
+  {
+    strncpy(job_printer_uri, ippGetString(attr, 0, NULL), sizeof(job_printer_uri) - 1);
+    job_printer_uri[sizeof(job_printer_uri) - 1] = '\0';
+
+    snprintf(job_uri, sizeof(job_uri), "%s/%d", ippGetString(attr, 0, NULL), job->id);
+  }
+  else
+  {
+    httpAssembleURI(HTTP_URI_CODING_ALL, job_printer_uri, sizeof(job_printer_uri), "ipps", NULL, client->system->hostname, client->system->port, client->printer->resource);
+    httpAssembleURIf(HTTP_URI_CODING_ALL, job_uri, sizeof(job_uri), "ipps", NULL, client->system->hostname, client->system->port, "%s/%d", client->printer->resource, job->id);
+  }
+
+  lprintMakeUUID(client->system, client->printer->name, job->id, job_uuid, sizeof(job_uuid));
 
   ippAddDate(job->attrs, IPP_TAG_JOB, "date-time-at-creation", ippTimeToDate(time(&job->created)));
   ippAddInteger(job->attrs, IPP_TAG_JOB, IPP_TAG_INTEGER, "job-id", job->id);
-  ippAddString(job->attrs, IPP_TAG_JOB, IPP_TAG_URI, "job-uri", NULL, uri);
-  ippAddString(job->attrs, IPP_TAG_JOB, IPP_TAG_URI, "job-uuid", NULL, uuid);
-  if ((attr = ippFindAttribute(client->request, "printer-uri", IPP_TAG_URI)) != NULL)
-    ippAddString(job->attrs, IPP_TAG_JOB, IPP_TAG_URI, "job-printer-uri", NULL, ippGetString(attr, 0, NULL));
-  else
-    ippAddString(job->attrs, IPP_TAG_JOB, IPP_TAG_URI, "job-printer-uri", NULL, client->printer->uri);
+  ippAddString(job->attrs, IPP_TAG_JOB, IPP_TAG_URI, "job-uri", NULL, job_uri);
+  ippAddString(job->attrs, IPP_TAG_JOB, IPP_TAG_URI, "job-uuid", NULL, job_uuid);
+  ippAddString(job->attrs, IPP_TAG_JOB, IPP_TAG_URI, "job-printer-uri", NULL, job_printer_uri);
   ippAddInteger(job->attrs, IPP_TAG_JOB, IPP_TAG_INTEGER, "time-at-creation", (int)(job->created - client->printer->start_time));
 
-  // TODO: create jobs array, add to active_jobs
-  cupsArrayAdd(client->system->jobs, job);
-//  client->printer->active_job = job;
+  cupsArrayAdd(client->printer->jobs, job);
+  cupsArrayAdd(client->printer->active_jobs, job);
 
-  pthread_rwlock_unlock(&client->system->rwlock);
+  pthread_rwlock_unlock(&client->printer->rwlock);
 
   return (job);
 }
@@ -251,33 +263,23 @@ lprintFindJob(lprint_client_t *client)	// I - Client
 			*job;		// Matching job, if any
 
 
-  if ((attr = ippFindAttribute(client->request, "job-uri", IPP_TAG_URI)) != NULL)
+  if ((attr = ippFindAttribute(client->request, "job-id", IPP_TAG_INTEGER)) != NULL)
+    key.id = ippGetInteger(attr, 0);
+  else if ((attr = ippFindAttribute(client->request, "job-uri", IPP_TAG_URI)) != NULL)
   {
-    const char *uri = ippGetString(attr, 0, NULL);
+    const char	*uri = ippGetString(attr, 0, NULL);
+					// job-uri value
+    const char	*idptr;			// Pointer to job-id
 
-    if (!strncmp(uri, client->printer->uri, client->printer->urilen) && uri[client->printer->urilen] == '/')
-      key.id = atoi(uri + client->printer->urilen + 1);
+    if (uri && (idptr = strrchr(uri, '/')) != NULL)
+      key.id = atoi(idptr + 1);
     else
       return (NULL);
   }
-  else if ((attr = ippFindAttribute(client->request, "job-id", IPP_TAG_INTEGER)) != NULL)
-    key.id = ippGetInteger(attr, 0);
 
   pthread_rwlock_rdlock(&(client->printer->rwlock));
-  job = (lprint_job_t *)cupsArrayFind(client->system->jobs, &key);
+  job = (lprint_job_t *)cupsArrayFind(client->printer->jobs, &key);
   pthread_rwlock_unlock(&(client->printer->rwlock));
 
   return (job);
-}
-
-
-//
-// 'compare_jobs()' - Compare two jobs.
-//
-
-static int				// O - Result of comparison
-compare_jobs(lprint_job_t *a,		// I - First job
-             lprint_job_t *b)		// I - Second job
-{
-  return (b->id - a->id);
 }
