@@ -74,25 +74,15 @@ enum lprint_preason_e			// printer-state-reasons bit values
   LPRINT_PREASON_MEDIA_NEEDED = 0x0020	// media-needed
 };
 typedef unsigned int lprint_preason_t;	// Bitfield for printer-state-reasons
-VAR const char * const lprint_preason_strings[]
+VAR const char * const lprint_preason_strings[6]
 VALUE({					// Strings for each bit
   // "none" is implied for no bits set
   "other",
   "cover-open",
-  "input-tray-missing",
-  "marker-supply-empty",
-  "marker-supply-low",
-  "marker-waste-almost-full",
-  "marker-waste-full",
   "media-empty",
   "media-jam",
   "media-low",
-  "media-needed",
-  "moving-to-paused",
-  "paused",
-  "spool-area-full",
-  "toner-empty",
-  "toner-low"
+  "media-needed"
 });
 
 
@@ -129,7 +119,7 @@ typedef struct lprint_system_s		// System data
   int			port;		// Port number, if any
   char			*directory;	// Spool directory
   char			*logfile;	// Log filename, if any
-  FILE			*logfp;		// Log file, if any
+  int			logfd;		// Log file descriptor, if any
   lprint_loglevel_t	loglevel;	// Log level
   char			*subtypes;	// DNS-SD sub-types, if any
   int			num_listeners;	// Number of listener sockets
@@ -166,6 +156,7 @@ struct lprint_printer_s			// Printer data
   lprint_preason_t	state_reasons;	// printer-state-reasons values
   time_t		state_time;	// printer-state-change-time
   time_t		status_time;	// Last time status was updated
+  lprint_job_t		*active_job;	// Currently printing job, if any
   int			impcompleted;	// printer-impressions-completed
 };
 
@@ -195,6 +186,7 @@ struct lprint_job_s			// Job data
 typedef struct lprint_client_s		// Client data
 {
   lprint_system_t	*system;	// Containing system
+  int			number;		// Connection number
   pthread_t		thread_id;	// Thread ID
   http_t		*http;		// HTTP connection
   ipp_t			*request,	// IPP request
@@ -217,6 +209,7 @@ typedef struct lprint_client_s		// Client data
 
 extern void		lprintCleanJobs(lprint_system_t *system);
 extern http_t		*lprintConnect(void);
+extern void		lprintCopyAttributes(ipp_t *to, ipp_t *from, cups_array_t *ra, ipp_tag_t group_tag, int quickcopy);
 extern lprint_client_t	*lprintCreateClient(lprint_system_t *system, int sock);
 extern lprint_job_t	*lprintCreateJob(lprint_client_t *client);
 extern int		lprintCreateJobFile(lprint_job_t *job, char *fname, size_t fnamesize, const char *dir, const char *ext);
@@ -240,6 +233,7 @@ extern void		lprintInitDNSSD(lprint_system_t *system);
 extern int		lprintIsServerRunning(void);
 extern lprint_job_t	*lprintFindJob(lprint_client_t *client);
 extern lprint_printer_t	*lprintFindPrinter(lprint_client_t *client);
+// Note: Log functions currently only support %d and %s!
 extern void		lprintLog(lprint_system_t *system, lprint_loglevel_t level, const char *message, ...);
 extern void		lprintLogAttributes(lprint_client_t *client, const char *title, ipp_t *ipp, int is_response);
 extern void		lprintLogClient(lprint_client_t *client, lprint_loglevel_t level, const char *message, ...) LPRINT_FORMAT(3, 4);

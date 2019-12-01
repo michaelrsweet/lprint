@@ -79,14 +79,19 @@ lprintCreateSystem(
 
     if (!strcmp(logfile, "-"))
     {
-      system->logfp = stderr;
+      // Log to stderr...
+      system->logfd = 2;
     }
-    else if ((system->logfp = fopen(logfile, "a")) == NULL)
+    else if ((system->logfd = open(logfile, O_CREAT | O_WRONLY | O_APPEND | O_NOFOLLOW | O_CLOEXEC, 0600)) < 0)
     {
-      system->logfp = stderr;
+      // Fallback to stderr if we can't open the log file...
       perror(logfile);
+
+      system->logfd = 2;
     }
   }
+  else
+    system->logfd = -1;
 
   system->loglevel = loglevel;
 
@@ -94,7 +99,7 @@ lprintCreateSystem(
     system->subtypes = strdup(subtypes);
 
   // Setup listeners...
-  if ((system->listeners[0].fd = lprint_create_listener(lprintGetServerPath(sockname, sizeof(sockname)), 0, AF_LOCAL)) < 0)
+  if ((system->listeners[0].fd = create_listener(lprintGetServerPath(sockname, sizeof(sockname)), 0, AF_LOCAL)) < 0)
   {
     lprintLog(system, LPRINT_LOGLEVEL_FATAL, "Unable to create domain socket listener for %s: %s", sockname, strerror(errno));
     goto fatal;
@@ -106,7 +111,7 @@ lprintCreateSystem(
 
   if (system->hostname)
   {
-    if ((system->listeners[system->num_listeners].fd = lprint_create_listener(system->hostname, system->port, AF_INET)) < 0)
+    if ((system->listeners[system->num_listeners].fd = create_listener(system->hostname, system->port, AF_INET)) < 0)
     {
       lprintLog(system, LPRINT_LOGLEVEL_FATAL, "Unable to create IPv4 listener for %s:%d: %s", system->hostname, system->port, strerror(errno));
       goto fatal;
@@ -114,7 +119,7 @@ lprintCreateSystem(
     else
       system->listeners[system->num_listeners ++].events = POLLIN;
 
-    if ((system->listeners[system->num_listeners].fd = lprint_create_listener(system->hostname, system->port, AF_INET6)) < 0)
+    if ((system->listeners[system->num_listeners].fd = create_listener(system->hostname, system->port, AF_INET6)) < 0)
     {
       lprintLog(system, LPRINT_LOGLEVEL_FATAL, "Unable to create IPv6 listener for %s:%d: %s", system->hostname, system->port, strerror(errno));
       goto fatal;
@@ -161,8 +166,8 @@ lprintDeleteSystem(
   free(system->logfile);
   free(system->subtypes);
 
-  if (system->logfp && system->logfp != stderr)
-    fclose(system->logfp);
+  if (system->logfd > 2)
+    close(system->logfd);
 
   for (i = 0; i < system->num_listeners; i ++)
     close(system->listeners[i].fd);
@@ -182,7 +187,7 @@ lprintDeleteSystem(
 // 'lprintRunSystem()' - Run the printer service.
 //
 
-static void
+void
 lprintRunSystem(lprint_system_t *system)// I - System
 {
   int			i,		// Looping var
@@ -316,7 +321,7 @@ load_config(lprint_system_t *system)	// I - System
 		*value;			// Value from line
 #endif // 0
 
-  printf("LOAD: %s\n", get_config_file(configfile, sizeof(configfile));
+  printf("LOAD: %s\n", get_config_file(configfile, sizeof(configfile)));
 
   (void)system;
   return (1);
@@ -335,7 +340,7 @@ save_config(lprint_system_t *system)	// I - System
   cups_file_t	*fp;			// File pointer
 #endif // 0
 
-  printf("LOAD: %s\n", get_config_file(configfile, sizeof(configfile));
+  printf("LOAD: %s\n", get_config_file(configfile, sizeof(configfile)));
 
   (void)system;
   return (1);
