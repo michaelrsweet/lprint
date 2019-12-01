@@ -190,8 +190,20 @@ lprintCreateJobFile(
       ext = "pdf";
     else if (!strcasecmp(job->format, "application/postscript"))
       ext = "ps";
+    else if (!strcasecmp(job->format, "application/vnd.boca-fgl"))
+      ext = "fgl";
+    else if (!strcasecmp(job->format, "application/vnd.dymo-lw"))
+      ext = "dymo";
     else if (!strcasecmp(job->format, "application/vnd.hp-pcl"))
       ext = "pcl";
+    else if (!strcasecmp(job->format, "application/vnd.zebra-cpcl"))
+      ext = "cpcl";
+    else if (!strcasecmp(job->format, "application/vnd.zebra-epl1"))
+      ext = "epl1";
+    else if (!strcasecmp(job->format, "application/vnd.zebra-epl2"))
+      ext = "epl2";
+    else if (!strcasecmp(job->format, "application/vnd.zebra-zpl"))
+      ext = "zpl";
     else
       ext = "dat";
   }
@@ -199,7 +211,7 @@ lprintCreateJobFile(
   // Create a filename with the job-id, job-name, and document-format (extension)...
   snprintf(fname, fnamesize, "%s/%d-%s.%s", directory, job->id, name, ext);
 
-  return (open(fname, O_WRONLY | O_CREAT | O_TRUNC, 0666));
+  return (open(fname, O_WRONLY | O_CREAT | O_TRUNC | O_NOFOLLOW | O_CLOEXEC | O_EXCL, 0600));
 }
 
 
