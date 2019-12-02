@@ -429,6 +429,71 @@ copy_printer_attributes(
   lprintCopyAttributes(client->response, printer->attrs, ra, IPP_TAG_ZERO, IPP_TAG_CUPS_CONST);
   lprintCopyAttributes(client->response, printer->driver->attrs, ra, IPP_TAG_ZERO, IPP_TAG_CUPS_CONST);
 
+  if ((!ra || cupsArrayFind(ra, "media-col-default")) && printer->driver->default_media[0])
+  {
+    ipp_t *col = lprintCreateMediaCol(printer->driver->default_media, NULL, NULL, printer->driver->left_right, printer->driver->bottom_top);
+					// Collection value
+
+    ippAddCollection(client->response, IPP_TAG_PRINTER, "media-col", col);
+    ippDelete(col);
+  }
+
+  if (!ra || cupsArrayFind(ra, "media-col-ready"))
+  {
+    int			i, j,		// Looping vars
+			count;		// Number of values
+    ipp_t		*col;		// Collection value
+    ipp_attribute_t	*attr;		// media-col-ready attribute
+
+    for (i = 0, count = 0; i < printer->driver->num_source; i ++)
+    {
+      if (printer->driver->ready_media[i][0])
+        count ++;
+    }
+
+    if (count > 0)
+    {
+      attr = ippAddCollections(client->response, IPP_TAG_PRINTER, "media-col-ready", count, NULL);
+
+      for (i = 0, j = 0; i < printer->driver->num_source && j < count; i ++)
+      {
+	if (printer->driver->ready_media[i][0])
+	{
+	  col = lprintCreateMediaCol(printer->driver->ready_media[i], printer->driver->source[i], NULL, printer->driver->left_right, printer->driver->bottom_top);
+          ippSetCollection(client->response, &attr, j ++, col);
+          ippDelete(col);
+	}
+      }
+    }
+  }
+
+  if ((!ra || cupsArrayFind(ra, "media-default")) && printer->driver->default_media[0])
+    ippAddString(client->response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-default", NULL, printer->driver->default_media);
+
+  if (!ra || cupsArrayFind(ra, "media-ready"))
+  {
+    int			i, j,		// Looping vars
+			count;		// Number of values
+    ipp_attribute_t	*attr;		// media-col-ready attribute
+
+    for (i = 0, count = 0; i < printer->driver->num_source; i ++)
+    {
+      if (printer->driver->ready_media[i][0])
+        count ++;
+    }
+
+    if (count > 0)
+    {
+      attr = ippAddStrings(client->response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-ready", count, NULL, NULL);
+
+      for (i = 0, j = 0; i < printer->driver->num_source && j < count; i ++)
+      {
+	if (printer->driver->ready_media[i][0])
+	  ippSetString(client->response, &attr, j ++, printer->driver->ready_media[i]);
+      }
+    }
+  }
+
   if (!ra || cupsArrayFind(ra, "printer-config-change-date-time"))
     ippAddDate(client->response, IPP_TAG_PRINTER, "printer-config-change-date-time", ippTimeToDate(printer->config_time));
 
@@ -974,6 +1039,8 @@ ipp_get_printer_attributes(
   cups_array_t		*ra;		// Requested attributes array
   lprint_printer_t	*printer;	// Printer
 
+
+  // TODO: Update status as needed
 
   // Send the attributes...
   ra      = ippCreateRequestedArray(client->request);
