@@ -446,6 +446,9 @@ copy_printer_attributes(
       ippAddOutOfBand(client->response, IPP_TAG_PRINTER, IPP_TAG_UNKNOWN, "printer-geo-location");
   }
 
+  if (!ra || cupsArrayFind(ra, "printer-is-accepting-jobs"))
+    ippAddBoolean(client->response, IPP_TAG_PRINTER, "printer-is-accepting-jobs", !printer->system->shutdown_time);
+
   if (!ra || cupsArrayFind(ra, "printer-location"))
     ippAddString(client->response, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-location", NULL, printer->location ? printer->location : "");
 
@@ -636,6 +639,16 @@ finish_document_data(
   job->state     = IPP_JSTATE_ABORTED;
   job->completed = time(NULL);
 
+  pthread_rwlock_wrlock(&client->printer->rwlock);
+
+  cupsArrayRemove(client->printer->active_jobs, job);
+  cupsArrayAdd(client->printer->completed_jobs, job);
+
+  if (!client->system->clean_time)
+    client->system->clean_time = time(NULL) + 60;
+
+  pthread_rwlock_unlock(&client->printer->rwlock);
+
   ra = cupsArrayNew((cups_array_func_t)strcmp, NULL);
   cupsArrayAdd(ra, "job-id");
   cupsArrayAdd(ra, "job-state");
@@ -692,11 +705,17 @@ ipp_cancel_job(lprint_client_t *client)	// I - Client
 	{
 	  job->state     = IPP_JSTATE_CANCELED;
 	  job->completed = time(NULL);
+
+	  cupsArrayRemove(client->printer->active_jobs, job);
+	  cupsArrayAdd(client->printer->completed_jobs, job);
 	}
 
 	pthread_rwlock_unlock(&(client->printer->rwlock));
 
 	lprintRespondIPP(client, IPP_STATUS_OK, NULL);
+
+        if (!client->system->clean_time)
+          client->system->clean_time = time(NULL) + 60;
         break;
   }
 }
@@ -1288,6 +1307,13 @@ valid_job_attributes(
   ipp_attribute_t	*attr,		// Current attribute
 			*supported;	// xxx-supported attribute
 
+
+  // If a shutdown is pending, do not accept more jobs...
+  if (client->system->shutdown_time)
+  {
+    lprintRespondIPP(client, IPP_STATUS_ERROR_NOT_ACCEPTING_JOBS, "Not accepting new jobs.");
+    return (0);
+  }
 
   // Check operation attributes...
   valid = valid_doc_attributes(client);

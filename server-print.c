@@ -52,5 +52,15 @@ lprintProcessJob(lprint_job_t *job)	// I - Job
   job->printer->state          = IPP_PSTATE_IDLE;
   job->printer->processing_job = NULL;
 
+  pthread_rwlock_wrlock(&job->printer->rwlock);
+
+  cupsArrayRemove(job->printer->active_jobs, job);
+  cupsArrayAdd(job->printer->completed_jobs, job);
+
+  if (!job->system->clean_time)
+    job->system->clean_time = time(NULL) + 60;
+
+  pthread_rwlock_unlock(&job->printer->rwlock);
+
   return (NULL);
 }

@@ -197,14 +197,15 @@ lprintRunSystem(lprint_system_t *system)// I - System
   // Loop until we are shutdown or have a hard error...
   for (;;)
   {
-    // TODO: Fix "pending jobs" logic
-//    if (cupsArrayCount(system->jobs) || system->save_needed || system->shutdown_requested)
-    if (system->save_needed || system->shutdown_requested)
+    if (system->save_time || system->shutdown_time)
       timeout = 5;
     else
       timeout = 60;
 
-    if ((count = poll(system->listeners, (nfds_t)system->num_listeners, timeout)) < 0 && errno != EINTR && errno != EAGAIN)
+    if (system->clean_time && (i = time(NULL) - system->clean_time) < timeout)
+      timeout = i;
+
+    if ((count = poll(system->listeners, (nfds_t)system->num_listeners, timeout * 1000)) < 0 && errno != EINTR && errno != EAGAIN)
     {
       lprintLog(system, LPRINT_LOGLEVEL_ERROR, "Unable to accept new connections: %s", strerror(errno));
       break;
@@ -235,23 +236,40 @@ lprintRunSystem(lprint_system_t *system)// I - System
       }
     }
 
-    if (system->save_needed)
+    if (system->save_time)
     {
       // Save the configuration...
       save_config(system);
-      system->save_needed = 0;
+      system->save_time = 0;
     }
 
-    if (system->shutdown_requested)
+    if (system->shutdown_time)
     {
       // Shutdown requested, see if we can do so safely...
-      // TODO: Fix active job logic
-//      if (cupsArrayCount(system->active_jobs) == 0)
+      int		count = 0;	// Number of active jobs
+      lprint_printer_t	*printer;	// Current printer
+
+      // Force shutdown after 60 seconds
+      if ((time(NULL) - system->shutdown_time) > 60)
+        break;
+
+      // Otherwise shutdown immediately if there are no more active jobs...
+      pthread_rwlock_rdlock(&system->rwlock);
+      for (printer = (lprint_printer_t *)cupsArrayFirst(system->printers); printer; printer = (lprint_printer_t *)cupsArrayNext(system->printers))
+      {
+        pthread_rwlock_rdlock(&printer->rwlock);
+        count += cupsArrayCount(printer->active_jobs);
+        pthread_rwlock_unlock(&printer->rwlock);
+      }
+      pthread_rwlock_unlock(&system->rwlock);
+
+      if (count == 0)
         break;
     }
 
     // Clean out old jobs...
-    lprintCleanJobs(system);
+    if (system->clean_time && time(NULL) >= system->clean_time)
+      lprintCleanJobs(system);
   }
 }
 
@@ -341,7 +359,7 @@ save_config(lprint_system_t *system)	// I - System
   cups_file_t	*fp;			// File pointer
 #endif // 0
 
-  printf("LOAD: %s\n", get_config_file(configfile, sizeof(configfile)));
+  printf("SAVE: %s\n", get_config_file(configfile, sizeof(configfile)));
 
   (void)system;
   return (1);

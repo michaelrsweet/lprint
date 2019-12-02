@@ -298,9 +298,6 @@ lprintCreatePrinter(
   // printer-icons
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-icons", NULL, icons);
 
-  // printer-is-accepting-jobs
-  ippAddBoolean(printer->attrs, IPP_TAG_PRINTER, "printer-is-accepting-jobs", 1);
-
   // printer-info
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-info", NULL, printer_name);
 
@@ -330,6 +327,17 @@ lprintCreatePrinter(
 
   // which-jobs-supported
   ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "which-jobs-supported", sizeof(which_jobs) / sizeof(which_jobs[0]), NULL, which_jobs);
+
+  // Add the printer to the system...
+  pthread_rwlock_wrlock(&system->rwlock);
+
+  cupsArrayAdd(system->printers, printer);
+
+  // TODO: Set this in server-ipp.c since printers loaded from the config file shouldn't trigger a save?
+  if (!system->save_time)
+    system->save_time = time(NULL) + 1;
+
+  pthread_rwlock_unlock(&system->rwlock);
 
   // Register the printer with Bonjour...
   if (system->subtypes)

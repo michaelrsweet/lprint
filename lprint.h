@@ -112,9 +112,9 @@ typedef struct lprint_filter_s		// Attribute filter
 typedef struct lprint_system_s		// System data
 {
   pthread_rwlock_t	rwlock;		// Reader/writer lock
-  int			save_needed,	// Do we need to save the config?
-			shutdown_requested;
-					// Shutdown requested?
+  time_t		clean_time,	// Next clean time
+			save_time,	// Do we need to save the config?
+			shutdown_time;	// Shutdown requested?
   char			*hostname;	// Hostname
   int			port;		// Port number, if any
   char			*directory;	// Spool directory
