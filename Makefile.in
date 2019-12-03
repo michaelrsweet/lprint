@@ -102,6 +102,13 @@ clean:
 	$(RM) $(TARGETS) $(OBJS)
 
 
+# Clean everything and generated files
+distclean:	clean
+	$(RM) -r autom4te.cache
+	$(RM) config.h config.log config.status
+	$(RM) Makefile
+
+
 # Install everything...
 install:	all
 	$(INSTALL) -d -m 755 $(BUILDROOT)$(bindir)

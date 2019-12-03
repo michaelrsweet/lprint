@@ -202,7 +202,7 @@ lprintRunSystem(lprint_system_t *system)// I - System
     else
       timeout = 60;
 
-    if (system->clean_time && (i = time(NULL) - system->clean_time) < timeout)
+    if (system->clean_time && (i = (int)(time(NULL) - system->clean_time)) < timeout)
       timeout = i;
 
     if ((count = poll(system->listeners, (nfds_t)system->num_listeners, timeout * 1000)) < 0 && errno != EINTR && errno != EAGAIN)

@@ -47,7 +47,6 @@ lprintCreatePrinter(
     const char      *org_unit)		// I - Organizational unit
 {
   lprint_printer_t	*printer;	// Printer
-  int			i;		// Looping var
   char			resource[1024],	// Resource path
 			ipp_uri[1024],	// Printer URI
 			ipps_uri[1024],	// Secure printer URI
@@ -58,12 +57,7 @@ lprintCreatePrinter(
 			uuid[128];	// printer-uuid
   int			k_supported;	// Maximum file size supported
   int			num_formats;	// Number of supported document formats
-  const char		*formats[100],	// Supported document formats
-			*format;	// Current format
-  int			num_sup_attrs;	// Number of supported attributes
-  const char		*sup_attrs[100];// Supported attributes
-  char			xxx_supported[256];
-					// Name of -supported attribute
+  const char		*formats[10];	// Supported document formats
   struct statfs		spoolinfo;	// FS info for spool directory
   double		spoolsize;	// FS size
   static const char * const ipp_versions[] =
@@ -271,6 +265,9 @@ lprintCreatePrinter(
   // job-sheets-supported
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_NAME), "job-sheets-supported", NULL, "none");
 
+  // media-col-supported
+  ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "media-col-supported", (int)(sizeof(media_col) / sizeof(media_col[0])), NULL, media_col);
+
   // multiple-document-handling-supported
   ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "multiple-document-handling-supported", sizeof(multiple_document_handling) / sizeof(multiple_document_handling[0]), NULL, multiple_document_handling);
 
@@ -345,14 +342,6 @@ lprintCreatePrinter(
 
   // Return it!
   return (printer);
-
-
-  // If we get here we were unable to create the printer...
-  bad_printer:
-
-  lprintDeletePrinter(printer);
-
-  return (NULL);
 }
 
 

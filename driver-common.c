@@ -95,10 +95,8 @@ lprint_driver_t	*			// O - New driver structure
 lprintCreateDriver(
     const char *driver_name)		// I - Driver name
 {
-  int			i, j;		// Looping vars
-  const char		*name;		// Driver name
+  int			i;		// Looping vars
   lprint_driver_t	*driver = NULL;	// New driver
-  ipp_attribute_t	*attr;		// Printer attribute
 
 
   for (i = 0; i < (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])); i ++)
@@ -108,7 +106,7 @@ lprintCreateDriver(
       if ((driver = calloc(1, sizeof(lprint_driver_t))) != NULL)
       {
 	// Initialize the driver structure...
-	driver->name  = strdup(name);
+	driver->name  = strdup(driver_name);
 	driver->attrs = ippNew();
 
 	if (!strncmp(driver_name, "cpcl_", 5))

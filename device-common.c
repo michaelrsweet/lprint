@@ -192,7 +192,7 @@ lprintReadDevice(
   {
     int	count;				// Bytes that were read
 
-    if (libusb_bulk_transfer(device->handle, device->read_endp, buffer, bytes, &count, 0) < 0)
+    if (libusb_bulk_transfer(device->handle, device->read_endp, buffer, (int)bytes, &count, 0) < 0)
       return (-1);
     else
       return (count);
@@ -241,7 +241,7 @@ lprintWriteDevice(
   {
     int	count;				// Bytes that were written
 
-    if (libusb_bulk_transfer(device->handle, device->write_endp, (unsigned char *)buffer, bytes, &count, 0) < 0)
+    if (libusb_bulk_transfer(device->handle, device->write_endp, (unsigned char *)buffer, (int)bytes, &count, 0) < 0)
       return (-1);
     else
       return (count);
@@ -277,7 +277,7 @@ lprint_find_usb(
 
   if ((err = libusb_init(NULL)) != 0)
   {
-    fprintf(stderr, "lprint: Unable to initialize USB access: %s\n", libusb_strerror(err));
+    fprintf(stderr, "lprint: Unable to initialize USB access: %s\n", libusb_strerror((enum libusb_error)err));
     return (0);
   }
 
@@ -428,7 +428,7 @@ lprint_find_usb(
 	if (device->protocol > 0)
 	{
 	  device->conf  = conf;
-	  device->iface = ifaceptr - confptr->interface;
+	  device->iface = iface;
 
 	  if (!libusb_open(udevice, &device->handle))
 	  {

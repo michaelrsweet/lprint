@@ -1,0 +1,494 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		27FBEED02396988300BB195A /* server-system.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEA22396988200BB195A /* server-system.c */; };
+		27FBEED12396988300BB195A /* driver-dymo.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEA42396988200BB195A /* driver-dymo.c */; };
+		27FBEED22396988300BB195A /* server-job.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEA62396988200BB195A /* server-job.c */; };
+		27FBEED32396988300BB195A /* driver-epl2.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEAB2396988200BB195A /* driver-epl2.c */; };
+		27FBEED42396988300BB195A /* server-log.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEB12396988200BB195A /* server-log.c */; };
+		27FBEED52396988300BB195A /* driver-cpcl.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEB22396988200BB195A /* driver-cpcl.c */; };
+		27FBEED62396988300BB195A /* server-print.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEB32396988200BB195A /* server-print.c */; };
+		27FBEED72396988300BB195A /* lprint-config.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEB42396988200BB195A /* lprint-config.c */; };
+		27FBEED82396988300BB195A /* lprint-server.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEB62396988200BB195A /* lprint-server.c */; };
+		27FBEED92396988300BB195A /* driver-fgl.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEB72396988200BB195A /* driver-fgl.c */; };
+		27FBEEDA2396988300BB195A /* driver-common.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEB82396988200BB195A /* driver-common.c */; };
+		27FBEEDB2396988300BB195A /* driver-epl1.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEBA2396988200BB195A /* driver-epl1.c */; };
+		27FBEEDC2396988300BB195A /* server-ipp.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEBB2396988200BB195A /* server-ipp.c */; };
+		27FBEEDD2396988300BB195A /* lprint-devices.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEBC2396988200BB195A /* lprint-devices.c */; };
+		27FBEEDE2396988300BB195A /* server-printer.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEBF2396988300BB195A /* server-printer.c */; };
+		27FBEEDF2396988300BB195A /* device-common.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEC02396988300BB195A /* device-common.c */; };
+		27FBEEE02396988300BB195A /* lprint-cancel.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEC12396988300BB195A /* lprint-cancel.c */; };
+		27FBEEE12396988300BB195A /* driver-zpl.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEC22396988300BB195A /* driver-zpl.c */; };
+		27FBEEE22396988300BB195A /* lprint-status.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEC42396988300BB195A /* lprint-status.c */; };
+		27FBEEE32396988300BB195A /* lprint-submit.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEC52396988300BB195A /* lprint-submit.c */; };
+		27FBEEE42396988300BB195A /* driver-pcl.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEC72396988300BB195A /* driver-pcl.c */; };
+		27FBEEE52396988300BB195A /* lprint.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEC92396988300BB195A /* lprint.c */; };
+		27FBEEE62396988300BB195A /* server-dnssd.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEECA2396988300BB195A /* server-dnssd.c */; };
+		27FBEEE72396988300BB195A /* lprint-printers.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEECB2396988300BB195A /* lprint-printers.c */; };
+		27FBEEE82396988300BB195A /* lprint-shutdown.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEECC2396988300BB195A /* lprint-shutdown.c */; };
+		27FBEEE92396988300BB195A /* lprint-jobs.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEECD2396988300BB195A /* lprint-jobs.c */; };
+		27FBEEEA2396988300BB195A /* server-client.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEECE2396988300BB195A /* server-client.c */; };
+		27FBEEEE2396994E00BB195A /* libcups.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEED2396994E00BB195A /* libcups.tbd */; };
+		27FBEEF02396995C00BB195A /* libpam.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEEF2396995C00BB195A /* libpam.tbd */; };
+		27FBEEF22396996600BB195A /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF12396996600BB195A /* IOKit.framework */; };
+		27FBEEF42396998300BB195A /* libusb-1.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF32396998300BB195A /* libusb-1.0.a */; };
+		27FBEEF6239699A600BB195A /* libpng16.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF5239699A600BB195A /* libpng16.a */; };
+		27FBEEF823969AB700BB195A /* libdl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF723969AB700BB195A /* libdl.tbd */; };
+		27FBEEFA23969AC000BB195A /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF923969AC000BB195A /* SystemConfiguration.framework */; };
+		27FBEEFC23969ACC00BB195A /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEFB23969ACC00BB195A /* CoreFoundation.framework */; };
+		27FBEEFE23969AD900BB195A /* libpthread.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEFD23969AD900BB195A /* libpthread.tbd */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		27155EA1239697D4000D0567 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		27155EA3239697D4000D0567 /* lprint */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = lprint; sourceTree = BUILT_PRODUCTS_DIR; };
+		27FBEEA12396988200BB195A /* lprint-config.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-config.1"; path = "../lprint-config.1"; sourceTree = "<group>"; };
+		27FBEEA22396988200BB195A /* server-system.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "server-system.c"; path = "../server-system.c"; sourceTree = "<group>"; };
+		27FBEEA32396988200BB195A /* lprint-jobs.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-jobs.1"; path = "../lprint-jobs.1"; sourceTree = "<group>"; };
+		27FBEEA42396988200BB195A /* driver-dymo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "driver-dymo.c"; path = "../driver-dymo.c"; sourceTree = "<group>"; };
+		27FBEEA52396988200BB195A /* lprint-shutdown.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-shutdown.1"; path = "../lprint-shutdown.1"; sourceTree = "<group>"; };
+		27FBEEA62396988200BB195A /* server-job.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "server-job.c"; path = "../server-job.c"; sourceTree = "<group>"; };
+		27FBEEA72396988200BB195A /* DESIGN.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = DESIGN.md; path = ../DESIGN.md; sourceTree = "<group>"; };
+		27FBEEA82396988200BB195A /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		27FBEEA92396988200BB195A /* lprint-printers.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-printers.1"; path = "../lprint-printers.1"; sourceTree = "<group>"; };
+		27FBEEAA2396988200BB195A /* lprint-png.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-png.h"; path = "../lprint-png.h"; sourceTree = "<group>"; };
+		27FBEEAB2396988200BB195A /* driver-epl2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "driver-epl2.c"; path = "../driver-epl2.c"; sourceTree = "<group>"; };
+		27FBEEAC2396988200BB195A /* NOTICE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = NOTICE; path = ../NOTICE; sourceTree = "<group>"; };
+		27FBEEAD2396988200BB195A /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
+		27FBEEAE2396988200BB195A /* lprint-cancel.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-cancel.1"; path = "../lprint-cancel.1"; sourceTree = "<group>"; };
+		27FBEEAF2396988200BB195A /* driver-common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "driver-common.h"; path = "../driver-common.h"; sourceTree = "<group>"; };
+		27FBEEB02396988200BB195A /* lprint.conf.5 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = lprint.conf.5; path = ../lprint.conf.5; sourceTree = "<group>"; };
+		27FBEEB12396988200BB195A /* server-log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "server-log.c"; path = "../server-log.c"; sourceTree = "<group>"; };
+		27FBEEB22396988200BB195A /* driver-cpcl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "driver-cpcl.c"; path = "../driver-cpcl.c"; sourceTree = "<group>"; };
+		27FBEEB32396988200BB195A /* server-print.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "server-print.c"; path = "../server-print.c"; sourceTree = "<group>"; };
+		27FBEEB42396988200BB195A /* lprint-config.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-config.c"; path = "../lprint-config.c"; sourceTree = "<group>"; };
+		27FBEEB52396988200BB195A /* lprint-server.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-server.1"; path = "../lprint-server.1"; sourceTree = "<group>"; };
+		27FBEEB62396988200BB195A /* lprint-server.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-server.c"; path = "../lprint-server.c"; sourceTree = "<group>"; };
+		27FBEEB72396988200BB195A /* driver-fgl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "driver-fgl.c"; path = "../driver-fgl.c"; sourceTree = "<group>"; };
+		27FBEEB82396988200BB195A /* driver-common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "driver-common.c"; path = "../driver-common.c"; sourceTree = "<group>"; };
+		27FBEEB92396988200BB195A /* device-common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "device-common.h"; path = "../device-common.h"; sourceTree = "<group>"; };
+		27FBEEBA2396988200BB195A /* driver-epl1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "driver-epl1.c"; path = "../driver-epl1.c"; sourceTree = "<group>"; };
+		27FBEEBB2396988200BB195A /* server-ipp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "server-ipp.c"; path = "../server-ipp.c"; sourceTree = "<group>"; };
+		27FBEEBC2396988200BB195A /* lprint-devices.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-devices.c"; path = "../lprint-devices.c"; sourceTree = "<group>"; };
+		27FBEEBD2396988200BB195A /* lprint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lprint.h; path = ../lprint.h; sourceTree = "<group>"; };
+		27FBEEBE2396988300BB195A /* lprint-devices.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-devices.1"; path = "../lprint-devices.1"; sourceTree = "<group>"; };
+		27FBEEBF2396988300BB195A /* server-printer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "server-printer.c"; path = "../server-printer.c"; sourceTree = "<group>"; };
+		27FBEEC02396988300BB195A /* device-common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "device-common.c"; path = "../device-common.c"; sourceTree = "<group>"; };
+		27FBEEC12396988300BB195A /* lprint-cancel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-cancel.c"; path = "../lprint-cancel.c"; sourceTree = "<group>"; };
+		27FBEEC22396988300BB195A /* driver-zpl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "driver-zpl.c"; path = "../driver-zpl.c"; sourceTree = "<group>"; };
+		27FBEEC32396988300BB195A /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = common.h; path = ../common.h; sourceTree = "<group>"; };
+		27FBEEC42396988300BB195A /* lprint-status.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-status.c"; path = "../lprint-status.c"; sourceTree = "<group>"; };
+		27FBEEC52396988300BB195A /* lprint-submit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-submit.c"; path = "../lprint-submit.c"; sourceTree = "<group>"; };
+		27FBEEC62396988300BB195A /* lprint.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = lprint.1; path = ../lprint.1; sourceTree = "<group>"; };
+		27FBEEC72396988300BB195A /* driver-pcl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "driver-pcl.c"; path = "../driver-pcl.c"; sourceTree = "<group>"; };
+		27FBEEC82396988300BB195A /* lprint-submit.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-submit.1"; path = "../lprint-submit.1"; sourceTree = "<group>"; };
+		27FBEEC92396988300BB195A /* lprint.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = lprint.c; path = ../lprint.c; sourceTree = "<group>"; };
+		27FBEECA2396988300BB195A /* server-dnssd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "server-dnssd.c"; path = "../server-dnssd.c"; sourceTree = "<group>"; };
+		27FBEECB2396988300BB195A /* lprint-printers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-printers.c"; path = "../lprint-printers.c"; sourceTree = "<group>"; };
+		27FBEECC2396988300BB195A /* lprint-shutdown.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-shutdown.c"; path = "../lprint-shutdown.c"; sourceTree = "<group>"; };
+		27FBEECD2396988300BB195A /* lprint-jobs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-jobs.c"; path = "../lprint-jobs.c"; sourceTree = "<group>"; };
+		27FBEECE2396988300BB195A /* server-client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "server-client.c"; path = "../server-client.c"; sourceTree = "<group>"; };
+		27FBEECF2396988300BB195A /* lprint-status.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-status.1"; path = "../lprint-status.1"; sourceTree = "<group>"; };
+		27FBEEED2396994E00BB195A /* libcups.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcups.tbd; path = usr/lib/libcups.tbd; sourceTree = SDKROOT; };
+		27FBEEEF2396995C00BB195A /* libpam.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpam.tbd; path = usr/lib/libpam.tbd; sourceTree = SDKROOT; };
+		27FBEEF12396996600BB195A /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		27FBEEF32396998300BB195A /* libusb-1.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libusb-1.0.a"; path = "../../../../../usr/local/lib/libusb-1.0.a"; sourceTree = "<group>"; };
+		27FBEEF5239699A600BB195A /* libpng16.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpng16.a; path = ../../../../../usr/local/Cellar/libpng/1.6.34/lib/libpng16.a; sourceTree = "<group>"; };
+		27FBEEF723969AB700BB195A /* libdl.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libdl.tbd; path = usr/lib/libdl.tbd; sourceTree = SDKROOT; };
+		27FBEEF923969AC000BB195A /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		27FBEEFB23969ACC00BB195A /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		27FBEEFD23969AD900BB195A /* libpthread.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpthread.tbd; path = usr/lib/libpthread.tbd; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		27155EA0239697D4000D0567 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27FBEEF02396995C00BB195A /* libpam.tbd in Frameworks */,
+				27FBEEF823969AB700BB195A /* libdl.tbd in Frameworks */,
+				27FBEEF6239699A600BB195A /* libpng16.a in Frameworks */,
+				27FBEEFE23969AD900BB195A /* libpthread.tbd in Frameworks */,
+				27FBEEEE2396994E00BB195A /* libcups.tbd in Frameworks */,
+				27FBEEFC23969ACC00BB195A /* CoreFoundation.framework in Frameworks */,
+				27FBEEFA23969AC000BB195A /* SystemConfiguration.framework in Frameworks */,
+				27FBEEF42396998300BB195A /* libusb-1.0.a in Frameworks */,
+				27FBEEF22396996600BB195A /* IOKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		27155E9A239697D4000D0567 = {
+			isa = PBXGroup;
+			children = (
+				27FBEEEB2396988F00BB195A /* Documentation */,
+				27FBEEC32396988300BB195A /* common.h */,
+				27FBEEC02396988300BB195A /* device-common.c */,
+				27FBEEB92396988200BB195A /* device-common.h */,
+				27FBEEB82396988200BB195A /* driver-common.c */,
+				27FBEEAF2396988200BB195A /* driver-common.h */,
+				27FBEEB22396988200BB195A /* driver-cpcl.c */,
+				27FBEEA42396988200BB195A /* driver-dymo.c */,
+				27FBEEBA2396988200BB195A /* driver-epl1.c */,
+				27FBEEAB2396988200BB195A /* driver-epl2.c */,
+				27FBEEB72396988200BB195A /* driver-fgl.c */,
+				27FBEEC72396988300BB195A /* driver-pcl.c */,
+				27FBEEC22396988300BB195A /* driver-zpl.c */,
+				27FBEEC12396988300BB195A /* lprint-cancel.c */,
+				27FBEEB42396988200BB195A /* lprint-config.c */,
+				27FBEEBC2396988200BB195A /* lprint-devices.c */,
+				27FBEECD2396988300BB195A /* lprint-jobs.c */,
+				27FBEEAA2396988200BB195A /* lprint-png.h */,
+				27FBEECB2396988300BB195A /* lprint-printers.c */,
+				27FBEEB62396988200BB195A /* lprint-server.c */,
+				27FBEECC2396988300BB195A /* lprint-shutdown.c */,
+				27FBEEC42396988300BB195A /* lprint-status.c */,
+				27FBEEC52396988300BB195A /* lprint-submit.c */,
+				27FBEEC92396988300BB195A /* lprint.c */,
+				27FBEEBD2396988200BB195A /* lprint.h */,
+				27FBEECE2396988300BB195A /* server-client.c */,
+				27FBEECA2396988300BB195A /* server-dnssd.c */,
+				27FBEEBB2396988200BB195A /* server-ipp.c */,
+				27FBEEA62396988200BB195A /* server-job.c */,
+				27FBEEB12396988200BB195A /* server-log.c */,
+				27FBEEB32396988200BB195A /* server-print.c */,
+				27FBEEBF2396988300BB195A /* server-printer.c */,
+				27FBEEA22396988200BB195A /* server-system.c */,
+				27155EA4239697D4000D0567 /* Products */,
+				27FBEEEC2396994E00BB195A /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		27155EA4239697D4000D0567 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				27155EA3239697D4000D0567 /* lprint */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		27FBEEEB2396988F00BB195A /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+				27FBEEA72396988200BB195A /* DESIGN.md */,
+				27FBEEAD2396988200BB195A /* LICENSE */,
+				27FBEEAE2396988200BB195A /* lprint-cancel.1 */,
+				27FBEEA12396988200BB195A /* lprint-config.1 */,
+				27FBEEBE2396988300BB195A /* lprint-devices.1 */,
+				27FBEEA32396988200BB195A /* lprint-jobs.1 */,
+				27FBEEA92396988200BB195A /* lprint-printers.1 */,
+				27FBEEB52396988200BB195A /* lprint-server.1 */,
+				27FBEEA52396988200BB195A /* lprint-shutdown.1 */,
+				27FBEECF2396988300BB195A /* lprint-status.1 */,
+				27FBEEC82396988300BB195A /* lprint-submit.1 */,
+				27FBEEC62396988300BB195A /* lprint.1 */,
+				27FBEEB02396988200BB195A /* lprint.conf.5 */,
+				27FBEEAC2396988200BB195A /* NOTICE */,
+				27FBEEA82396988200BB195A /* README.md */,
+			);
+			name = Documentation;
+			sourceTree = "<group>";
+		};
+		27FBEEEC2396994E00BB195A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				27FBEEFD23969AD900BB195A /* libpthread.tbd */,
+				27FBEEFB23969ACC00BB195A /* CoreFoundation.framework */,
+				27FBEEF923969AC000BB195A /* SystemConfiguration.framework */,
+				27FBEEF723969AB700BB195A /* libdl.tbd */,
+				27FBEEF5239699A600BB195A /* libpng16.a */,
+				27FBEEF32396998300BB195A /* libusb-1.0.a */,
+				27FBEEF12396996600BB195A /* IOKit.framework */,
+				27FBEEEF2396995C00BB195A /* libpam.tbd */,
+				27FBEEED2396994E00BB195A /* libcups.tbd */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		27155EA2239697D4000D0567 /* lprint */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 27155EAA239697D4000D0567 /* Build configuration list for PBXNativeTarget "lprint" */;
+			buildPhases = (
+				27155E9F239697D4000D0567 /* Sources */,
+				27155EA0239697D4000D0567 /* Frameworks */,
+				27155EA1239697D4000D0567 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = lprint;
+			productName = lprint;
+			productReference = 27155EA3239697D4000D0567 /* lprint */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		27155E9B239697D4000D0567 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1120;
+				ORGANIZATIONNAME = "Michael R Sweet";
+				TargetAttributes = {
+					27155EA2239697D4000D0567 = {
+						CreatedOnToolsVersion = 11.2.1;
+					};
+				};
+			};
+			buildConfigurationList = 27155E9E239697D4000D0567 /* Build configuration list for PBXProject "lprint" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 27155E9A239697D4000D0567;
+			productRefGroup = 27155EA4239697D4000D0567 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				27155EA2239697D4000D0567 /* lprint */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		27155E9F239697D4000D0567 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27FBEED12396988300BB195A /* driver-dymo.c in Sources */,
+				27FBEEDB2396988300BB195A /* driver-epl1.c in Sources */,
+				27FBEEE92396988300BB195A /* lprint-jobs.c in Sources */,
+				27FBEEDD2396988300BB195A /* lprint-devices.c in Sources */,
+				27FBEEE22396988300BB195A /* lprint-status.c in Sources */,
+				27FBEED92396988300BB195A /* driver-fgl.c in Sources */,
+				27FBEED52396988300BB195A /* driver-cpcl.c in Sources */,
+				27FBEEDC2396988300BB195A /* server-ipp.c in Sources */,
+				27FBEEDF2396988300BB195A /* device-common.c in Sources */,
+				27FBEEE52396988300BB195A /* lprint.c in Sources */,
+				27FBEEE42396988300BB195A /* driver-pcl.c in Sources */,
+				27FBEED62396988300BB195A /* server-print.c in Sources */,
+				27FBEEE62396988300BB195A /* server-dnssd.c in Sources */,
+				27FBEED22396988300BB195A /* server-job.c in Sources */,
+				27FBEEE32396988300BB195A /* lprint-submit.c in Sources */,
+				27FBEEEA2396988300BB195A /* server-client.c in Sources */,
+				27FBEED72396988300BB195A /* lprint-config.c in Sources */,
+				27FBEEE72396988300BB195A /* lprint-printers.c in Sources */,
+				27FBEED32396988300BB195A /* driver-epl2.c in Sources */,
+				27FBEED02396988300BB195A /* server-system.c in Sources */,
+				27FBEEE12396988300BB195A /* driver-zpl.c in Sources */,
+				27FBEED82396988300BB195A /* lprint-server.c in Sources */,
+				27FBEEE82396988300BB195A /* lprint-shutdown.c in Sources */,
+				27FBEEE02396988300BB195A /* lprint-cancel.c in Sources */,
+				27FBEED42396988300BB195A /* server-log.c in Sources */,
+				27FBEEDA2396988300BB195A /* driver-common.c in Sources */,
+				27FBEEDE2396988300BB195A /* server-printer.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		27155EA8239697D4000D0567 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					.,
+					/usr/local/include,
+					"/usr/local/include/libusb-1.0",
+				);
+				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		27155EA9239697D4000D0567 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					.,
+					/usr/local/include,
+					"/usr/local/include/libusb-1.0",
+				);
+				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		27155EAB239697D4000D0567 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = RU58A2256H;
+				ENABLE_HARDENED_RUNTIME = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/libpng/1.6.34/lib,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		27155EAC239697D4000D0567 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = RU58A2256H;
+				ENABLE_HARDENED_RUNTIME = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/libpng/1.6.34/lib,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		27155E9E239697D4000D0567 /* Build configuration list for PBXProject "lprint" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				27155EA8239697D4000D0567 /* Debug */,
+				27155EA9239697D4000D0567 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		27155EAA239697D4000D0567 /* Build configuration list for PBXNativeTarget "lprint" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				27155EAB239697D4000D0567 /* Debug */,
+				27155EAC239697D4000D0567 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 27155E9B239697D4000D0567 /* Project object */;
+}
