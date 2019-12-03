@@ -1,0 +1,29 @@
+name: lprint
+version: 0.1
+summary: Label Printer Utility
+description: |
+   LPrint implements printing for a variety of common label and receipt printers
+   connected via network or USB.  Features include:
+
+   - A single executable handles spooling, status, and server functionality.
+   - Multiple printers can be managed.
+   - Implements an IPP Everywhere print service.
+   - Exposes printer-specific options such as print darkness, resolution, and
+     speed.
+   - Can print "raw", PWG Raster, and PNG files.
+
+grade: stable
+confinement: strict
+icon: lprint.png
+
+apps:
+    lprint:
+        command: bin/lprint
+        plugs: [avahi-observe, home, network, network-bind]
+
+parts:
+    main:
+        plugin: autotools
+        source: .
+        build-packages: [libavahi-client-dev, libcups2-dev, libcupsimage2-dev, libgnutls28-dev, libpng-dev, zlib1g-dev]
+        stage-packages: [libavahi-client3]

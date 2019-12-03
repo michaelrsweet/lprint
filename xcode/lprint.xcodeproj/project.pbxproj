@@ -115,6 +115,10 @@
 		27FBEEF923969AC000BB195A /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		27FBEEFB23969ACC00BB195A /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		27FBEEFD23969AD900BB195A /* libpthread.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpthread.tbd; path = usr/lib/libpthread.tbd; sourceTree = SDKROOT; };
+		27FBEEFF23969DF900BB195A /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
+		27FBEF0123969E2A00BB195A /* Makefile.in */ = {isa = PBXFileReference; lastKnownFileType = text; name = Makefile.in; path = ../Makefile.in; sourceTree = "<group>"; };
+		27FBEF0223969E2A00BB195A /* config.h.in */ = {isa = PBXFileReference; lastKnownFileType = text; name = config.h.in; path = ../config.h.in; sourceTree = "<group>"; };
+		27FBEF0323969E2B00BB195A /* configure.ac */ = {isa = PBXFileReference; lastKnownFileType = text; name = configure.ac; path = ../configure.ac; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -140,8 +144,10 @@
 		27155E9A239697D4000D0567 = {
 			isa = PBXGroup;
 			children = (
+				27FBEF0023969E0900BB195A /* Autoconf */,
 				27FBEEEB2396988F00BB195A /* Documentation */,
 				27FBEEC32396988300BB195A /* common.h */,
+				27FBEEFF23969DF900BB195A /* config.h */,
 				27FBEEC02396988300BB195A /* device-common.c */,
 				27FBEEB92396988200BB195A /* device-common.h */,
 				27FBEEB82396988200BB195A /* driver-common.c */,
@@ -222,6 +228,16 @@
 				27FBEEED2396994E00BB195A /* libcups.tbd */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		27FBEF0023969E0900BB195A /* Autoconf */ = {
+			isa = PBXGroup;
+			children = (
+				27FBEF0223969E2A00BB195A /* config.h.in */,
+				27FBEF0323969E2B00BB195A /* configure.ac */,
+				27FBEF0123969E2A00BB195A /* Makefile.in */,
+			);
+			name = Autoconf;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
