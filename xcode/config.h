@@ -1,6 +1,5 @@
-/* config.h.  Generated from config.h.in by configure.  */
 //
-// Configuration header file for LPrint, a Label Printer Utility
+// Xcode configuration header file for LPrint, a Label Printer Utility
 //
 // Copyright © 2019 by Michael R Sweet.
 //
