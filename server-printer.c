@@ -19,6 +19,10 @@
 #else
 #  include <sys/statfs.h>
 #endif // __APPLE__
+#ifdef __linux
+#  include <sys/random.h>
+#endif // __linux
+
 
 //
 // Local functions...
@@ -466,7 +470,7 @@ lprint_rand(void)
   // Linux has the getrandom function to get real entropy, but can fail...
   unsigned	buffer;			// Random number buffer
 
-  if (getrandom(&buffer, sizeof(buffer)) == sizeof(buffer))
+  if (getrandom(&buffer, sizeof(buffer), 0) == sizeof(buffer))
     return (buffer);
 #  endif // __linux
 

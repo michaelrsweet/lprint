@@ -98,3 +98,92 @@ lprintUnregisterDNSSD(
 {
   (void)printer;
 }
+
+
+#ifdef HAVE_DNSSD
+/*
+ * 'dnssd_callback()' - Handle Bonjour registration events.
+ */
+
+static void DNSSD_API
+dnssd_callback(
+    DNSServiceRef       sdRef,		/* I - Service reference */
+    DNSServiceFlags     flags,		/* I - Status flags */
+    DNSServiceErrorType errorCode,	/* I - Error, if any */
+    const char          *name,		/* I - Service name */
+    const char          *regtype,	/* I - Service type */
+    const char          *domain,	/* I - Domain for service */
+    lprint_printer_t    *printer)	/* I - Printer */
+{
+  (void)sdRef;
+  (void)flags;
+  (void)domain;
+
+  if (errorCode)
+  {
+    fprintf(stderr, "DNSServiceRegister for %s failed with error %d.\n", regtype, (int)errorCode);
+    return;
+  }
+  else if (strcasecmp(name, printer->dnssd_name))
+  {
+    if (Verbosity)
+      fprintf(stderr, "Now using DNS-SD service name \"%s\".\n", name);
+
+    /* No lock needed since only the main thread accesses/changes this */
+    free(printer->dnssd_name);
+    printer->dnssd_name = strdup(name);
+  }
+}
+
+
+#elif defined(HAVE_AVAHI)
+/*
+ * 'dnssd_callback()' - Handle Bonjour registration events.
+ */
+
+static void
+dnssd_callback(
+    AvahiEntryGroup      *srv,		/* I - Service */
+    AvahiEntryGroupState state,		/* I - Registration state */
+    void                 *context)	/* I - Printer */
+{
+  (void)srv;
+  (void)state;
+  (void)context;
+}
+
+
+/*
+ * 'dnssd_client_cb()' - Client callback for Avahi.
+ *
+ * Called whenever the client or server state changes...
+ */
+
+static void
+dnssd_client_cb(
+    AvahiClient      *c,		/* I - Client */
+    AvahiClientState state,		/* I - Current state */
+    void             *userdata)		/* I - User data (unused) */
+{
+  (void)userdata;
+
+  if (!c)
+    return;
+
+  switch (state)
+  {
+    default :
+        fprintf(stderr, "Ignored Avahi state %d.\n", state);
+	break;
+
+    case AVAHI_CLIENT_FAILURE:
+	if (avahi_client_errno(c) == AVAHI_ERR_DISCONNECTED)
+	{
+	  fputs("Avahi server crashed, exiting.\n", stderr);
+	  exit(1);
+	}
+	break;
+  }
+}
+#endif /* HAVE_DNSSD */
+
