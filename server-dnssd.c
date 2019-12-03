@@ -121,17 +121,19 @@ dnssd_callback(
 
   if (errorCode)
   {
-    fprintf(stderr, "DNSServiceRegister for %s failed with error %d.\n", regtype, (int)errorCode);
+    lprintLogPrinter(printer, LPRINT_LOGLEVEL_ERROR, "DNSServiceRegister for '%s' failed with error %d.", regtype, (int)errorCode);
     return;
   }
   else if (strcasecmp(name, printer->dnssd_name))
   {
-    if (Verbosity)
-      fprintf(stderr, "Now using DNS-SD service name \"%s\".\n", name);
+    lprintLogPrinter(printer, LPRINT_LOGLEVEL_INFO, "Now using DNS-SD service name '%s'.\n", name);
 
-    /* No lock needed since only the main thread accesses/changes this */
+    pthread_rwlock_wrlock(&printer->rwlock);
+
     free(printer->dnssd_name);
     printer->dnssd_name = strdup(name);
+
+    pthread_rwlock_unlock(&printer->rwlock);
   }
 }
 
