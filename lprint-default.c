@@ -1,5 +1,5 @@
 //
-// Config sub-command for LPrint, a Label Printer Utility
+// Set default printer sub-command for LPrint, a Label Printer Utility
 //
 // Copyright © 2019 by Michael R Sweet.
 //
@@ -15,12 +15,12 @@
 
 
 //
-// 'lprintDoConfig()' - Do the config sub-command.
+// 'lprintDoDefault()' - Do the default printer sub-command.
 //
 
 int					// O - Exit status
-lprintDoConfig(int  argc,		// I - Number of command-line arguments
-               char *argv[])		// I - Command-line arguments
+lprintDoDefault(int  argc,		// I - Number of command-line arguments
+                char *argv[])		// I - Command-line arguments
 {
   (void)argc;
   (void)argv;

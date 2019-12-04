@@ -72,10 +72,14 @@ OBJS		=	\
 			driver-pcl.o \
 			driver-zpl.o \
 			lprint.o \
+			lprint-add.o \
 			lprint-cancel.o \
-			lprint-config.o \
+			lprint-default.o \
+			lprint-delete.o \
 			lprint-devices.o \
+			lprint-drivers.o \
 			lprint-jobs.o \
+			lprint-modify.o \
 			lprint-printers.o \
 			lprint-server.o \
 			lprint-shutdown.o \

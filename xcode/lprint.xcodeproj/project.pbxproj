@@ -14,7 +14,7 @@
 		27FBEED42396988300BB195A /* server-log.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEB12396988200BB195A /* server-log.c */; };
 		27FBEED52396988300BB195A /* driver-cpcl.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEB22396988200BB195A /* driver-cpcl.c */; };
 		27FBEED62396988300BB195A /* server-print.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEB32396988200BB195A /* server-print.c */; };
-		27FBEED72396988300BB195A /* lprint-config.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEB42396988200BB195A /* lprint-config.c */; };
+		27FBEED72396988300BB195A /* lprint-add.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEB42396988200BB195A /* lprint-add.c */; };
 		27FBEED82396988300BB195A /* lprint-server.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEB62396988200BB195A /* lprint-server.c */; };
 		27FBEED92396988300BB195A /* driver-fgl.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEB72396988200BB195A /* driver-fgl.c */; };
 		27FBEEDA2396988300BB195A /* driver-common.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEB82396988200BB195A /* driver-common.c */; };
@@ -43,6 +43,10 @@
 		27FBEEFA23969AC000BB195A /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF923969AC000BB195A /* SystemConfiguration.framework */; };
 		27FBEEFC23969ACC00BB195A /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEFB23969ACC00BB195A /* CoreFoundation.framework */; };
 		27FBEEFE23969AD900BB195A /* libpthread.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEFD23969AD900BB195A /* libpthread.tbd */; };
+		27FBEF08239747C300BB195A /* lprint-modify.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEF04239747C200BB195A /* lprint-modify.c */; };
+		27FBEF09239747C300BB195A /* lprint-delete.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEF05239747C200BB195A /* lprint-delete.c */; };
+		27FBEF0A239747C300BB195A /* lprint-default.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEF06239747C200BB195A /* lprint-default.c */; };
+		27FBEF0B239747C300BB195A /* lprint-drivers.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEF07239747C200BB195A /* lprint-drivers.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -78,7 +82,7 @@
 		27FBEEB12396988200BB195A /* server-log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "server-log.c"; path = "../server-log.c"; sourceTree = "<group>"; };
 		27FBEEB22396988200BB195A /* driver-cpcl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "driver-cpcl.c"; path = "../driver-cpcl.c"; sourceTree = "<group>"; };
 		27FBEEB32396988200BB195A /* server-print.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "server-print.c"; path = "../server-print.c"; sourceTree = "<group>"; };
-		27FBEEB42396988200BB195A /* lprint-config.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-config.c"; path = "../lprint-config.c"; sourceTree = "<group>"; };
+		27FBEEB42396988200BB195A /* lprint-add.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-add.c"; path = "../lprint-add.c"; sourceTree = "<group>"; };
 		27FBEEB52396988200BB195A /* lprint-server.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-server.1"; path = "../lprint-server.1"; sourceTree = "<group>"; };
 		27FBEEB62396988200BB195A /* lprint-server.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-server.c"; path = "../lprint-server.c"; sourceTree = "<group>"; };
 		27FBEEB72396988200BB195A /* driver-fgl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "driver-fgl.c"; path = "../driver-fgl.c"; sourceTree = "<group>"; };
@@ -119,6 +123,10 @@
 		27FBEF0123969E2A00BB195A /* Makefile.in */ = {isa = PBXFileReference; lastKnownFileType = text; name = Makefile.in; path = ../Makefile.in; sourceTree = "<group>"; };
 		27FBEF0223969E2A00BB195A /* config.h.in */ = {isa = PBXFileReference; lastKnownFileType = text; name = config.h.in; path = ../config.h.in; sourceTree = "<group>"; };
 		27FBEF0323969E2B00BB195A /* configure.ac */ = {isa = PBXFileReference; lastKnownFileType = text; name = configure.ac; path = ../configure.ac; sourceTree = "<group>"; };
+		27FBEF04239747C200BB195A /* lprint-modify.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-modify.c"; path = "../lprint-modify.c"; sourceTree = "<group>"; };
+		27FBEF05239747C200BB195A /* lprint-delete.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-delete.c"; path = "../lprint-delete.c"; sourceTree = "<group>"; };
+		27FBEF06239747C200BB195A /* lprint-default.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-default.c"; path = "../lprint-default.c"; sourceTree = "<group>"; };
+		27FBEF07239747C200BB195A /* lprint-drivers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-drivers.c"; path = "../lprint-drivers.c"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -159,10 +167,14 @@
 				27FBEEB72396988200BB195A /* driver-fgl.c */,
 				27FBEEC72396988300BB195A /* driver-pcl.c */,
 				27FBEEC22396988300BB195A /* driver-zpl.c */,
+				27FBEEB42396988200BB195A /* lprint-add.c */,
 				27FBEEC12396988300BB195A /* lprint-cancel.c */,
-				27FBEEB42396988200BB195A /* lprint-config.c */,
+				27FBEF06239747C200BB195A /* lprint-default.c */,
+				27FBEF05239747C200BB195A /* lprint-delete.c */,
 				27FBEEBC2396988200BB195A /* lprint-devices.c */,
+				27FBEF07239747C200BB195A /* lprint-drivers.c */,
 				27FBEECD2396988300BB195A /* lprint-jobs.c */,
+				27FBEF04239747C200BB195A /* lprint-modify.c */,
 				27FBEEAA2396988200BB195A /* lprint-png.h */,
 				27FBEECB2396988300BB195A /* lprint-printers.c */,
 				27FBEEB62396988200BB195A /* lprint-server.c */,
@@ -305,6 +317,7 @@
 				27FBEED92396988300BB195A /* driver-fgl.c in Sources */,
 				27FBEED52396988300BB195A /* driver-cpcl.c in Sources */,
 				27FBEEDC2396988300BB195A /* server-ipp.c in Sources */,
+				27FBEF09239747C300BB195A /* lprint-delete.c in Sources */,
 				27FBEEDF2396988300BB195A /* device-common.c in Sources */,
 				27FBEEE52396988300BB195A /* lprint.c in Sources */,
 				27FBEEE42396988300BB195A /* driver-pcl.c in Sources */,
@@ -312,17 +325,20 @@
 				27FBEEE62396988300BB195A /* server-dnssd.c in Sources */,
 				27FBEED22396988300BB195A /* server-job.c in Sources */,
 				27FBEEE32396988300BB195A /* lprint-submit.c in Sources */,
+				27FBEF0A239747C300BB195A /* lprint-default.c in Sources */,
 				27FBEEEA2396988300BB195A /* server-client.c in Sources */,
-				27FBEED72396988300BB195A /* lprint-config.c in Sources */,
+				27FBEED72396988300BB195A /* lprint-add.c in Sources */,
 				27FBEEE72396988300BB195A /* lprint-printers.c in Sources */,
 				27FBEED32396988300BB195A /* driver-epl2.c in Sources */,
 				27FBEED02396988300BB195A /* server-system.c in Sources */,
 				27FBEEE12396988300BB195A /* driver-zpl.c in Sources */,
 				27FBEED82396988300BB195A /* lprint-server.c in Sources */,
 				27FBEEE82396988300BB195A /* lprint-shutdown.c in Sources */,
+				27FBEF0B239747C300BB195A /* lprint-drivers.c in Sources */,
 				27FBEEE02396988300BB195A /* lprint-cancel.c in Sources */,
 				27FBEED42396988300BB195A /* server-log.c in Sources */,
 				27FBEEDA2396988300BB195A /* driver-common.c in Sources */,
+				27FBEF08239747C300BB195A /* lprint-modify.c in Sources */,
 				27FBEEDE2396988300BB195A /* server-printer.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

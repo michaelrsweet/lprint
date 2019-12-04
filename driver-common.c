@@ -241,16 +241,16 @@ lprintGetDrivers(int *num_drivers)	// O - Number of drivers
 
 const char *				// O - Make and model string
 lprintGetMakeAndModel(
-    lprint_driver_t *driver)		// I - Driver
+    const char *driver_name)		// I - Driver name
 {
   int	i;				// Looping var
 
 
-  if (driver && driver->name)
+  if (driver_name)
   {
     for (i = 0; i < (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])); i ++)
     {
-      if (!strcmp(lprint_drivers[i], driver->name))
+      if (!strcmp(lprint_drivers[i], driver_name))
 	return (lprint_models[i]);
     }
   }

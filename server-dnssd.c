@@ -33,7 +33,7 @@ static AvahiClient	*DNSSDClient = NULL;
 
 #ifdef HAVE_DNSSD
 static void DNSSD_API	dnssd_callback(DNSServiceRef sdRef, DNSServiceFlags flags, DNSServiceErrorType errorCode, const char *name, const char *regtype, const char *domain, lprint_printer_t *printer);
-static void		*dnssd_run(void *data);
+//static void		*dnssd_run(void *data);
 #elif defined(HAVE_AVAHI)
 static void		dnssd_callback(AvahiEntryGroup *p, AvahiEntryGroupState state, void *context);
 static void		dnssd_client_cb(AvahiClient *c, AvahiClientState state, void *userdata);

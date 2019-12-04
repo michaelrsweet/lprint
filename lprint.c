@@ -55,14 +55,22 @@ main(int  argc,				// I - Number of command-line arguments
 
   if (argc == 1 || !strcmp(argv[1], "submit") || argv[1][0] == '-')
     return (lprintDoSubmit(argc, argv));
+  else if (!strcmp(argv[1], "add"))
+    return (lprintDoAdd(argc, argv));
   else if (!strcmp(argv[1], "cancel"))
     return (lprintDoCancel(argc, argv));
-  else if (!strcmp(argv[1], "config"))
-    return (lprintDoConfig(argc, argv));
+  else if (!strcmp(argv[1], "default"))
+    return (lprintDoDefault(argc, argv));
+  else if (!strcmp(argv[1], "delete"))
+    return (lprintDoDelete(argc, argv));
   else if (!strcmp(argv[1], "devices"))
     return (lprintDoDevices(argc, argv));
+  else if (!strcmp(argv[1], "drivers"))
+    return (lprintDoDrivers(argc, argv));
   else if (!strcmp(argv[1], "jobs"))
     return (lprintDoJobs(argc, argv));
+  else if (!strcmp(argv[1], "modify"))
+    return (lprintDoModify(argc, argv));
   else if (!strcmp(argv[1], "printers"))
     return (lprintDoPrinters(argc, argv));
   else if (!strcmp(argv[1], "server"))
@@ -167,22 +175,30 @@ lprintIsServerRunning(void)
 static void
 usage(int status)			// O - Exit status
 {
-  puts("Usage: lprint command [options]");
+  puts("Usage: lprint command [target] [options]");
   puts("       lprint [options] filename");
   puts("       lprint [options] -");
   puts("");
   puts("Commands:");
-  puts("  cancel    Cancel one or more jobs.");
-  puts("  config    Add, modify, or delete a printer.");
-  puts("  devices   List devices.");
-  puts("  jobs      List jobs.");
-  puts("  printers  List printers.");
-  puts("  server    Run a server.");
-  puts("  shutdown  Shutdown a running server.");
-  puts("  status    Show server/printer/job status.");
-  puts("  submit    Submit a file for printing.");
+  puts("  add PRINTER      Add a printer.");
+  puts("  cancel JOB-ID    Cancel one or more jobs.");
+  puts("  default PRINTER  Set the default printer.");
+  puts("  delete PRINTER   Delete a printer.");
+  puts("  devices          List devices.");
+  puts("  drivers          List drivers.");
+  puts("  jobs             List jobs.");
+  puts("  modify PRINTER   Modify a printer.");
+  puts("  printers         List printers.");
+  puts("  server           Run a server.");
+  puts("  shutdown         Shutdown a running server.");
+  puts("  status           Show server/printer/job status.");
+  puts("  submit FILENAME  Submit a file for printing.");
   puts("");
   puts("Options:");
+  puts("  -d PRINTER       Specify printer (submit).");
+  puts("  -m DRIVER        Specify driver (add/modify).");
+  puts("  -o NAME=VALUE    Specify printer option.");
+  puts("  -v DEVICE-URI    Specify socket: or usb: device (add/modify).");
 
   exit(status);
 }

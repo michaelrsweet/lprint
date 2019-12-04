@@ -105,7 +105,7 @@ extern lprint_driver_t	*lprintCreateDriver(const char *driver_name);
 extern ipp_t		*lprintCreateMediaCol(const char *size_name, const char *source, const char *type, int left_right, int bottom_top);
 extern void		lprintDeleteDriver(lprint_driver_t *driver);
 extern const char * const *lprintGetDrivers(int *num_drivers);
-extern const char	*lprintGetMakeAndModel(lprint_driver_t *driver);
+extern const char	*lprintGetMakeAndModel(const char *driver_name);
 extern void		lprintInitCPCL(lprint_driver_t *driver);
 extern void		lprintInitDYMO(lprint_driver_t *driver);
 extern void		lprintInitEPL1(lprint_driver_t *driver);
