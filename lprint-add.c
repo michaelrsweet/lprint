@@ -19,11 +19,11 @@
 //
 
 int					// O - Exit status
-lprintDoAdd(int  argc,			// I - Number of command-line arguments
-            char *argv[])		// I - Command-line arguments
+lprintDoAdd(int           num_options,	// I - Number of options
+	    cups_option_t *options)	// I - Options
 {
-  (void)argc;
-  (void)argv;
+  (void)num_options;
+  (void)options;
 
   return (1);
 }

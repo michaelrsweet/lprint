@@ -19,11 +19,16 @@
 //
 
 int					// O - Exit status
-lprintDoSubmit(int  argc,		// I - Number of command-line arguments
-               char *argv[])		// I - Command-line arguments
+lprintDoSubmit(
+    int           num_files,		// I - Number of files
+    char          **files,		// I - Files
+    int           num_options,		// I - Number of options
+    cups_option_t *options)		// I - Options
 {
-  (void)argc;
-  (void)argv;
+  (void)num_files;
+  (void)files;
+  (void)num_options;
+  (void)options;
 
   return (1);
 }

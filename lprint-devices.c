@@ -26,12 +26,12 @@ static int	lprint_print_device(const char *device_uri, const void *user_data);
 //
 
 int					// O - Exit status
-lprintDoDevices(int  argc,		// I - Number of command-line arguments
-	        char *argv[])		// I - Command-line arguments
+lprintDoDevices(
+    int           num_options,		// I - Number of options
+    cups_option_t *options)		// I - Options
 {
-  // TODO: Show errors for back command-line options
-  (void)argc;
-  (void)argv;
+  (void)num_options;
+  (void)options;
 
   lprintListDevices(lprint_print_device, NULL);
 

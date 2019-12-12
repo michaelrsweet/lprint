@@ -19,15 +19,17 @@
 //
 
 int					// O - Exit status
-lprintDoDrivers(int  argc,		// I - Number of command-line arguments
-                char *argv[])		// I - Command-line arguments
+lprintDoDrivers(
+    int           num_options,		// I - Number of options
+    cups_option_t *options)		// I - Options
 {
+  (void)num_options;
+  (void)options;
+
   int		i,			// Looping var
 		num_drivers;		// Number of drivers
   const char	* const *drivers;	// Array of drivers
 
-
-  (void)argv;
 
   drivers = lprintGetDrivers(&num_drivers);
 
