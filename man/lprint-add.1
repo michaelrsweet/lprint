@@ -1,0 +1,58 @@
+.\"
+.\" lprint-add man page for LPrint, a Label Printer Utility
+.\"
+.\" Copyright © 2019 by Michael R Sweet.
+.\"
+.\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
+.\" information.
+.\"
+.TH lprint 1 "LPrint" "November 21, 2019" "Michael R Sweet"
+.SH NAME
+lprint-add \- add a label printer
+
+.SH SYNOPSIS
+.B lprint
+.B add
+.B \-d
+.I printer-name
+.B \-m
+.I driver-name
+.B \-v
+.I device-uri
+[
+.B \-o
+.I option-name=value
+]
+.SH DESCRIPTION
+This command creates a label printer queue using the specified name, driver, and driver.
+.SH OPTIONS
+The following options are recognized by
+.B lprint add:
+.TP 5
+\fB\-d \fIprinter-name\fR
+Specifies the name of the print queue.
+.TP 5
+\fB\-m \fIdriver-name\fR
+Specifies the name of the print driver.
+See
+.BR lprint-drivers (1)
+for the command to list the available print drivers.
+.TP 5
+\fB\-o \fIoption-name=value\fR
+Specifies the default value for the given option name.
+See
+.BR lprint-submit (1)
+for a list of supported options.
+.TP 5
+\fB\-v \fIdevice-uri\fR
+Specifies the device for the print queue.
+The value can be a socket: URI such as "socket://11.22.33.44" or a usb: URI as listed by the
+.BR lprint-devices (1)
+command.
+.SH SEE ALSO
+.BR lprint (1),
+.BR lprint-devices (1),
+.BR lprint-drivers (1),
+.BR lprint-submit (1)
+.SH COPYRIGHT
+Copyright \[co] 2019 by Michael R Sweet.

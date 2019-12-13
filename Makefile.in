@@ -61,6 +61,23 @@ BUILDROOT	=	$(DSTROOT)$(RPM_BUILD_ROOT)$(DESTDIR)
 
 
 # Targets...
+MAN1		=	\
+			man/lprint-add.1 \
+			man/lprint-cancel.1 \
+			man/lprint-default.1 \
+			man/lprint-delete.1 \
+			man/lprint-devices.1 \
+			man/lprint-jobs.1 \
+			man/lprint-modify.1 \
+			man/lprint-printers.1 \
+			man/lprint-server.1 \
+			man/lprint-shutdown.1 \
+			man/lprint-status.1 \
+			man/lprint-submit.1 \
+			man/lprint.1
+MAN5		=	\
+			man/lprint.conf.5
+
 OBJS		=	\
 			device-common.o \
 			driver-common.o \
@@ -118,18 +135,13 @@ install:	all
 	$(INSTALL) -d -m 755 $(BUILDROOT)$(bindir)
 	$(INSTALL) -c -m 755 lprint $(BUILDROOT)$(bindir)
 	$(INSTALL) -d -m 755 $(BUILDROOT)$(mandir)/man1
-	$(INSTALL) -c -m 644 lprint.1 $(BUILDROOT)$(mandir)/man1
-	$(INSTALL) -c -m 644 lprint-cancel.1 $(BUILDROOT)$(mandir)/man1
-	$(INSTALL) -c -m 644 lprint-config.1 $(BUILDROOT)$(mandir)/man1
-	$(INSTALL) -c -m 644 lprint-devices.1 $(BUILDROOT)$(mandir)/man1
-	$(INSTALL) -c -m 644 lprint-jobs.1 $(BUILDROOT)$(mandir)/man1
-	$(INSTALL) -c -m 644 lprint-printers.1 $(BUILDROOT)$(mandir)/man1
-	$(INSTALL) -c -m 644 lprint-send.1 $(BUILDROOT)$(mandir)/man1
-	$(INSTALL) -c -m 644 lprint-server.1 $(BUILDROOT)$(mandir)/man1
-	$(INSTALL) -c -m 644 lprint-shutdown.1 $(BUILDROOT)$(mandir)/man1
-	$(INSTALL) -c -m 644 lprint-status.1 $(BUILDROOT)$(mandir)/man1
+	for file in $(MAN1); do \
+		$(INSTALL) -c -m 644 $$file $(BUILDROOT)$(mandir)/man1; \
+	done
 	$(INSTALL) -d -m 755 $(BUILDROOT)$(mandir)/man5
-	$(INSTALL) -c -m 644 lprint.conf.5 $(BUILDROOT)$(mandir)/man5
+	for file in $(MAN5); do \
+		$(INSTALL) -c -m 644 lprint.conf.5 $(BUILDROOT)$(mandir)/man5; \
+	done
 
 
 # Test everything...
