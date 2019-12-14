@@ -1,44 +1,53 @@
 .\"
-.\" ??? man page for LPrint, a Label Printer Utility
+.\" lprint-server man page for LPrint, a Label Printer Utility
 .\"
 .\" Copyright © 2019 by Michael R Sweet.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint 1 "LPrint" "November 21, 2019" "Michael R Sweet"
+.TH lprint-server 1 "LPrint" "December 13, 2019" "Michael R Sweet"
 .SH NAME
-lprint \- description
-
+lprint-server \- start a label print server.
 .SH SYNOPSIS
 .B lprint
-.B foo
+.B server
 [
-.B \-\-option
-.I value
+.B \-o
+.I option-name=value
 ]
-
 .SH DESCRIPTION
-.B lprint
-description of what this does.
-
+This command starts a label print server.
+Normally a server is started automatically as needed, however you can run the server manually to listen on a public network address and/or enable different logging options.
 .SH OPTIONS
 The following options are recognized by
-.B lprint:
+.B lprint server:
 .TP 5
-\fB\-\-option \fIvalue\fR
-Description of option.
-
-.SH EXIT STATUS
-The
-.B lprint
-program returns 1 if it is unable to ...
-
-.SH ENVIRONMENT
-
-.SH EXAMPLES
-
+\fB\-o log-file=\fRFILENAME\fR
+Specifies that all messages are written to the named file.
+If the file already exists, messages are appended to it.
+.TP 5
+.B \-o log-file=\-
+Specifies that all messages are written to the standard error.
+.TP 5
+.B \-o log-level=error
+Specifies that only error messages should be logged.
+.TP 5
+.B \-o log-level=info
+Specifies that error and informational messages should be logged.
+.TP 5
+.B \-o log-level=debug
+Specifies that all messages should be logged.
+.TP 5
+\fB\-o server-hostname=\fIHOSTNAME\fR
+Listens for IPP connections on the specified hostname/address(es).
+If not specified, the server only listens for connections on a per-user (local) domain socket.
+.TP 5
+\fB\-o server-port=\fIPORT\fR
+Listens for IPP connections on the specified port.
+If not specified, a random port between 9000 and 9999 is chosen.
 .SH SEE ALSO
-
+.BR lprint (1),
+.BR lprint-shutdown (1).
 .SH COPYRIGHT
 Copyright \[co] 2019 by Michael R Sweet.

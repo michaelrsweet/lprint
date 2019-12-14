@@ -6,39 +6,25 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint 1 "LPrint" "November 21, 2019" "Michael R Sweet"
+.TH lprint.conf 5 "LPrint" "December 13, 2019" "Michael R Sweet"
 .SH NAME
-lprint \- description
-
-.SH SYNOPSIS
-.B lprint
-.B foo
-[
-.B \-\-option
-.I value
-]
-
+~/lprint.conf \- printer configuration file.
 .SH DESCRIPTION
-.B lprint
-description of what this does.
-
-.SH OPTIONS
-The following options are recognized by
-.B lprint:
-.TP 5
-\fB\-\-option \fIvalue\fR
-Description of option.
-
-.SH EXIT STATUS
 The
-.B lprint
-program returns 1 if it is unable to ...
-
-.SH ENVIRONMENT
-
-.SH EXAMPLES
-
+.B ~/.lprint.conf
+file contains a list of the printer queues configured using the
+.BR lprint-add (1),
+.BR lprint-default (1),
+.BR lprint-delete (1),
+and
+.BR lprint-modify (1)
+commands.
 .SH SEE ALSO
-
+.BR lprint (1),
+.BR lprint-add (1),
+.BR lprint-default (1),
+.BR lprint-delete (1),
+.BR lprint-modify (1),
+.BR lprint-server (1).
 .SH COPYRIGHT
 Copyright \[co] 2019 by Michael R Sweet.

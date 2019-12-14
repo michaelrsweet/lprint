@@ -1,44 +1,30 @@
 .\"
-.\" ??? man page for LPrint, a Label Printer Utility
+.\" lprint-delete man page for LPrint, a Label Printer Utility
 .\"
 .\" Copyright © 2019 by Michael R Sweet.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint 1 "LPrint" "November 21, 2019" "Michael R Sweet"
+.TH lprint-delete 1 "LPrint" "December 13, 2019" "Michael R Sweet"
 .SH NAME
-lprint \- description
-
+lprint-delete \- delete a label printer queue.
 .SH SYNOPSIS
 .B lprint
-.B foo
-[
-.B \-\-option
-.I value
-]
-
+.B delete
+.B \-d
+.I printer-name
 .SH DESCRIPTION
-.B lprint
-description of what this does.
-
+This command deletes the specified label printer queue.
 .SH OPTIONS
 The following options are recognized by
-.B lprint:
+.B lprint delete:
 .TP 5
-\fB\-\-option \fIvalue\fR
-Description of option.
-
-.SH EXIT STATUS
-The
-.B lprint
-program returns 1 if it is unable to ...
-
-.SH ENVIRONMENT
-
-.SH EXAMPLES
-
+\fB\-d \fIPRINTER-NAME\fR
+Specifies the printer queue to delete.
 .SH SEE ALSO
-
+.BR lprint (1),
+.BR lprint-add (1),
+.BR lprint-modify (1).
 .SH COPYRIGHT
 Copyright \[co] 2019 by Michael R Sweet.
