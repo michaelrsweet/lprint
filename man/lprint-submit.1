@@ -1,44 +1,120 @@
 .\"
-.\" ??? man page for LPrint, a Label Printer Utility
+.\" lprint-submit man page for LPrint, a Label Printer Utility
 .\"
 .\" Copyright © 2019 by Michael R Sweet.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint 1 "LPrint" "November 21, 2019" "Michael R Sweet"
+.TH lprint-submit 1 "LPrint" "December 13, 2019" "Michael R Sweet"
 .SH NAME
-lprint \- description
-
+lprint-submit \- submit a file for printing.
 .SH SYNOPSIS
 .B lprint
-.B foo
 [
-.B \-\-option
-.I value
+.B submit
+] [
+.B \-d
+.I printer-name
+] [
+.B \-n
+.I copies
+] [
+.B \-o
+.I option-name=value
+] [
+.B \-t
+.I title
+] [
+.I file [ ... fileN ]
 ]
-
-.SH DESCRIPTION
+.br
 .B lprint
-description of what this does.
-
+[
+.B submit
+] [
+.B \-d
+.I printer-name
+] [
+.B \-n
+.I copies
+] [
+.B \-o
+.I option-name=value
+] [
+.B \-t
+.I title
+]
+\-
+.SH DESCRIPTION
+This command submits one or more files for printing.
+The first form prints the named files.
+The second form copies the print file from the standard input.
 .SH OPTIONS
 The following options are recognized by
-.B lprint:
+.B lprint submit:
 .TP 5
-\fB\-\-option \fIvalue\fR
-Description of option.
-
-.SH EXIT STATUS
-The
-.B lprint
-program returns 1 if it is unable to ...
-
-.SH ENVIRONMENT
-
-.SH EXAMPLES
-
+\fB\-d \fIprinter-name\fR
+Specifies the name of the printer queue.
+If not specified, the default printer is used.
+.TP 5
+\fB\-n \fIcopies\fR
+Specifies the number of copies.
+.TP 5
+\fB\-o finishings=3\fR
+Do not cut the labels after printing.
+.TP 5
+\fB\-o finishings=11\fR
+Cut the labels after printing.
+.TP 5
+\fB\-o media=\fIsize-name\fR
+Specifies the label size.
+.TP 5
+\fB\-o media-source=\fIroll-name\fR
+Specifies the label roll.
+.TP 5
+.B \-o orientation-requested=3
+Print images in portrait orientation.
+.TP 5
+.B \-o orientation-requested=4
+Print images in landscape orientation.
+.TP 5
+.B \-o print-color-mode=bi-level
+Only print black or white when printing images.
+.TP 5
+.B \-o print-color-mode=monochrome
+Halftone shades of gray when printing images.
+.B \-o print-content-optimize=graphic
+Optimize printing for text only.
+.B \-o print-content-optimize=photo
+Optimize printing for photos.
+.B \-o print-content-optimize=text
+Optimize printing for graphics only.
+.B \-o print-content-optimize=text-and-graphic
+Optimize printing for text and graphics.
+.TP 5
+\fB\-o print-darkness=\fINNN\fR
+Specifies the print darkness from 0 to 100.
+.TP 5
+\fB\-o print-quality=3\fR
+Print using draft quality.
+.TP 5
+\fB\-o print-quality=4\fR
+Print using normal quality.
+.TP 5
+\fB\-o print-quality=5\fR
+Print using best quality.
+.TP 5
+\fB\-o print-speed=\fINNN\fR
+Specifies the print speed in inches per second.
+.TP 5
+\fB\-o printer-resolution=\fINNN\fBdpi\fR
+Specifies the print resolution in dots per inch.
+.TP 5
+\fB\-t \fItitle\fR
+Specifies the print job name.
 .SH SEE ALSO
-
+.BR lprint-cancel (1),
+.BR lprint-default (1).
 .SH COPYRIGHT
 Copyright \[co] 2019 by Michael R Sweet.

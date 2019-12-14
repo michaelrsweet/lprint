@@ -1,44 +1,83 @@
 .\"
-.\" ??? man page for LPrint, a Label Printer Utility
+.\" Main man page for LPrint, a Label Printer Utility
 .\"
 .\" Copyright © 2019 by Michael R Sweet.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint 1 "LPrint" "November 21, 2019" "Michael R Sweet"
+.TH lprint 1 "LPrint" "December 13, 2019" "Michael R Sweet"
 .SH NAME
-lprint \- description
-
+lprint \- a label printer utility
 .SH SYNOPSIS
 .B lprint
-.B foo
 [
-.B \-\-option
-.I value
-]
+.I subcommand
+] [ options ]
+[ files]
 
 .SH DESCRIPTION
 .B lprint
-description of what this does.
-
-.SH OPTIONS
-The following options are recognized by
+is a label printer utility that can be run standalone or as a dedicated IPP Everywhere network service.
+.B lprint
+supports printing PNG images, PWG raster files, and printer-specific label files to USB and network label printers.
+If no subcommand is specified, "submit" is assumed.
+.SH SUBCOMMANDS
+The following subcommands are recognized by
 .B lprint:
 .TP 5
-\fB\-\-option \fIvalue\fR
-Description of option.
-
-.SH EXIT STATUS
-The
-.B lprint
-program returns 1 if it is unable to ...
-
-.SH ENVIRONMENT
-
-.SH EXAMPLES
-
+add
+Add a printer queue.
+.TP 5
+cancel
+Cancel one or more print jobs.
+.TP 5
+default
+Set the default printer queue.
+.TP 5
+delete
+Delete a printer queue.
+.TP 5
+devices
+List connected printers.
+.TP 5
+drivers
+List the supported drivers.
+.TP 5
+jobs
+List pending print jobs.
+.TP 5
+modify
+Modify a printer queue.
+.TP 5
+printers
+List the printer queues.
+.TP 5
+server
+Start a server.
+.TP 5
+shutdown
+Shutdown a running server.
+.TP 5
+status
+Show the status of a printer or all printers.
+.TP 5
+submit
+Submit a file for printing.
 .SH SEE ALSO
-
+.BR lprint-add (1),
+.BR lprint-cancel (1),
+.BR lprint-default (1),
+.BR lprint-delete (1),
+.BR lprint-devices (1),
+.BR lprint-drivers (1),
+.BR lprint-jobs (1),
+.BR lprint-modify (1),
+.BR lprint-printers (1),
+.BR lprint-server (1),
+.BR lprint-shutdown (1),
+.BR lprint-status (1),
+.BR lprint-submit (1),
+.BR lprint.conf (5)
 .SH COPYRIGHT
 Copyright \[co] 2019 by Michael R Sweet.

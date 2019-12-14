@@ -1,44 +1,52 @@
 .\"
-.\" ??? man page for LPrint, a Label Printer Utility
+.\" lprint-cancel man page for LPrint, a Label Printer Utility
 .\"
 .\" Copyright © 2019 by Michael R Sweet.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint 1 "LPrint" "November 21, 2019" "Michael R Sweet"
+.TH lprint-cancel 1 "LPrint" "December 13, 2019" "Michael R Sweet"
 .SH NAME
-lprint \- description
+lprint-cancel \- cancel one or more print jobs.
 
 .SH SYNOPSIS
 .B lprint
-.B foo
+.B cancel
 [
-.B \-\-option
-.I value
+.B \-d
+.I printer-name
+] [
+.B \-j
+.I job-id
 ]
-
-.SH DESCRIPTION
+.br
 .B lprint
-description of what this does.
-
+.B cancel
+[
+.B \-d
+.I printer-name
+]
+.B \-a
+.SH DESCRIPTION
+This command cancels one or more print jobs.
+In the first form, the currently printing job or the specified job is canceled.
+In the second form, all print jobs are canceled.
 .SH OPTIONS
 The following options are recognized by
-.B lprint:
+.B lprint cancel:
 .TP 5
-\fB\-\-option \fIvalue\fR
-Description of option.
-
-.SH EXIT STATUS
-The
-.B lprint
-program returns 1 if it is unable to ...
-
-.SH ENVIRONMENT
-
-.SH EXAMPLES
-
+.B \-a
+Cancel all print jobs.
+.TP 5
+\fB\-d \fIprinter-name\fR
+Specifies the name of the printer queue.
+If not specified, the default printer is used.
+.TP 5
+\fB\-j \fIjob-id\fR
+Specifies the print job number.
 .SH SEE ALSO
-
+.BR lprint-default (1),
+.BR lprint-submit (1).
 .SH COPYRIGHT
 Copyright \[co] 2019 by Michael R Sweet.

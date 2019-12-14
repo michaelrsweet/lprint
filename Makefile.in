@@ -67,6 +67,7 @@ MAN1		=	\
 			man/lprint-default.1 \
 			man/lprint-delete.1 \
 			man/lprint-devices.1 \
+			man/lprint-drivers.1 \
 			man/lprint-jobs.1 \
 			man/lprint-modify.1 \
 			man/lprint-printers.1 \

@@ -186,6 +186,17 @@ main(int  argc,				// I - Number of command-line arguments
               num_options = cupsParseOptions(argv[i], num_options, &options);
               break;
 
+          case 't' : // title
+              i ++;
+              if (i >= argc)
+              {
+                fputs("lprint: Missing title.\n", stderr);
+                usage(1);
+	      }
+
+              num_options = cupsAddOption("job-name", argv[i], num_options, &options);
+              break;
+
           case 'v' : // device-uri
               i ++;
               if (i >= argc)
