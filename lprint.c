@@ -216,6 +216,11 @@ main(int  argc,				// I - Number of command-line arguments
     }
   }
 
+  fprintf(stderr, "subcommand='%s'\n", subcommand);
+  fprintf(stderr, "num_options=%d\n", num_options);
+  for (i = 0; i < num_options; i ++)
+    fprintf(stderr, "options[%d].name='%s', value='%s'\n", i, options[i].name, options[i].value);
+
   if (!subcommand || !strcmp(subcommand, "submit"))
   {
     return (lprintDoSubmit(num_files, files, num_options, options));

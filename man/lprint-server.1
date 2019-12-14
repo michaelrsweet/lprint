@@ -6,7 +6,7 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint-server 1 "LPrint" "December 13, 2019" "Michael R Sweet"
+.TH lprint-server 1 "LPrint" "December 14, 2019" "Michael R Sweet"
 .SH NAME
 lprint-server \- start a label print server.
 .SH SYNOPSIS
@@ -23,15 +23,20 @@ Normally a server is started automatically as needed, however you can run the se
 The following options are recognized by
 .B lprint server:
 .TP 5
+.B \-o log-file=\-
+Specifies that all messages are written to the standard error.
+.TP 5
+.B \-o log-file=syslog
+Specifies that all messages are sent to the syslog service.
+This is the default.
+.TP 5
 \fB\-o log-file=\fRFILENAME\fR
 Specifies that all messages are written to the named file.
 If the file already exists, messages are appended to it.
 .TP 5
-.B \-o log-file=\-
-Specifies that all messages are written to the standard error.
-.TP 5
 .B \-o log-level=error
 Specifies that only error messages should be logged.
+This is the default.
 .TP 5
 .B \-o log-level=info
 Specifies that error and informational messages should be logged.

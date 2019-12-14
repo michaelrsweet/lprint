@@ -32,7 +32,7 @@ static int		save_config(lprint_system_t *system);
 lprint_system_t *			// O - System object
 lprintCreateSystem(
     const char        *hostname,	// I - Hostname or `NULL` for none
-    int               port,		// I - Port number or `0` for none
+    int               port,		// I - Port number or `0` for auto
     const char        *subtypes,	// I - DNS-SD sub-types or `NULL` for none
     const char        *logfile,		// I - Log file or `NULL` for syslog
     lprint_loglevel_t loglevel)		// I - Log level
@@ -73,7 +73,7 @@ lprintCreateSystem(
 
   system->directory = strdup(spooldir);
 
-  if (logfile)
+  if (logfile && strcmp(logfile, "syslog"))
   {
     system->logfile = strdup(logfile);
 
@@ -111,7 +111,10 @@ lprintCreateSystem(
 
   if (system->hostname)
   {
-    if ((system->listeners[system->num_listeners].fd = create_listener(system->hostname, system->port, AF_INET)) < 0)
+    if (system->port == 0)
+      system->port = 9000 + (getuid() % 1000);
+
+    if ((system->listeners[system->num_listeners].fd = create_listener(NULL, system->port, AF_INET)) < 0)
     {
       lprintLog(system, LPRINT_LOGLEVEL_FATAL, "Unable to create IPv4 listener for %s:%d: %s", system->hostname, system->port, strerror(errno));
       goto fatal;
@@ -119,7 +122,7 @@ lprintCreateSystem(
     else
       system->listeners[system->num_listeners ++].events = POLLIN;
 
-    if ((system->listeners[system->num_listeners].fd = create_listener(system->hostname, system->port, AF_INET6)) < 0)
+    if ((system->listeners[system->num_listeners].fd = create_listener(NULL, system->port, AF_INET6)) < 0)
     {
       lprintLog(system, LPRINT_LOGLEVEL_FATAL, "Unable to create IPv6 listener for %s:%d: %s", system->hostname, system->port, strerror(errno));
       goto fatal;
