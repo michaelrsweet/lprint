@@ -103,7 +103,7 @@ main(int  argc,				// I - Number of command-line arguments
     {
       for (j = 0; j < (int)(sizeof(subcommands) / sizeof(subcommands[0])); j ++)
       {
-        if (!strcmp(argv[i], subcommands[i]))
+        if (!strcmp(argv[i], subcommands[j]))
         {
           subcommand = argv[i];
           break;
@@ -216,10 +216,15 @@ main(int  argc,				// I - Number of command-line arguments
     }
   }
 
-  fprintf(stderr, "subcommand='%s'\n", subcommand);
-  fprintf(stderr, "num_options=%d\n", num_options);
+#ifdef DEBUG
+  LPRINT_DEBUG("subcommand='%s'\n", subcommand);
+  LPRINT_DEBUG("num_options=%d\n", num_options);
   for (i = 0; i < num_options; i ++)
-    fprintf(stderr, "options[%d].name='%s', value='%s'\n", i, options[i].name, options[i].value);
+    LPRINT_DEBUG("options[%d].name='%s', value='%s'\n", i, options[i].name, options[i].value);
+  LPRINT_DEBUG("num_files=%d\n", num_files);
+  for (i = 0; i < num_files; i ++)
+    LPRINT_DEBUG("files[%d]='%s'\n", i, files[i]);
+#endif // DEBUG
 
   if (!subcommand || !strcmp(subcommand, "submit"))
   {
