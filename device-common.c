@@ -126,12 +126,14 @@ lprintOpenDevice(
       if (device->fd < 0)
         goto error;
     }
+#ifdef HAVE_LIBUSB
     else if (!strcmp(scheme, "usb"))
     {
       // USB printer class device
       if (!lprint_find_usb(lprint_open_cb, device_uri, device))
         goto error;
     }
+#endif // HAVE_LIBUSB
   }
 
   return (device);
@@ -188,6 +190,7 @@ lprintReadDevice(
 
     return (count);
   }
+#ifdef HAVE_LIBUSB
   else if (device->handle)
   {
     int	count;				// Bytes that were read
@@ -197,6 +200,7 @@ lprintReadDevice(
     else
       return (count);
   }
+#endif // HAVE_LIBUSB
 
   return (-1);
 }
@@ -237,6 +241,7 @@ lprintWriteDevice(
 
     return ((ssize_t)total);
   }
+#ifdef HAVE_LIBUSB
   else if (device->handle)
   {
     int	count;				// Bytes that were written
@@ -246,6 +251,7 @@ lprintWriteDevice(
     else
       return (count);
   }
+#endif // HAVE_LIBUSB
 
   return (-1);
 }
