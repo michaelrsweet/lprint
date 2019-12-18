@@ -24,7 +24,6 @@ lprintDoServer(
     int           num_options,		// I - Number of options
     cups_option_t *options)		// I - Options
 {
-  int		pid;			// Process ID
   lprint_system_t *system;		// System object
   const char	*val;			// Option value
   lprint_loglevel_t loglevel;		// Log level

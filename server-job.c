@@ -131,7 +131,7 @@ lprintCreateJob(
     httpAssembleURIf(HTTP_URI_CODING_ALL, job_uri, sizeof(job_uri), "ipps", NULL, client->system->hostname, client->system->port, "%s/%d", client->printer->resource, job->id);
   }
 
-  lprintMakeUUID(client->system, client->printer->name, job->id, job_uuid, sizeof(job_uuid));
+  lprintMakeUUID(client->system, client->printer->printer_name, job->id, job_uuid, sizeof(job_uuid));
 
   ippAddDate(job->attrs, IPP_TAG_JOB, "date-time-at-creation", ippTimeToDate(time(&job->created)));
   ippAddInteger(job->attrs, IPP_TAG_JOB, IPP_TAG_INTEGER, "job-id", job->id);
@@ -255,31 +255,19 @@ lprintDeleteJob(lprint_job_t *job)	// I - Job
 // 'lprintFindJob()' - Find a job specified in a request.
 //
 
-lprint_job_t *				// O - Job or NULL
-lprintFindJob(lprint_client_t *client)	// I - Client
+lprint_job_t *				// O - Job or `NULL`
+lprintFindJob(lprint_printer_t *printer,// I - Printer
+              int              job_id)	// I - Job ID
 {
-  ipp_attribute_t	*attr;		// job-id or job-uri attribute
   lprint_job_t		key,		// Job search key
 			*job;		// Matching job, if any
 
 
-  if ((attr = ippFindAttribute(client->request, "job-id", IPP_TAG_INTEGER)) != NULL)
-    key.id = ippGetInteger(attr, 0);
-  else if ((attr = ippFindAttribute(client->request, "job-uri", IPP_TAG_URI)) != NULL)
-  {
-    const char	*uri = ippGetString(attr, 0, NULL);
-					// job-uri value
-    const char	*idptr;			// Pointer to job-id
+  key.id = job_id;
 
-    if (uri && (idptr = strrchr(uri, '/')) != NULL)
-      key.id = atoi(idptr + 1);
-    else
-      return (NULL);
-  }
-
-  pthread_rwlock_rdlock(&(client->printer->rwlock));
-  job = (lprint_job_t *)cupsArrayFind(client->printer->jobs, &key);
-  pthread_rwlock_unlock(&(client->printer->rwlock));
+  pthread_rwlock_rdlock(&(printer->rwlock));
+  job = (lprint_job_t *)cupsArrayFind(printer->jobs, &key);
+  pthread_rwlock_unlock(&(printer->rwlock));
 
   return (job);
 }

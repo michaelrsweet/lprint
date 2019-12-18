@@ -27,12 +27,18 @@ static void		finish_document_data(lprint_client_t *client, lprint_job_t *job);
 static void		ipp_cancel_job(lprint_client_t *client);
 static void		ipp_close_job(lprint_client_t *client);
 static void		ipp_create_job(lprint_client_t *client);
+static void		ipp_create_printer(lprint_client_t *client);
+static void		ipp_delete_printer(lprint_client_t *client);
 static void		ipp_get_job_attributes(lprint_client_t *client);
 static void		ipp_get_jobs(lprint_client_t *client);
 static void		ipp_get_printer_attributes(lprint_client_t *client);
+static void		ipp_get_system_attributes(lprint_client_t *client);
 static void		ipp_identify_printer(lprint_client_t *client);
 static void		ipp_print_job(lprint_client_t *client);
 static void		ipp_send_document(lprint_client_t *client);
+static void		ipp_set_printer_attributes(lprint_client_t *client);
+static void		ipp_set_system_attributes(lprint_client_t *client);
+static void		ipp_shutdown_all_printers(lprint_client_t *client);
 static void		ipp_validate_job(lprint_client_t *client);
 
 static void		respond_unsupported(lprint_client_t *client, ipp_attribute_t *attr);
@@ -140,7 +146,9 @@ lprintProcessIPP(
       else
 	language = NULL;
 
-      if ((attr = ippFindAttribute(client->request, "printer-uri", IPP_TAG_URI)) != NULL)
+      if ((attr = ippFindAttribute(client->request, "system-uri", IPP_TAG_URI)) != NULL)
+	uri = attr;
+      else if ((attr = ippFindAttribute(client->request, "printer-uri", IPP_TAG_URI)) != NULL)
 	uri = attr;
       else if ((attr = ippFindAttribute(client->request, "job-uri", IPP_TAG_URI)) != NULL)
 	uri = attr;
@@ -161,11 +169,13 @@ lprintProcessIPP(
       }
       else
       {
-        char		scheme[32],	// URI scheme
-			userpass[32],	// Username/password in URI
-			host[256],	// Host name in URI
-			resource[256];	// Resource path in URI
-	int		port;		// Port number in URI
+        char	scheme[32],		// URI scheme
+		userpass[32],		// Username/password in URI
+		host[256],		// Host name in URI
+		resource[256],		// Resource path in URI
+		*resptr;		// Pointer into resource
+	int	port,			// Port number in URI
+		job_id;			// Job ID
 
         name = ippGetName(uri);
 
@@ -173,58 +183,122 @@ lprintProcessIPP(
         {
 	  lprintRespondIPP(client, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES, "Bad %s value '%s'.", name, ippGetString(uri, 0, NULL));
         }
-        else if ((!strcmp(name, "job-uri") && strncmp(resource, "/ipp/print/", 11)) || (!strcmp(name, "printer-uri") && strcmp(resource, "/ipp/print")))
-	{
-	  lprintRespondIPP(client, IPP_STATUS_ERROR_NOT_FOUND, "%s %s not found.", name, ippGetString(uri, 0, NULL));
+        else if (!strcmp(name, "system-uri"))
+        {
+          if (strcmp(resource, "/ipp/system"))
+          {
+	    lprintRespondIPP(client, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES, "Bad %s value '%s'.", name, ippGetString(uri, 0, NULL));
+          }
+          else
+            client->printer = lprintFindPrinter(client->system, NULL, ippGetInteger(ippFindAttribute(client->request, "printer-id", IPP_TAG_INTEGER), 0));
+        }
+        else if ((client->printer = lprintFindPrinter(client->system, resource, 0)) != NULL)
+        {
+          resptr = resource + client->printer->resourcelen;
+
+          if (*resptr)
+            job_id = atoi(resptr + 1);
+	  else
+	    job_id = ippGetInteger(ippFindAttribute(client->request, "job-id", IPP_TAG_INTEGER), 0);
+
+          if (job_id)
+            client->job = lprintFindJob(client->printer, job_id);
 	}
 	else
 	{
-	  // Try processing the operation...
-	  switch (ippGetOperation(client->request))
+	  lprintRespondIPP(client, IPP_STATUS_ERROR_NOT_FOUND, "%s %s not found.", name, ippGetString(uri, 0, NULL));
+	}
+
+	if (ippGetStatusCode(client->response) == IPP_STATUS_OK)
+	{
+	  if (client->printer)
 	  {
-	    case IPP_OP_PRINT_JOB :
-		ipp_print_job(client);
-		break;
+	    // Try processing the printer operation...
+	    switch (ippGetOperation(client->request))
+	    {
+	      case IPP_OP_PRINT_JOB :
+		  ipp_print_job(client);
+		  break;
 
-	    case IPP_OP_VALIDATE_JOB :
-		ipp_validate_job(client);
-		break;
+	      case IPP_OP_VALIDATE_JOB :
+		  ipp_validate_job(client);
+		  break;
 
-	    case IPP_OP_CREATE_JOB :
-		ipp_create_job(client);
-		break;
+	      case IPP_OP_CREATE_JOB :
+		  ipp_create_job(client);
+		  break;
 
-	    case IPP_OP_SEND_DOCUMENT :
-		ipp_send_document(client);
-		break;
+	      case IPP_OP_SEND_DOCUMENT :
+		  ipp_send_document(client);
+		  break;
 
-	    case IPP_OP_CANCEL_JOB :
-		ipp_cancel_job(client);
-		break;
+	      case IPP_OP_CANCEL_JOB :
+		  ipp_cancel_job(client);
+		  break;
 
-	    case IPP_OP_GET_JOB_ATTRIBUTES :
-		ipp_get_job_attributes(client);
-		break;
+	      case IPP_OP_GET_JOB_ATTRIBUTES :
+		  ipp_get_job_attributes(client);
+		  break;
 
-	    case IPP_OP_GET_JOBS :
-		ipp_get_jobs(client);
-		break;
+	      case IPP_OP_GET_JOBS :
+		  ipp_get_jobs(client);
+		  break;
 
-	    case IPP_OP_GET_PRINTER_ATTRIBUTES :
-		ipp_get_printer_attributes(client);
-		break;
+	      case IPP_OP_GET_PRINTER_ATTRIBUTES :
+		  ipp_get_printer_attributes(client);
+		  break;
 
-	    case IPP_OP_CLOSE_JOB :
-	        ipp_close_job(client);
-		break;
+	      case IPP_OP_SET_PRINTER_ATTRIBUTES :
+		  ipp_set_printer_attributes(client);
+		  break;
 
-	    case IPP_OP_IDENTIFY_PRINTER :
-	        ipp_identify_printer(client);
-		break;
+	      case IPP_OP_CLOSE_JOB :
+		  ipp_close_job(client);
+		  break;
 
-	    default :
-		lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Operation not supported.");
-		break;
+	      case IPP_OP_IDENTIFY_PRINTER :
+		  ipp_identify_printer(client);
+		  break;
+
+	      default :
+		  lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Operation not supported.");
+		  break;
+	    }
+	  }
+	  else
+	  {
+	    // Try processing the system operation...
+	    switch (ippGetOperation(client->request))
+	    {
+	      case IPP_OP_CREATE_PRINTER :
+	          ipp_create_printer(client);
+	          break;
+
+	      case IPP_OP_DELETE_PRINTER :
+	          ipp_delete_printer(client);
+	          break;
+
+	      case IPP_OP_GET_PRINTER_ATTRIBUTES :
+                  client->printer = lprintFindPrinter(client->system, NULL, client->system->default_printer);
+		  ipp_get_printer_attributes(client);
+		  break;
+
+	      case IPP_OP_GET_SYSTEM_ATTRIBUTES :
+		  ipp_get_system_attributes(client);
+		  break;
+
+	      case IPP_OP_SET_SYSTEM_ATTRIBUTES :
+		  ipp_set_system_attributes(client);
+		  break;
+
+	      case IPP_OP_SHUTDOWN_ALL_PRINTERS :
+	          ipp_shutdown_all_printers(client);
+	          break;
+
+	      default :
+		  lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Operation not supported.");
+		  break;
+	    }
 	  }
 	}
       }
@@ -732,11 +806,11 @@ finish_document_data(
 static void
 ipp_cancel_job(lprint_client_t *client)	// I - Client
 {
-  lprint_job_t		*job;		// Job information
+  lprint_job_t	*job = client->job;	// Job information
 
 
   // Get the job...
-  if ((job = lprintFindJob(client)) == NULL)
+  if (!job)
   {
     lprintRespondIPP(client, IPP_STATUS_ERROR_NOT_FOUND, "Job does not exist.");
     return;
@@ -793,11 +867,11 @@ ipp_cancel_job(lprint_client_t *client)	// I - Client
 static void
 ipp_close_job(lprint_client_t *client)	// I - Client
 {
-  lprint_job_t		*job;		// Job information
+  lprint_job_t	*job = client->job;	// Job information
 
 
   // Get the job...
-  if ((job = lprintFindJob(client)) == NULL)
+  if (!job)
   {
     lprintRespondIPP(client, IPP_STATUS_ERROR_NOT_FOUND, "Job does not exist.");
     return;
@@ -879,6 +953,30 @@ ipp_create_job(lprint_client_t *client)	// I - Client
 
 
 //
+// 'ipp_create_printer()' - Create a printer.
+//
+
+static void
+ipp_create_printer(
+    lprint_client_t *client)		// I - Client
+{
+  lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
+}
+
+
+//
+// 'ipp_delete_printer()' - Delete a printer.
+//
+
+static void
+ipp_delete_printer(
+    lprint_client_t *client)		// I - Client
+{
+  lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
+}
+
+
+//
 // 'ipp_get_job_attributes()' - Get the attributes for a job object.
 //
 
@@ -886,11 +984,11 @@ static void
 ipp_get_job_attributes(
     lprint_client_t *client)		// I - Client
 {
-  lprint_job_t	*job;			// Job
+  lprint_job_t	*job = client->job;	// Job information
   cups_array_t	*ra;			// requested-attributes
 
 
-  if ((job = lprintFindJob(client)) == NULL)
+  if (!job)
   {
     lprintRespondIPP(client, IPP_STATUS_ERROR_NOT_FOUND, "Job not found.");
     return;
@@ -1059,6 +1157,16 @@ ipp_get_printer_attributes(
 
 
 //
+// 'ipp_get_system_attributes()' - Get system attributes.
+//
+
+static void
+ipp_get_system_attributes(
+    lprint_client_t *client)		// I - Client
+{
+  lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
+}
+//
 // 'ipp_identify_printer()' - Beep or display a message.
 //
 
@@ -1132,12 +1240,12 @@ static void
 ipp_send_document(
     lprint_client_t *client)		// I - Client
 {
-  lprint_job_t		*job;		// Job information
-  ipp_attribute_t	*attr;		// Current attribute
+  lprint_job_t	*job = client->job;	// Job information
+  ipp_attribute_t *attr;		// Current attribute
 
 
   // Get the job...
-  if ((job = lprintFindJob(client)) == NULL)
+  if (!job)
   {
     lprintRespondIPP(client, IPP_STATUS_ERROR_NOT_FOUND, "Job does not exist.");
     httpFlush(client->http);
@@ -1201,6 +1309,42 @@ ipp_send_document(
   pthread_rwlock_unlock(&(client->printer->rwlock));
 
   finish_document_data(client, job);
+}
+
+
+//
+// 'ipp_set_printer_attributes()' - Set printer attributes.
+//
+
+static void
+ipp_set_printer_attributes(
+    lprint_client_t *client)		// I - Client
+{
+  lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
+}
+
+
+//
+// 'ipp_set_system_attributes()' - Set system attributes.
+//
+
+static void
+ipp_set_system_attributes(
+    lprint_client_t *client)		// I - Client
+{
+  lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
+}
+
+
+//
+// 'ipp_shutdown_all_printers()' - Shutdown the system.
+//
+
+static void
+ipp_shutdown_all_printers(
+    lprint_client_t *client)		// I - Client
+{
+  lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
 }
 
 

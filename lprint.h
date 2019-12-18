@@ -138,7 +138,8 @@ struct lprint_printer_s			// Printer data
 			ipps_ref,	// Bonjour IPPS service
 			http_ref,	// Bonjour HTTP service
 			printer_ref;	// Bonjour LPD service
-  char			*name,		// printer-name
+  int			printer_id;	// printer-id
+  char			*printer_name,	// printer-name
 			*dnssd_name,	// printer-dnssd-name
 			*location,	// Human-readable location
 			*geo_location,	// Geographic location (geo: URI)
@@ -239,8 +240,8 @@ extern int		lprintDoSubmit(int num_files, char **files, int num_options, cups_op
 extern char		*lprintGetServerPath(char *buffer, size_t bufsize);
 extern void		lprintInitDNSSD(lprint_system_t *system);
 extern int		lprintIsServerRunning(void);
-extern lprint_job_t	*lprintFindJob(lprint_client_t *client);
-extern lprint_printer_t	*lprintFindPrinter(lprint_client_t *client);
+extern lprint_job_t	*lprintFindJob(lprint_printer_t *printer, int job_id);
+extern lprint_printer_t	*lprintFindPrinter(lprint_system_t *system, const char *resource, int printer_id);
 // Note: Log functions currently only support %d and %s!
 extern void		lprintLog(lprint_system_t *system, lprint_loglevel_t level, const char *message, ...);
 extern void		lprintLogAttributes(lprint_client_t *client, const char *title, ipp_t *ipp, int is_response);

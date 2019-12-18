@@ -160,7 +160,7 @@ lprintLogPrinter(
   if (level < printer->system->loglevel)
     return;
 
-  snprintf(pmessage, sizeof(pmessage), "[Printer %s] %s", printer->name, message);
+  snprintf(pmessage, sizeof(pmessage), "[Printer %s] %s", printer->printer_name, message);
   va_start(ap, message);
 
   if (printer->system->logfd >= 0)

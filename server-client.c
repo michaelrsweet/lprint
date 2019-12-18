@@ -21,10 +21,10 @@
 // Local functions...
 //
 
-static void		html_escape(lprint_client_t *client, const char *s, size_t slen);
-static void		html_footer(lprint_client_t *client);
-static void		html_header(lprint_client_t *client, const char *title, int refresh);
-static void		html_printf(lprint_client_t *client, const char *format, ...) LPRINT_FORMAT(2, 3);
+//static void		html_escape(lprint_client_t *client, const char *s, size_t slen);
+//static void		html_footer(lprint_client_t *client);
+//static void		html_header(lprint_client_t *client, const char *title, int refresh);
+//static void		html_printf(lprint_client_t *client, const char *format, ...) LPRINT_FORMAT(2, 3);
 //static int		parse_options(lprint_client_t *client, cups_option_t **options);
 //static int		show_media(lprint_client_t *client);
 //static int		show_status(lprint_client_t *client);
@@ -482,6 +482,7 @@ lprintRespondHTTP(
 }
 
 
+#if 0
 /*
  * 'html_escape()' - Write a HTML-safe string.
  */
@@ -552,8 +553,8 @@ html_header(lprint_client_t *client,	/* I - Client */
 	      "<html>\n"
 	      "<head>\n"
 	      "<title>%s</title>\n"
-	      "<link rel=\"shortcut icon\" href=\"/icon.png\" type=\"image/png\">\n"
-	      "<link rel=\"apple-touch-icon\" href=\"/icon.png\" type=\"image/png\">\n"
+	      "<link rel=\"shortcut icon\" href=\"/lprint.png\" type=\"image/png\">\n"
+	      "<link rel=\"apple-touch-icon\" href=\"/lprint.png\" type=\"image/png\">\n"
 	      "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=9\">\n", title);
   if (refresh > 0)
     html_printf(client, "<meta http-equiv=\"refresh\" content=\"%d\">\n", refresh);
@@ -810,6 +811,7 @@ html_printf(lprint_client_t *client,	/* I - Client */
 
   va_end(ap);
 }
+#endif // 0
 
 
 #if 0

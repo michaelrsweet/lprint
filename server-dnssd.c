@@ -32,7 +32,7 @@ static AvahiClient	*DNSSDClient = NULL;
 //
 
 #ifdef HAVE_DNSSD
-static void DNSSD_API	dnssd_callback(DNSServiceRef sdRef, DNSServiceFlags flags, DNSServiceErrorType errorCode, const char *name, const char *regtype, const char *domain, lprint_printer_t *printer);
+//static void DNSSD_API	dnssd_callback(DNSServiceRef sdRef, DNSServiceFlags flags, DNSServiceErrorType errorCode, const char *name, const char *regtype, const char *domain, lprint_printer_t *printer);
 //static void		*dnssd_run(void *data);
 #elif defined(HAVE_AVAHI)
 static void		dnssd_callback(AvahiEntryGroup *p, AvahiEntryGroupState state, void *context);
@@ -101,6 +101,7 @@ lprintUnregisterDNSSD(
 
 
 #ifdef HAVE_DNSSD
+#if 0
 /*
  * 'dnssd_callback()' - Handle Bonjour registration events.
  */
@@ -136,7 +137,7 @@ dnssd_callback(
     pthread_rwlock_unlock(&printer->rwlock);
   }
 }
-
+#endif // 0
 
 #elif defined(HAVE_AVAHI)
 /*

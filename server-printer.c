@@ -13,6 +13,7 @@
 //
 
 #include "lprint.h"
+#include <ctype.h>
 #ifdef __APPLE__
 #  include <sys/param.h>
 #  include <sys/mount.h>
@@ -197,7 +198,7 @@ lprintCreatePrinter(
   pthread_rwlock_init(&printer->rwlock, NULL);
 
   printer->system         = system;
-  printer->name           = strdup(printer_name);
+  printer->printer_name   = strdup(printer_name);
   printer->dnssd_name     = strdup(printer_name);
   printer->resource       = strdup(resource);
   printer->resourcelen    = strlen(resource);
@@ -332,7 +333,12 @@ lprintCreatePrinter(
   // Add the printer to the system...
   pthread_rwlock_wrlock(&system->rwlock);
 
+  printer->printer_id = system->next_printer_id ++;
+
   cupsArrayAdd(system->printers, printer);
+
+  if (!system->default_printer)
+    system->default_printer = printer->printer_id;
 
   // TODO: Set this in server-ipp.c since printers loaded from the config file shouldn't trigger a save?
   if (!system->save_time)
@@ -356,9 +362,16 @@ lprintCreatePrinter(
 void
 lprintDeletePrinter(lprint_printer_t *printer)	/* I - Printer */
 {
+  // Remove the printer from the system object...
+  pthread_rwlock_wrlock(&printer->system->rwlock);
+  cupsArrayRemove(printer->system->printers, printer);
+  pthread_rwlock_unlock(&printer->system->rwlock);
+
+  // Remove DNS-SD registrations...
   lprintUnregisterDNSSD(printer);
 
-  free(printer->name);
+  // Free memory...
+  free(printer->printer_name);
   free(printer->dnssd_name);
   free(printer->location);
   free(printer->geo_location);
@@ -376,6 +389,40 @@ lprintDeletePrinter(lprint_printer_t *printer)	/* I - Printer */
   cupsArrayDelete(printer->jobs);
 
   free(printer);
+}
+
+
+//
+// 'lprintFindPrinter()' - Find a printer by resource...
+//
+
+lprint_printer_t *			// O - Printer or `NULL` if none
+lprintFindPrinter(
+    lprint_system_t *system,		// I - System
+    const char      *resource,		// I - Resource path or `NULL`
+    int             printer_id)		// I - Printer ID or `0`
+{
+  lprint_printer_t	*printer;	// Matching printer
+
+
+  pthread_rwlock_rdlock(&system->rwlock);
+
+  if (resource && (!strcmp(resource, "/ipp/print") || (!strncmp(resource, "/ipp/print/", 11) && isdigit(resource[11] & 255))))
+  {
+    printer_id = system->default_printer;
+    resource   = NULL;
+  }
+
+  for (printer = (lprint_printer_t *)cupsArrayFirst(system->printers); printer; printer = (lprint_printer_t *)cupsArrayNext(system->printers))
+  {
+    if (resource && !strncmp(printer->resource, resource, printer->resourcelen) && (!resource[printer->resourcelen] || resource[printer->resourcelen] == '/'))
+      break;
+    else if (printer->printer_id == printer_id)
+      break;
+  }
+  pthread_rwlock_unlock(&system->rwlock);
+
+  return (printer);
 }
 
 
