@@ -256,7 +256,6 @@ extern void		*lprintProcessJob(lprint_job_t *job);
 extern int		lprintRegisterDNSSD(lprint_printer_t *printer);
 extern int		lprintRespondHTTP(lprint_client_t *client, http_status_t code, const char *content_coding, const char *type, size_t length);
 extern void		lprintRespondIPP(lprint_client_t *client, ipp_status_t status, const char *message, ...) LPRINT_FORMAT(3, 4);
-extern void		lprintRespondUnsupported(lprint_client_t *client, ipp_attribute_t *attr);
 extern void		lprintRunSystem(lprint_system_t *system);
 extern void		lprintUnregisterDNSSD(lprint_printer_t *printer);
 

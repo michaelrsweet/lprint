@@ -32,6 +32,7 @@ static void		ipp_delete_printer(lprint_client_t *client);
 static void		ipp_get_job_attributes(lprint_client_t *client);
 static void		ipp_get_jobs(lprint_client_t *client);
 static void		ipp_get_printer_attributes(lprint_client_t *client);
+static void		ipp_get_printers(lprint_client_t *client);
 static void		ipp_get_system_attributes(lprint_client_t *client);
 static void		ipp_identify_printer(lprint_client_t *client);
 static void		ipp_print_job(lprint_client_t *client);
@@ -40,6 +41,8 @@ static void		ipp_set_printer_attributes(lprint_client_t *client);
 static void		ipp_set_system_attributes(lprint_client_t *client);
 static void		ipp_shutdown_all_printers(lprint_client_t *client);
 static void		ipp_validate_job(lprint_client_t *client);
+
+static int		is_domain_connection(lprint_client_t *client);
 
 static void		respond_unsupported(lprint_client_t *client, ipp_attribute_t *attr);
 
@@ -83,6 +86,7 @@ lprintProcessIPP(
   ipp_attribute_t	*language;	// Language attribute
   ipp_attribute_t	*uri;		// Printer URI attribute
   int			major, minor;	// Version number
+  ipp_op_t		op;		// Operation code
   const char		*name;		// Name of attribute
 
 
@@ -94,6 +98,7 @@ lprintProcessIPP(
 
   // Then validate the request header and required attributes...
   major = ippGetVersion(client->request, &minor);
+  op    = ippGetOperation(client->request);
 
   if (major < 1 || major > 2)
   {
@@ -130,7 +135,7 @@ lprintProcessIPP(
       //
       //   attributes-charset
       //   attributes-natural-language
-      //   printer-uri/job-uri
+      //   system-uri/printer-uri/job-uri
       attr = ippFirstAttribute(client->request);
       name = ippGetName(attr);
       if (attr && name && !strcmp(name, "attributes-charset") && ippGetValueTag(attr) == IPP_TAG_CHARSET)
@@ -155,12 +160,15 @@ lprintProcessIPP(
       else
 	uri = NULL;
 
+      client->printer = NULL;
+      client->job     = NULL;
+
       if (charset && strcasecmp(ippGetString(charset, 0, NULL), "us-ascii") && strcasecmp(ippGetString(charset, 0, NULL), "utf-8"))
       {
         // Bad character set...
 	lprintRespondIPP(client, IPP_STATUS_ERROR_BAD_REQUEST, "Unsupported character set \"%s\".", ippGetString(charset, 0, NULL));
       }
-      else if (!charset || !language || !uri)
+      else if (!charset || !language || (!uri && op != IPP_OP_CUPS_GET_PRINTERS))
       {
         // Return an error, since attributes-charset,
 	// attributes-natural-language, and printer-uri/job-uri are required
@@ -169,45 +177,46 @@ lprintProcessIPP(
       }
       else
       {
-        char	scheme[32],		// URI scheme
+        if (uri)
+        {
+	  char	scheme[32],		// URI scheme
 		userpass[32],		// Username/password in URI
 		host[256],		// Host name in URI
 		resource[256],		// Resource path in URI
 		*resptr;		// Pointer into resource
-	int	port,			// Port number in URI
+	  int	port,			// Port number in URI
 		job_id;			// Job ID
 
-        name = ippGetName(uri);
+	  name = ippGetName(uri);
 
-        if (httpSeparateURI(HTTP_URI_CODING_ALL, ippGetString(uri, 0, NULL), scheme, sizeof(scheme), userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
-        {
-	  lprintRespondIPP(client, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES, "Bad %s value '%s'.", name, ippGetString(uri, 0, NULL));
-        }
-        else if (!strcmp(name, "system-uri"))
-        {
-          if (strcmp(resource, "/ipp/system"))
-          {
+	  if (httpSeparateURI(HTTP_URI_CODING_ALL, ippGetString(uri, 0, NULL), scheme, sizeof(scheme), userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
+	  {
 	    lprintRespondIPP(client, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES, "Bad %s value '%s'.", name, ippGetString(uri, 0, NULL));
-          }
-          else
-            client->printer = lprintFindPrinter(client->system, NULL, ippGetInteger(ippFindAttribute(client->request, "printer-id", IPP_TAG_INTEGER), 0));
-        }
-        else if ((client->printer = lprintFindPrinter(client->system, resource, 0)) != NULL)
-        {
-          resptr = resource + client->printer->resourcelen;
+	  }
+	  else if (!strcmp(name, "system-uri"))
+	  {
+	    if (strcmp(resource, "/ipp/system"))
+	    {
+	      lprintRespondIPP(client, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES, "Bad %s value '%s'.", name, ippGetString(uri, 0, NULL));
+	    }
+	    else
+	      client->printer = lprintFindPrinter(client->system, NULL, ippGetInteger(ippFindAttribute(client->request, "printer-id", IPP_TAG_INTEGER), 0));
+	  }
+	  else if ((client->printer = lprintFindPrinter(client->system, resource, 0)) != NULL)
+	  {
+	    if (!strcmp(name, "job-uri") && (resptr = strrchr(resource, '/')) != NULL)
+	      job_id = atoi(resptr + 1);
+	    else
+	      job_id = ippGetInteger(ippFindAttribute(client->request, "job-id", IPP_TAG_INTEGER), 0);
 
-          if (*resptr)
-            job_id = atoi(resptr + 1);
+	    if (job_id)
+	      client->job = lprintFindJob(client->printer, job_id);
+	  }
 	  else
-	    job_id = ippGetInteger(ippFindAttribute(client->request, "job-id", IPP_TAG_INTEGER), 0);
-
-          if (job_id)
-            client->job = lprintFindJob(client->printer, job_id);
-	}
-	else
-	{
-	  lprintRespondIPP(client, IPP_STATUS_ERROR_NOT_FOUND, "%s %s not found.", name, ippGetString(uri, 0, NULL));
-	}
+	  {
+	    lprintRespondIPP(client, IPP_STATUS_ERROR_NOT_FOUND, "%s %s not found.", name, ippGetString(uri, 0, NULL));
+	  }
+        }
 
 	if (ippGetStatusCode(client->response) == IPP_STATUS_OK)
 	{
@@ -277,6 +286,11 @@ lprintProcessIPP(
 	      case IPP_OP_DELETE_PRINTER :
 	          ipp_delete_printer(client);
 	          break;
+
+              case IPP_OP_GET_PRINTERS :
+              case IPP_OP_CUPS_GET_PRINTERS :
+		  ipp_get_printers(client);
+		  break;
 
 	      case IPP_OP_GET_PRINTER_ATTRIBUTES :
                   client->printer = lprintFindPrinter(client->system, NULL, client->system->default_printer);
@@ -960,7 +974,71 @@ static void
 ipp_create_printer(
     lprint_client_t *client)		// I - Client
 {
-  lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
+  const char	*printer_name,		// Printer name
+		*device_uri,		// Device URI
+		*driver_name;		// Name of driver
+  ipp_attribute_t *attr;		// Current attribute
+
+
+  // Verify the connection is local...
+  if (!is_domain_connection(client))
+  {
+    lprintRespondIPP(client, IPP_STATUS_ERROR_FORBIDDEN, "Administrative requests not supported over network connections.");
+    return;
+  }
+
+  // Get required attributes...
+  if ((attr = ippFindAttribute(client->request, "printer-service-type", IPP_TAG_ZERO)) == NULL)
+  {
+    lprintRespondIPP(client, IPP_STATUS_ERROR_BAD_REQUEST, "Missing 'printer-name' attribute in request.");
+    return;
+  }
+  else if (ippGetGroupTag(attr) != IPP_TAG_OPERATION || ippGetValueTag(attr) != IPP_TAG_KEYWORD || ippGetCount(attr) != 1 || strcmp(ippGetString(attr, 0, NULL), "print"))
+  {
+    respond_unsupported(client, attr);
+    return;
+  }
+
+  if ((attr = ippFindAttribute(client->request, "printer-name", IPP_TAG_ZERO)) == NULL)
+  {
+    lprintRespondIPP(client, IPP_STATUS_ERROR_BAD_REQUEST, "Missing 'printer-name' attribute in request.");
+    return;
+  }
+  else if (ippGetGroupTag(attr) != IPP_TAG_PRINTER || (ippGetValueTag(attr) != IPP_TAG_NAME && ippGetValueTag(attr) != IPP_TAG_NAMELANG) || ippGetCount(attr) != 1)
+  {
+    respond_unsupported(client, attr);
+    return;
+  }
+  else
+    printer_name = ippGetString(attr, 0, NULL);
+
+  if ((attr = ippFindAttribute(client->request, "device-uri", IPP_TAG_ZERO)) == NULL)
+  {
+    lprintRespondIPP(client, IPP_STATUS_ERROR_BAD_REQUEST, "Missing 'device-uri' attribute in request.");
+    return;
+  }
+  else if (ippGetGroupTag(attr) != IPP_TAG_PRINTER || ippGetValueTag(attr) != IPP_TAG_URI || ippGetCount(attr) != 1)
+  {
+    respond_unsupported(client, attr);
+    return;
+  }
+  else
+    device_uri = ippGetString(attr, 0, NULL);
+
+  if ((attr = ippFindAttribute(client->request, "lprint-driver", IPP_TAG_ZERO)) == NULL)
+  {
+    lprintRespondIPP(client, IPP_STATUS_ERROR_BAD_REQUEST, "Missing 'lprint-driver' attribute in request.");
+    return;
+  }
+  else if (ippGetGroupTag(attr) != IPP_TAG_PRINTER || ippGetValueTag(attr) != IPP_TAG_KEYWORD || ippGetCount(attr) != 1)
+  {
+    respond_unsupported(client, attr);
+    return;
+  }
+  else
+    driver_name = ippGetString(attr, 0, NULL);
+
+  lprintRespondIPP(client, IPP_STATUS_OK, NULL);
 }
 
 
@@ -972,6 +1050,13 @@ static void
 ipp_delete_printer(
     lprint_client_t *client)		// I - Client
 {
+  // Verify the connection is local...
+  if (!is_domain_connection(client))
+  {
+    lprintRespondIPP(client, IPP_STATUS_ERROR_FORBIDDEN, "Administrative requests not supported over network connections.");
+    return;
+  }
+
   lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
 }
 
@@ -1157,6 +1242,18 @@ ipp_get_printer_attributes(
 
 
 //
+// 'ipp_get_printers()' - Get printers.
+//
+
+static void
+ipp_get_printers(
+    lprint_client_t *client)		// I - Client
+{
+  lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
+}
+
+
+//
 // 'ipp_get_system_attributes()' - Get system attributes.
 //
 
@@ -1164,8 +1261,17 @@ static void
 ipp_get_system_attributes(
     lprint_client_t *client)		// I - Client
 {
+  // Verify the connection is local...
+  if (!is_domain_connection(client))
+  {
+    lprintRespondIPP(client, IPP_STATUS_ERROR_FORBIDDEN, "Administrative requests not supported over network connections.");
+    return;
+  }
+
   lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
 }
+
+
 //
 // 'ipp_identify_printer()' - Beep or display a message.
 //
@@ -1320,6 +1426,13 @@ static void
 ipp_set_printer_attributes(
     lprint_client_t *client)		// I - Client
 {
+  // Verify the connection is local...
+  if (!is_domain_connection(client))
+  {
+    lprintRespondIPP(client, IPP_STATUS_ERROR_FORBIDDEN, "Administrative requests not supported over network connections.");
+    return;
+  }
+
   lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
 }
 
@@ -1332,6 +1445,13 @@ static void
 ipp_set_system_attributes(
     lprint_client_t *client)		// I - Client
 {
+  // Verify the connection is local...
+  if (!is_domain_connection(client))
+  {
+    lprintRespondIPP(client, IPP_STATUS_ERROR_FORBIDDEN, "Administrative requests not supported over network connections.");
+    return;
+  }
+
   lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
 }
 
@@ -1344,6 +1464,13 @@ static void
 ipp_shutdown_all_printers(
     lprint_client_t *client)		// I - Client
 {
+  // Verify the connection is local...
+  if (!is_domain_connection(client))
+  {
+    lprintRespondIPP(client, IPP_STATUS_ERROR_FORBIDDEN, "Administrative requests not supported over network connections.");
+    return;
+  }
+
   lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
 }
 
@@ -1353,10 +1480,23 @@ ipp_shutdown_all_printers(
 //
 
 static void
-ipp_validate_job(lprint_client_t *client)	// I - Client
+ipp_validate_job(
+    lprint_client_t *client)		// I - Client
 {
   if (valid_job_attributes(client))
     lprintRespondIPP(client, IPP_STATUS_OK, NULL);
+}
+
+
+//
+// 'is_domain_connection()' - Return whether a client is local.
+//
+
+static int				// O - 1 if local, 0 otherwise
+is_domain_connection(
+    lprint_client_t *client)		// I - Client
+{
+  return (httpAddrFamily(httpGetAddress(client->http)) == AF_LOCAL);
 }
 
 
