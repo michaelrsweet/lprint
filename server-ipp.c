@@ -976,8 +976,15 @@ ipp_create_printer(
 {
   const char	*printer_name,		// Printer name
 		*device_uri,		// Device URI
-		*driver_name;		// Name of driver
+		*driver_name,		// Name of driver
+		*location,		// printer-location
+		*geo_location,		// printer-gwo-location
+		*organization,		// printer-organization
+		*org_unit;		// printer-organizational-unit
   ipp_attribute_t *attr;		// Current attribute
+  char		resource[256];		// Resource path
+  lprint_printer_t *printer;		// Printer
+  cups_array_t	*ra;			// Requested attributes
 
 
   // Verify the connection is local...
@@ -1004,7 +1011,7 @@ ipp_create_printer(
     lprintRespondIPP(client, IPP_STATUS_ERROR_BAD_REQUEST, "Missing 'printer-name' attribute in request.");
     return;
   }
-  else if (ippGetGroupTag(attr) != IPP_TAG_PRINTER || (ippGetValueTag(attr) != IPP_TAG_NAME && ippGetValueTag(attr) != IPP_TAG_NAMELANG) || ippGetCount(attr) != 1)
+  else if (ippGetGroupTag(attr) != IPP_TAG_PRINTER || (ippGetValueTag(attr) != IPP_TAG_NAME && ippGetValueTag(attr) != IPP_TAG_NAMELANG) || ippGetCount(attr) != 1 || strlen(ippGetString(attr, 0, NULL)) > 127)
   {
     respond_unsupported(client, attr);
     return;
@@ -1038,7 +1045,40 @@ ipp_create_printer(
   else
     driver_name = ippGetString(attr, 0, NULL);
 
+  location     = ippGetString(ippFindAttribute(client->request, "printer-location", IPP_TAG_TEXT), 0, NULL);
+  geo_location = ippGetString(ippFindAttribute(client->request, "printer-geo-location", IPP_TAG_TEXT), 0, NULL);
+  organization = ippGetString(ippFindAttribute(client->request, "printer-organization", IPP_TAG_TEXT), 0, NULL);
+  org_unit     = ippGetString(ippFindAttribute(client->request, "printer-organizational-unit", IPP_TAG_TEXT), 0, NULL);
+
+  // See if the printer already exists...
+  snprintf(resource, sizeof(resource), "/ipp/print/%s", printer_name);
+
+  if (lprintFindPrinter(client->system, resource, 0))
+  {
+    lprintRespondIPP(client, IPP_STATUS_ERROR_NOT_POSSIBLE, "Printer name '%s' already exists.", printer_name);
+    return;
+  }
+
+  // Create the printer...
+  if ((printer = lprintCreatePrinter(client->system, 0, printer_name, driver_name, device_uri, location, geo_location, organization, org_unit)) == NULL)
+  {
+    lprintRespondIPP(client, IPP_STATUS_ERROR_INTERNAL, "Printer name '%s' already exists.", printer_name);
+    return;
+  }
+
+  // Return the printer
   lprintRespondIPP(client, IPP_STATUS_OK, NULL);
+
+  ra = cupsArrayNew((cups_array_func_t)strcmp, NULL);
+  cupsArrayAdd(ra, "printer-id");
+  cupsArrayAdd(ra, "printer-is-accepting-jobs");
+  cupsArrayAdd(ra, "printer-state");
+  cupsArrayAdd(ra, "printer-state-reasons");
+  cupsArrayAdd(ra, "printer-uuid");
+  cupsArrayAdd(ra, "printer-xri-supported");
+
+  copy_printer_attributes(client, printer, ra);
+  cupsArrayDelete(ra);
 }
 
 
