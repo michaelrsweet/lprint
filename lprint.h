@@ -161,8 +161,9 @@ struct lprint_printer_s			// Printer data
   cups_array_t		*active_jobs,	// Array of active jobs
 			*completed_jobs,// Array of completed jobs
 			*jobs;		// Array of all jobs
-  int			next_job_id;	// Next job-id
-  int			impcompleted;	// printer-impressions-completed
+  int			next_job_id,	// Next job-id
+			deleted,	// Non-zero if deleted
+			impcompleted;	// printer-impressions-completed
 };
 
 struct lprint_job_s			// Job data

@@ -1097,7 +1097,18 @@ ipp_delete_printer(
     return;
   }
 
-  lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
+  if (!client->printer)
+  {
+    lprintRespondIPP(client, IPP_STATUS_ERROR_NOT_FOUND, "Printer not found.");
+    return;
+  }
+
+  if (!client->printer->processing_job)
+    lprintDeletePrinter(client->printer);
+  else
+    client->printer->deleted = 1;
+
+  lprintRespondIPP(client, IPP_STATUS_OK, NULL);
 }
 
 
