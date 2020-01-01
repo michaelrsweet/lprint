@@ -16,6 +16,18 @@
 
 
 //
+// Local type...
+//
+
+typedef struct lprint_attr_s		// Input attribute structure
+{
+  const char	*name;			// Attribute name
+  ipp_tag_t	value_tag;		// Value tag
+  int		multiple;		// 1 if multiple values supported
+} lprint_attr_t;
+
+
+//
 // Local functions...
 //
 
@@ -45,6 +57,8 @@ static void		ipp_validate_job(lprint_client_t *client);
 static int		is_domain_connection(lprint_client_t *client);
 
 static void		respond_unsupported(lprint_client_t *client, ipp_attribute_t *attr);
+
+static int		set_printer_attributes(lprint_client_t *client, lprint_printer_t *printer);
 
 static int		valid_doc_attributes(lprint_client_t *client);
 static int		valid_job_attributes(lprint_client_t *client);
@@ -1066,6 +1080,9 @@ ipp_create_printer(
     return;
   }
 
+  if (!set_printer_attributes(client, printer))
+    return;
+
   // Return the printer
   lprintRespondIPP(client, IPP_STATUS_OK, NULL);
 
@@ -1484,7 +1501,10 @@ ipp_set_printer_attributes(
     return;
   }
 
-  lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
+  if (!set_printer_attributes(client, client->printer))
+    return;
+
+  lprintRespondIPP(client, IPP_STATUS_OK, "Printer attributes set.");
 }
 
 
@@ -1569,6 +1589,135 @@ respond_unsupported(
 
   temp = ippCopyAttribute(client->response, attr, 0);
   ippSetGroupTag(client->response, &temp, IPP_TAG_UNSUPPORTED_GROUP);
+}
+
+
+//
+// 'set_printer_attributes()' - Set printer attributes.
+//
+
+static int				// O - 1 if OK, 0 on failure
+set_printer_attributes(
+    lprint_client_t  *client,		// I - Client
+    lprint_printer_t *printer)		// I - Printer
+{
+  int			create_printer;	// Create-Printer request?
+  ipp_attribute_t	*rattr,		// Current request attribute
+			*pattr;		// Current printer attribute
+  ipp_tag_t		value_tag;	// Value tag
+  int			count;		// Number of values
+  const char		*name;		// Attribute name
+  int			i;		// Looping var
+  static lprint_attr_t	pattrs[] =	// Settable printer attributes
+  {
+    { "copies-default",			IPP_TAG_INTEGER,	0 },
+    { "finishings-default",		IPP_TAG_ENUM,		0 },
+    { "media-default",			IPP_TAG_KEYWORD,	0 },
+    { "media-ready",			IPP_TAG_KEYWORD,	1 },
+    { "orientation-requested-default",	IPP_TAG_ENUM,		0 },
+    { "print-color-mode-default",	IPP_TAG_KEYWORD,	0 },
+    { "print-content-optimize-default",	IPP_TAG_KEYWORD,	0 },
+    { "print-quality-default",		IPP_TAG_ENUM,		0 },
+    { "printer-location",		IPP_TAG_TEXT,		0 },
+    { "printer-geo-location",		IPP_TAG_URI,		0 },
+    { "printer-organization",		IPP_TAG_TEXT,		0 },
+    { "printer-organizational-unit",	IPP_TAG_TEXT,		0 },
+    { "printer-resolution-default",	IPP_TAG_RESOLUTION,	0 }
+  };
+
+
+  create_printer = ippGetOperation(client->request) == IPP_OP_CREATE_PRINTER;
+
+  // Preflight request attributes...
+  for (rattr = ippFirstAttribute(client->request); rattr; rattr = ippNextAttribute(client->request))
+  {
+    if (ippGetGroupTag(rattr) == IPP_TAG_OPERATION)
+    {
+      continue;
+    }
+    else if (ippGetGroupTag(rattr) != IPP_TAG_PRINTER)
+    {
+      respond_unsupported(client, rattr);
+      return (0);
+    }
+
+    name      = ippGetName(rattr);
+    value_tag = ippGetValueTag(rattr);
+    count     = ippGetCount(rattr);
+
+    for (i = 0; i < (int)(sizeof(pattrs) / sizeof(pattrs[0])); i ++)
+    {
+      if (strcmp(name, pattrs[i].name))
+        continue;
+      else if (value_tag != pattrs[i].value_tag || (count > 1 && !pattrs[i].multiple))
+      {
+        respond_unsupported(client, rattr);
+        return (0);
+      }
+    }
+
+    if (create_printer && (!strcmp(name, "printer-name") || !strcmp(name, "device-uri") || !strcmp(name, "lprint-driver")))
+      continue;
+
+    if (i >= (int)(sizeof(pattrs) / sizeof(pattrs[0])))
+    {
+      respond_unsupported(client, rattr);
+      return (0);
+    }
+  }
+
+  // Now apply changes...
+  pthread_rwlock_wrlock(&printer->rwlock);
+
+  for (rattr = ippFirstAttribute(client->request); rattr; rattr = ippNextAttribute(client->request))
+  {
+    if (ippGetGroupTag(rattr) == IPP_TAG_OPERATION)
+      continue;
+
+    name = ippGetName(rattr);
+
+    if (!strcmp(name, "media-ready"))
+    {
+      // TODO: Implement changes to media-ready
+    }
+    else if (!strcmp(name, "printer-geo-location"))
+    {
+      free(printer->geo_location);
+      printer->geo_location = strdup(ippGetString(rattr, 0, NULL));
+    }
+    else if (!strcmp(name, "printer-location"))
+    {
+      free(printer->location);
+      printer->location = strdup(ippGetString(rattr, 0, NULL));
+    }
+    else if (!strcmp(name, "printer-organization"))
+    {
+      free(printer->organization);
+      printer->organization = strdup(ippGetString(rattr, 0, NULL));
+    }
+    else if (!strcmp(name, "printer-organization-unit"))
+    {
+      free(printer->org_unit);
+      printer->org_unit = strdup(ippGetString(rattr, 0, NULL));
+    }
+    else
+    {
+      for (i = 0; i < (int)(sizeof(pattrs) / sizeof(pattrs[0])); i ++)
+      {
+	if (strcmp(name, pattrs[i].name))
+	  continue;
+
+        if ((pattr = ippFindAttribute(printer->attrs, name, IPP_TAG_ZERO)) != NULL)
+          ippDeleteAttribute(printer->attrs, pattr);
+
+        ippCopyAttribute(printer->attrs, rattr, 0);
+      }
+    }
+  }
+
+  pthread_rwlock_unlock(&printer->rwlock);
+
+  return (1);
 }
 
 

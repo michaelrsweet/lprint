@@ -32,6 +32,8 @@
 static int	compare_active_jobs(lprint_job_t *a, lprint_job_t *b);
 static int	compare_completed_jobs(lprint_job_t *a, lprint_job_t *b);
 static int	compare_jobs(lprint_job_t *a, lprint_job_t *b);
+static int	compare_printers(lprint_printer_t *a, lprint_printer_t *b);
+static void	free_printer(lprint_printer_t *printer);
 static unsigned	lprint_rand(void);
 
 
@@ -84,6 +86,7 @@ lprintCreatePrinter(
     IPP_OP_GET_JOB_ATTRIBUTES,
     IPP_OP_GET_JOBS,
     IPP_OP_GET_PRINTER_ATTRIBUTES,
+    IPP_OP_SET_PRINTER_ATTRIBUTES,
     IPP_OP_CANCEL_MY_JOBS,
     IPP_OP_CLOSE_JOB,
     IPP_OP_IDENTIFY_PRINTER
@@ -137,6 +140,22 @@ lprintCreatePrinter(
   {					// multiple-document-handling-supported values
     "separate-documents-uncollated-copies",
     "separate-documents-collated-copies"
+  };
+  static const char * const printer_settable_attributes[] =
+  {					// printer-settable-attributes values
+    "copies-default",
+    "document-format-default",
+    "finishings-default",
+    "media-default",
+    "orientation-requested-default",
+    "print-color-mode-default",
+    "print-content-optimize-default",
+    "print-quality-default",
+    "printer-geo-location",
+    "printer-location",
+    "printer-organization",
+    "printer-organizational-unit",
+    "printer-resolution-default"
   };
   static const char * const uri_authentication[] =
   {					// uri-authentication-supported values
@@ -309,6 +328,9 @@ lprintCreatePrinter(
   // printer-name
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_NAME, "printer-name", NULL, printer_name);
 
+  // printer-settable-attributes
+  ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "printer-settable-attributes", (int)(sizeof(printer_settable_attributes) / sizeof(printer_settable_attributes[0])), NULL, printer_settable_attributes);
+
   // printer-supply-info-uri
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-supply-info-uri", NULL, supplyurl);
 
@@ -334,6 +356,9 @@ lprintCreatePrinter(
   pthread_rwlock_wrlock(&system->rwlock);
 
   printer->printer_id = system->next_printer_id ++;
+
+  if (!system->printers)
+    system->printers = cupsArrayNew3((cups_array_func_t)compare_printers, NULL, NULL, 0, NULL, (cups_afree_func_t)free_printer);
 
   cupsArrayAdd(system->printers, printer);
 
@@ -366,29 +391,6 @@ lprintDeletePrinter(lprint_printer_t *printer)	/* I - Printer */
   pthread_rwlock_wrlock(&printer->system->rwlock);
   cupsArrayRemove(printer->system->printers, printer);
   pthread_rwlock_unlock(&printer->system->rwlock);
-
-  // Remove DNS-SD registrations...
-  lprintUnregisterDNSSD(printer);
-
-  // Free memory...
-  free(printer->printer_name);
-  free(printer->dnssd_name);
-  free(printer->location);
-  free(printer->geo_location);
-  free(printer->organization);
-  free(printer->org_unit);
-  free(printer->resource);
-  free(printer->device_uri);
-  free(printer->driver_name);
-
-  lprintDeleteDriver(printer->driver);
-  ippDelete(printer->attrs);
-
-  cupsArrayDelete(printer->active_jobs);
-  cupsArrayDelete(printer->completed_jobs);
-  cupsArrayDelete(printer->jobs);
-
-  free(printer);
 }
 
 
@@ -405,22 +407,30 @@ lprintFindPrinter(
   lprint_printer_t	*printer;	// Matching printer
 
 
+  lprintLog(system, LPRINT_LOGLEVEL_DEBUG, "lprintFindPrinter(system, resource=\"%s\", printer_id=%d)", resource, printer_id);
+
   pthread_rwlock_rdlock(&system->rwlock);
 
   if (resource && (!strcmp(resource, "/ipp/print") || (!strncmp(resource, "/ipp/print/", 11) && isdigit(resource[11] & 255))))
   {
     printer_id = system->default_printer;
     resource   = NULL;
+
+    lprintLog(system, LPRINT_LOGLEVEL_DEBUG, "lprintFindPrinter: Looking for default printer_id=%d", printer_id);
   }
 
   for (printer = (lprint_printer_t *)cupsArrayFirst(system->printers); printer; printer = (lprint_printer_t *)cupsArrayNext(system->printers))
   {
+    lprintLog(system, LPRINT_LOGLEVEL_DEBUG, "lprintFindPrinter: printer '%s' - resource=\"%s\", printer_id=%d", printer->printer_name, printer->resource, printer->printer_id);
+
     if (resource && !strncmp(printer->resource, resource, printer->resourcelen) && (!resource[printer->resourcelen] || resource[printer->resourcelen] == '/'))
       break;
     else if (printer->printer_id == printer_id)
       break;
   }
   pthread_rwlock_unlock(&system->rwlock);
+
+  lprintLog(system, LPRINT_LOGLEVEL_DEBUG, "lprintFindPrinter: Returning %p(%s)", printer, printer ? printer->printer_name : "none");
 
   return (printer);
 }
@@ -498,6 +508,50 @@ compare_jobs(lprint_job_t *a,		// I - First job
              lprint_job_t *b)		// I - Second job
 {
   return (b->id - a->id);
+}
+
+
+//
+// 'compare_printers()' - Compare two printers.
+//
+
+static int				// O - Result of comparison
+compare_printers(lprint_printer_t *a,	// I - First printer
+                 lprint_printer_t *b)	// I - Second printer
+{
+  return (strcmp(a->printer_name, b->printer_name));
+}
+
+
+//
+// 'free_printer()' - Free the memory used by a printer.
+//
+
+static void
+free_printer(lprint_printer_t *printer)	// I - Printer
+{
+  // Remove DNS-SD registrations...
+  lprintUnregisterDNSSD(printer);
+
+  // Free memory...
+  free(printer->printer_name);
+  free(printer->dnssd_name);
+  free(printer->location);
+  free(printer->geo_location);
+  free(printer->organization);
+  free(printer->org_unit);
+  free(printer->resource);
+  free(printer->device_uri);
+  free(printer->driver_name);
+
+  lprintDeleteDriver(printer->driver);
+  ippDelete(printer->attrs);
+
+  cupsArrayDelete(printer->active_jobs);
+  cupsArrayDelete(printer->completed_jobs);
+  cupsArrayDelete(printer->jobs);
+
+  free(printer);
 }
 
 
