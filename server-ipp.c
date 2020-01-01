@@ -1522,7 +1522,9 @@ ipp_shutdown_all_printers(
     return;
   }
 
-  lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
+  client->system->shutdown_time = time(NULL);
+
+  lprintRespondIPP(client, IPP_STATUS_OK, NULL);
 }
 
 
