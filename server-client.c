@@ -361,7 +361,7 @@ lprintProcessHTTP(
 	{
 	  if (ipp_state == IPP_STATE_ERROR)
 	  {
-            fprintf(stderr, "%s IPP read error (%s).\n", client->hostname, cupsLastErrorString());
+            lprintLogClient(client, LPRINT_LOGLEVEL_ERROR, "IPP read error (%s).", cupsLastErrorString());
 	    lprintRespondHTTP(client, HTTP_STATUS_BAD_REQUEST, NULL, NULL, 0);
 	    return (0);
 	  }
@@ -396,7 +396,7 @@ lprintRespondHTTP(
   char	message[1024];			/* Text message */
 
 
-  fprintf(stderr, "%s %s\n", client->hostname, httpStatus(code));
+  lprintLogClient(client, LPRINT_LOGLEVEL_INFO, "%s", httpStatus(code));
 
   if (code == HTTP_STATUS_CONTINUE)
   {

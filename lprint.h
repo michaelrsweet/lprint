@@ -213,6 +213,8 @@ typedef struct lprint_client_s		// Client data
 // Functions...
 //
 
+extern void		lprintAddDefaults(ipp_t *request, int num_options, cups_option_t *options);
+extern void		lprintAddPrinterURI(ipp_t *request, const char *printer_name, char *resource, size_t rsize);
 extern void		lprintCleanJobs(lprint_system_t *system);
 extern http_t		*lprintConnect(void);
 extern void		lprintCopyAttributes(ipp_t *to, ipp_t *from, cups_array_t *ra, ipp_tag_t group_tag, int quickcopy);

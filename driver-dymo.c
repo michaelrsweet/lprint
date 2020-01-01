@@ -80,7 +80,7 @@ lprintInitDYMO(
 
   driver->printfunc  = lprint_dymo_print;
   driver->statusfunc = lprint_dymo_status;
-  driver->format     = "application/vnd.-";
+  driver->format     = "application/vnd.dymo-lw";
 
   driver->num_resolution  = 1;
   driver->x_resolution[0] = 203;

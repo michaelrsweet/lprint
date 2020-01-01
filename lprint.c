@@ -274,7 +274,8 @@ main(int  argc,				// I - Number of command-line arguments
 http_t *				// O - HTTP connection
 lprintConnect(void)
 {
-  char	sockname[1024];			// Socket filename
+  http_t	*http;			// HTTP connection
+  char		sockname[1024];		// Socket filename
 
 
   // See if the server is running...
@@ -307,7 +308,12 @@ lprintConnect(void)
       usleep(250000);
   }
 
-  return (httpConnect2(sockname, 0, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL));
+  http = httpConnect2(sockname, 0, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL);
+
+  if (!http)
+    fprintf(stderr, "lprint: Unable to connect to server - %s\n", cupsLastErrorString());
+
+  return (http);
 }
 
 
