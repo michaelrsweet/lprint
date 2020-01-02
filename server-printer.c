@@ -369,10 +369,6 @@ lprintCreatePrinter(
   if (!system->default_printer)
     system->default_printer = printer->printer_id;
 
-  // TODO: Set this in server-ipp.c since printers loaded from the config file shouldn't trigger a save?
-  if (!system->save_time)
-    system->save_time = time(NULL) + 1;
-
   pthread_rwlock_unlock(&system->rwlock);
 
   // Register the printer with Bonjour...

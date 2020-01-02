@@ -16,6 +16,13 @@
 
 
 //
+// Local globals...
+//
+
+static int		shutdown_system = 0;
+
+
+//
 // Local functions...
 //
 
@@ -23,6 +30,7 @@ static int		create_listener(const char *name, int port, int family);
 static char		*get_config_file(char *buffer, size_t bufsize);
 static int		load_config(lprint_system_t *system);
 static int		save_config(lprint_system_t *system);
+static void		sigterm_handler(int sig);
 
 
 //
@@ -34,7 +42,7 @@ lprintCreateSystem(
     const char        *hostname,	// I - Hostname or `NULL` for none
     int               port,		// I - Port number or `0` for auto
     const char        *subtypes,	// I - DNS-SD sub-types or `NULL` for none
-    const char        *logfile,		// I - Log file or `NULL` for syslog
+    const char        *logfile,		// I - Log file or `NULL` for default
     lprint_loglevel_t loglevel)		// I - Log level
 {
   lprint_system_t	*system;	// System object
@@ -71,29 +79,12 @@ lprintCreateSystem(
     system->port     = port ? port : 8000 + (getuid() % 1000);
   }
 
-  system->directory = strdup(spooldir);
-
-  if (logfile && strcmp(logfile, "syslog"))
-  {
-    system->logfile = strdup(logfile);
-
-    if (!strcmp(logfile, "-"))
-    {
-      // Log to stderr...
-      system->logfd = 2;
-    }
-    else if ((system->logfd = open(logfile, O_CREAT | O_WRONLY | O_APPEND | O_NOFOLLOW | O_CLOEXEC, 0600)) < 0)
-    {
-      // Fallback to stderr if we can't open the log file...
-      perror(logfile);
-
-      system->logfd = 2;
-    }
-  }
-  else
-    system->logfd = -1;
-
-  system->loglevel = loglevel;
+  system->directory       = strdup(spooldir);
+  system->logfd           = 2;
+  system->logfile         = logfile ? strdup(logfile) : NULL;
+  system->loglevel        = loglevel;
+  system->next_client     = 1;
+  system->next_printer_id = 1;
 
   if (subtypes)
     system->subtypes = strdup(subtypes);
@@ -135,9 +126,36 @@ lprintCreateSystem(
   if (system->subtypes)
     lprintInitDNSSD(system);
 
-  // Load printers
+  // Load printers...
   if (!load_config(system))
     goto fatal;
+
+  // Initialize logging...
+  if (system->loglevel == LPRINT_LOGLEVEL_UNSPEC)
+    system->loglevel = LPRINT_LOGLEVEL_ERROR;
+
+  if (system->logfile)
+  {
+    if (!strcmp(system->logfile, "syslog"))
+    {
+      // Log to syslog...
+      system->logfd = -1;
+    }
+    else if (!strcmp(system->logfile, "-"))
+    {
+      // Log to stderr...
+      system->logfd = 2;
+    }
+    else if ((system->logfd = open(system->logfile, O_CREAT | O_WRONLY | O_APPEND | O_NOFOLLOW | O_CLOEXEC, 0600)) < 0)
+    {
+      // Fallback to stderr if we can't open the log file...
+      perror(system->logfile);
+
+      system->logfd = 2;
+    }
+  }
+
+  lprintLog(system, LPRINT_LOGLEVEL_INFO, "System configuration loaded.");
 
   return (system);
 
@@ -169,7 +187,7 @@ lprintDeleteSystem(
   free(system->logfile);
   free(system->subtypes);
 
-  if (system->logfd > 2)
+  if (system->logfd >= 0 && system->logfd != 2)
     close(system->logfd);
 
   for (i = 0; i < system->num_listeners; i ++)
@@ -197,8 +215,14 @@ lprintRunSystem(lprint_system_t *system)// I - System
   lprint_client_t	*client;	// New client
 
 
+  // Catch important signals...
+  lprintLog(system, LPRINT_LOGLEVEL_INFO, "Starting main loop.");
+
+  signal(SIGTERM, sigterm_handler);
+  signal(SIGINT, sigterm_handler);
+
   // Loop until we are shutdown or have a hard error...
-  for (;;)
+  while (!shutdown_system)
   {
     if (system->save_time || system->shutdown_time)
       timeout = 5;
@@ -242,7 +266,9 @@ lprintRunSystem(lprint_system_t *system)// I - System
     if (system->save_time)
     {
       // Save the configuration...
+      pthread_rwlock_rdlock(&system->rwlock);
       save_config(system);
+      pthread_rwlock_unlock(&system->rwlock);
       system->save_time = 0;
     }
 
@@ -273,6 +299,16 @@ lprintRunSystem(lprint_system_t *system)// I - System
     // Clean out old jobs...
     if (system->clean_time && time(NULL) >= system->clean_time)
       lprintCleanJobs(system);
+  }
+
+  lprintLog(system, LPRINT_LOGLEVEL_INFO, "Shutting down main loop.");
+
+  if (system->save_time)
+  {
+    // Save the configuration...
+    pthread_rwlock_rdlock(&system->rwlock);
+    save_config(system);
+    pthread_rwlock_unlock(&system->rwlock);
   }
 }
 
@@ -337,15 +373,186 @@ static int				// O - 1 on success, 0 on failure
 load_config(lprint_system_t *system)	// I - System
 {
   char		configfile[256];	// Configuration filename
-#if 0
   cups_file_t	*fp;			// File pointer
   char		line[1024],		// Line from file
 		*value;			// Value from line
-#endif // 0
+  int		linenum = 0;		// Line number in file
 
-  printf("LOAD: %s\n", get_config_file(configfile, sizeof(configfile)));
+  // Try opening the config file...
+  if ((fp = cupsFileOpen(get_config_file(configfile, sizeof(configfile)), "r")) == NULL)
+    return (1);
 
-  (void)system;
+  while (cupsFileGetConf(fp, line, sizeof(line), &value, &linenum))
+  {
+    if (!value)
+    {
+      lprintLog(system, LPRINT_LOGLEVEL_ERROR, "Missing value for '%s' on line %d of '%s'.", line, linenum, configfile);
+    }
+    else if (!strcmp(line, "DefaultPrinterId"))
+    {
+      system->default_printer = atoi(value);
+    }
+    else if (!strcmp(line, "NextPrinterId"))
+    {
+      system->next_printer_id = atoi(value);
+    }
+    else if (!strcmp(line, "LogFile"))
+    {
+      if (!system->logfile)
+        system->logfile = strdup(value);
+    }
+    else if (!strcmp(line, "LogLevel"))
+    {
+      if (system->loglevel != LPRINT_LOGLEVEL_UNSPEC)
+        continue;
+
+      if (!strcmp(value, "debug"))
+        system->loglevel = LPRINT_LOGLEVEL_DEBUG;
+      else if (!strcmp(value, "info"))
+        system->loglevel = LPRINT_LOGLEVEL_INFO;
+      else if (!strcmp(value, "warn"))
+        system->loglevel = LPRINT_LOGLEVEL_WARN;
+      else if (!strcmp(value, "error"))
+        system->loglevel = LPRINT_LOGLEVEL_ERROR;
+      else if (!strcmp(value, "fatal"))
+        system->loglevel = LPRINT_LOGLEVEL_FATAL;
+      else
+	lprintLog(system, LPRINT_LOGLEVEL_ERROR, "Bad LogLevel value '%s' on line %d of '%s'.", value, linenum, configfile);
+    }
+    else if (!strcmp(line, "Printer"))
+    {
+      lprint_printer_t	*printer;	// Printer
+      char		*printer_name,	// Printer name
+			*printer_id,	// Printer ID number
+			*device_uri,	// Device URI
+			*lprint_driver;	// Driver name
+      ipp_attribute_t	*attr;		// IPP attribute
+
+      printer_name = value;
+
+      if ((printer_id = strchr(printer_name, ' ')) == NULL)
+      {
+        lprintLog(system, LPRINT_LOGLEVEL_ERROR, "Bad Printer value '%s' on line %d of '%s'.", value, linenum, configfile);
+        break;
+      }
+
+      if ((device_uri = strchr(printer_id + 1, ' ')) == NULL)
+      {
+        lprintLog(system, LPRINT_LOGLEVEL_ERROR, "Bad Printer value '%s' on line %d of '%s'.", value, linenum, configfile);
+        break;
+      }
+
+      if ((lprint_driver = strchr(device_uri + 1, ' ')) == NULL)
+      {
+        lprintLog(system, LPRINT_LOGLEVEL_ERROR, "Bad Printer value '%s' on line %d of '%s'.", value, linenum, configfile);
+        break;
+      }
+
+      *printer_id++    = '\0';
+      *device_uri++    = '\0';
+      *lprint_driver++ = '\0';
+
+      printer = lprintCreatePrinter(system, atoi(printer_id), printer_name, lprint_driver, device_uri, NULL, NULL, NULL, NULL);
+
+      if (printer->printer_id >= system->next_printer_id)
+       system->next_printer_id = printer->printer_id + 1;
+
+      while (cupsFileGetConf(fp, line, sizeof(line), &value, &linenum))
+      {
+        if (!strcmp(line, "EndPrinter"))
+        {
+          break;
+	}
+	else if (!value)
+	{
+	  lprintLog(system, LPRINT_LOGLEVEL_ERROR, "Missing value for '%s' on line %d of '%s'.", line, linenum, configfile);
+	}
+	else
+	{
+	  // Delete any existing attribute...
+	  if ((attr = ippFindAttribute(printer->attrs, line, IPP_TAG_ZERO)) != NULL)
+	    ippDeleteAttribute(printer->attrs, attr);
+
+	  if (!strcmp(line, "copies-default"))
+	  {
+	    ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, line, atoi(value));
+	  }
+	  else if (!strcmp(line, "document-format-default"))
+	  {
+	    ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_MIMETYPE, line, NULL, value);
+	  }
+	  else if (!strcmp(line, "finishings-default") || !strcmp(line, "print-quality-default") || !strcmp(line, "orientation-requested-default"))
+	  {
+	    ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_ENUM, line, atoi(value));
+	  }
+	  else if (!strcmp(line, "media-default") || !strcmp(line, "print-color-mode-default") || !strcmp(line, "print-content-optimize-default"))
+	  {
+	    ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, line, NULL, value);
+	  }
+	  else if (!strcmp(line, "media-ready"))
+	  {
+	    int		i;		// Looping var
+	    char	*current,	// Current value
+			*next;		// Pointer to next value
+
+            for (i = 0, current = value; current && i < LPRINT_MAX_SOURCE; i ++, current = next)
+            {
+              if ((next = strchr(current, ',')) != NULL)
+                *next++ = '\0';
+
+	      strlcpy(printer->driver->ready_media[i], current, sizeof(printer->driver->ready_media[i]));
+	    }
+	  }
+	  else if (!strcmp(line, "printer-geo-location"))
+	  {
+	    printer->geo_location = strdup(value);
+	  }
+	  else if (!strcmp(line, "printer-location"))
+	  {
+	    printer->location = strdup(value);
+	  }
+	  else if (!strcmp(line, "printer-organization"))
+	  {
+	    printer->organization = strdup(value);
+	  }
+	  else if (!strcmp(line, "printer-organizational-unit"))
+	  {
+	    printer->org_unit = strdup(value);
+	  }
+	  else if (!strcmp(line, "printer-resolution-default"))
+	  {
+	    int		xres, yres;	// Resolution values
+	    char	units[32];	// Resolution units
+
+	    if (sscanf(value, "%dx%d%31s", &xres, &yres, units) != 3)
+	    {
+	      if (sscanf(value, "%d%31s", &xres, units) != 2)
+	      {
+		xres = 300;
+
+		strlcpy(units, "dpi", sizeof(units));
+	      }
+
+	      yres = xres;
+	    }
+
+	    ippAddResolution(printer->attrs, IPP_TAG_PRINTER, "printer-resolution-default", xres, yres, !strcmp(units, "dpi") ? IPP_RES_PER_INCH : IPP_RES_PER_CM);
+	  }
+	  else
+	  {
+	    lprintLog(system, LPRINT_LOGLEVEL_ERROR, "Unsupported attribute '%s' with value '%s' on line %d of '%s'.", line, value, linenum, configfile);
+	  }
+	}
+      }
+    }
+    else
+    {
+      lprintLog(system, LPRINT_LOGLEVEL_ERROR, "Unknown '%s %s' on line %d of '%s'.", line, value, linenum, configfile);
+    }
+  }
+
+  cupsFileClose(fp);
+
   return (1);
 }
 
@@ -357,13 +564,86 @@ load_config(lprint_system_t *system)	// I - System
 static int				// O - 1 on success, 0 on failure
 save_config(lprint_system_t *system)	// I - System
 {
-  char		configfile[256];	// Configuration filename
-#if 0
-  cups_file_t	*fp;			// File pointer
-#endif // 0
+  char			configfile[256];// Configuration filename
+  cups_file_t		*fp;		// File pointer
+  lprint_printer_t	*printer;	// Current printer
+  int			i;		// Looping var
+  ipp_attribute_t	*attr;		// Printer attribute
+  char			value[1024];	// Attribute value
+  static const char * const llevels[] =	// Log level strings
+  {
+    "debug",
+    "info",
+    "warn",
+    "error",
+    "fatal"
+  };
+  static const char * const pattrs[] =	// List of printer attributes to save
+  {
+    "copies-default",
+    "document-format-default-default",
+    "finishings-default",
+    "media-default",
+    "media-ready",
+    "orientation-requested-default",
+    "print-color-mode-default",
+    "print-content-optimize-default",
+    "print-quality-default",
+    "printer-resolution-default"
+  };
 
-  printf("SAVE: %s\n", get_config_file(configfile, sizeof(configfile)));
 
-  (void)system;
+  if ((fp = cupsFileOpen(get_config_file(configfile, sizeof(configfile)), "w")) == NULL)
+  {
+    lprintLog(system, LPRINT_LOGLEVEL_ERROR, "Unable to save configuration to '%s': %s", configfile, strerror(errno));
+    return (0);
+  }
+
+  lprintLog(system, LPRINT_LOGLEVEL_INFO, "Saving system configuration to '%s'.", configfile);
+
+  cupsFilePrintf(fp, "DefaultPrinterId %d\n", system->default_printer);
+  cupsFilePrintf(fp, "NextPrinterId %d\n", system->next_printer_id);
+
+  if (system->logfile)
+    cupsFilePutConf(fp, "LogFile", system->logfile);
+  cupsFilePutConf(fp, "LogLevel", llevels[system->loglevel]);
+
+  for (printer = (lprint_printer_t *)cupsArrayFirst(system->printers); printer; printer = (lprint_printer_t *)cupsArrayNext(system->printers))
+  {
+    cupsFilePrintf(fp, "Printer %s %d %s %s\n", printer->printer_name, printer->printer_id, printer->device_uri, printer->driver_name);
+    if (printer->geo_location)
+      cupsFilePutConf(fp, "printer-geo-location", printer->geo_location);
+    if (printer->location)
+      cupsFilePutConf(fp, "printer-location", printer->location);
+    if (printer->organization)
+      cupsFilePutConf(fp, "printer-organization", printer->organization);
+    if (printer->org_unit)
+      cupsFilePutConf(fp, "printer-organizational-unit", printer->org_unit);
+
+    for (i = 0; i < (int)(sizeof(pattrs) / sizeof(pattrs[0])); i ++)
+    {
+      if ((attr = ippFindAttribute(printer->attrs, pattrs[i], IPP_TAG_ZERO)) != NULL)
+      {
+        ippAttributeString(attr, value, sizeof(value));
+        cupsFilePutConf(fp, pattrs[i], value);
+      }
+    }
+
+    cupsFilePuts(fp, "EndPrinter\n");
+  }
+
+  cupsFileClose(fp);
+
   return (1);
+}
+
+
+//
+// 'sigterm_handler()' - SIGTERM handler.
+//
+
+static void
+sigterm_handler(int sig)		// I - Signal (ignored)
+{
+  shutdown_system = 1;
 }

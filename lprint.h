@@ -125,6 +125,7 @@ typedef struct lprint_system_s		// System data
   int			num_listeners;	// Number of listener sockets
   struct pollfd		listeners[3];	// Listener sockets
   cups_array_t		*clients;	// Array of client connections
+  int			next_client;	// Next client number
   cups_array_t		*printers;	// Array of printers
   int			default_printer,// Default printer-id
 			next_printer_id;// Next printer-id
@@ -245,7 +246,7 @@ extern lprint_printer_t	*lprintFindPrinter(lprint_system_t *system, const char *
 extern char		*lprintGetServerPath(char *buffer, size_t bufsize);
 extern void		lprintInitDNSSD(lprint_system_t *system);
 extern int		lprintIsServerRunning(void);
-// Note: Log functions currently only support %d and %s!
+// Note: Log functions currently only support %d, %p, %s, and %u!
 extern void		lprintLog(lprint_system_t *system, lprint_loglevel_t level, const char *message, ...);
 extern void		lprintLogAttributes(lprint_client_t *client, const char *title, ipp_t *ipp, int is_response);
 extern void		lprintLogClient(lprint_client_t *client, lprint_loglevel_t level, const char *message, ...) LPRINT_FORMAT(3, 4);

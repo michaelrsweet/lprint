@@ -52,7 +52,7 @@ lprintDoServer(
     }
   }
   else
-    loglevel = LPRINT_LOGLEVEL_ERROR;
+    loglevel = LPRINT_LOGLEVEL_UNSPEC;
 
   logfile  = cupsGetOption("log-file", num_options, options);
   hostname = cupsGetOption("server-name", num_options, options);

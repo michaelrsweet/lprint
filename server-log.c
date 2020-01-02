@@ -213,6 +213,11 @@ write_log(lprint_system_t   *system,	// I - System
             bufptr += strlen(bufptr);
             break;
 
+        case 'p' : // Log a pointer
+            snprintf(bufptr, bufptr - bufend + 1, "%p", va_arg(ap, void *));
+            bufptr += strlen(bufptr);
+            break;
+
         case 's' : // Log a string
             if ((sval = va_arg(ap, char *)) == NULL)
               sval = "(null)";
@@ -252,6 +257,11 @@ write_log(lprint_system_t   *system,	// I - System
               else
                 *bufptr++ = val;
             }
+            break;
+
+        case 'u' : // Log an unsigned integer
+            snprintf(bufptr, bufptr - bufend + 1, "%u", va_arg(ap, unsigned));
+            bufptr += strlen(bufptr);
             break;
 
         default : // Something else we don't support

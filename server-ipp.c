@@ -1611,6 +1611,7 @@ set_printer_attributes(
   static lprint_attr_t	pattrs[] =	// Settable printer attributes
   {
     { "copies-default",			IPP_TAG_INTEGER,	1 },
+    { "document-format-default",	IPP_TAG_MIMETYPE,	1 },
     { "finishings-default",		IPP_TAG_ENUM,		1 },
     { "media-default",			IPP_TAG_KEYWORD,	1 },
     { "media-ready",			IPP_TAG_KEYWORD,	LPRINT_MAX_SOURCE },
@@ -1631,6 +1632,8 @@ set_printer_attributes(
 
   for (rattr = ippFirstAttribute(client->request); rattr; rattr = ippNextAttribute(client->request))
   {
+    lprintLogClient(client, LPRINT_LOGLEVEL_DEBUG, "%s %s %s%s ...", ippTagString(ippGetGroupTag(rattr)), ippGetName(rattr), ippGetCount(rattr) > 1 ? "1setOf " : "", ippTagString(ippGetValueTag(rattr)));
+
     if (ippGetGroupTag(rattr) == IPP_TAG_OPERATION)
     {
       continue;
@@ -1651,15 +1654,8 @@ set_printer_attributes(
 
     for (i = 0; i < (int)(sizeof(pattrs) / sizeof(pattrs[0])); i ++)
     {
-      if (strcmp(name, pattrs[i].name))
-      {
-        continue;
-      }
-      else if (value_tag != pattrs[i].value_tag || (count > pattrs[i].max_count))
-      {
-        respond_unsupported(client, rattr);
+      if (!strcmp(name, pattrs[i].name) && value_tag == pattrs[i].value_tag && count <= pattrs[i].max_count)
         break;
-      }
     }
 
     if (i >= (int)(sizeof(pattrs) / sizeof(pattrs[0])))
@@ -1729,7 +1725,12 @@ set_printer_attributes(
     }
   }
 
+  printer->config_time = time(NULL);
+
   pthread_rwlock_unlock(&printer->rwlock);
+
+  if (!client->system->save_time)
+    client->system->save_time = time(NULL) + 1;
 
   return (1);
 }
