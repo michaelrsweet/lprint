@@ -14,6 +14,7 @@
 
 #include "lprint.h"
 #include "lprint-png.h"
+#include "lprint-large-png.h"
 #include <ctype.h>
 
 
@@ -290,7 +291,7 @@ lprintProcessHTTP(
 	return (lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, NULL, 0));
 
     case HTTP_STATE_HEAD :
-        if (!strcmp(client->uri, "/lprint.png"))
+        if (!strcmp(client->uri, "/lprint.png") || !strcmp(client->uri, "/lprint-large.png"))
 	  return (lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "image/png", 0));
 #if 0
 	else if (!strcmp(client->uri, "/") || !strcmp(client->uri, "/media") || !strcmp(client->uri, "/supplies"))
@@ -307,6 +308,15 @@ lprintProcessHTTP(
 	    return (0);
 
 	  httpWrite2(client->http, (const char *)lprint_png, sizeof(lprint_png));
+	  httpFlushWrite(client->http);
+	}
+        else if (!strcmp(client->uri, "/lprint-large.png"))
+	{
+	  // Send PNG icon file.
+	  if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "image/png", sizeof(lprint_large_png)))
+	    return (0);
+
+	  httpWrite2(client->http, (const char *)lprint_large_png, sizeof(lprint_large_png));
 	  httpFlushWrite(client->http);
 	}
 #if 0

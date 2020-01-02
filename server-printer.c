@@ -58,7 +58,7 @@ lprintCreatePrinter(
 			ipp_uri[1024],	// Printer URI
 			ipps_uri[1024],	// Secure printer URI
 			*uris[2],	// All URIs
-			icons[1024],	// printer-icons URI
+			icons[2][1024],	// printer-icons URIs
 			adminurl[1024],	// printer-more-info URI
 			supplyurl[1024],// printer-supply-info-uri URI
 			uuid[128];	// printer-uuid
@@ -187,7 +187,8 @@ lprintCreatePrinter(
 
   httpAssembleURI(HTTP_URI_CODING_ALL, ipp_uri, sizeof(ipp_uri), "ipp", NULL, system->hostname, system->port, resource);
   httpAssembleURI(HTTP_URI_CODING_ALL, ipps_uri, sizeof(ipps_uri), "ipps", NULL, system->hostname, system->port, resource);
-  httpAssembleURI(HTTP_URI_CODING_ALL, icons, sizeof(icons), "https", NULL, system->hostname, system->port, "/lprint.png");
+  httpAssembleURI(HTTP_URI_CODING_ALL, icons[0], sizeof(icons[0]), "https", NULL, system->hostname, system->port, "/lprint.png");
+  httpAssembleURI(HTTP_URI_CODING_ALL, icons[1], sizeof(icons[1]), "https", NULL, system->hostname, system->port, "/lprint-large.png");
   httpAssembleURI(HTTP_URI_CODING_ALL, adminurl, sizeof(adminurl), "https", NULL, system->hostname, system->port, resource);
   httpAssembleURIf(HTTP_URI_CODING_ALL, supplyurl, sizeof(supplyurl), "https", NULL, system->hostname, system->port, "%s/supplies", resource);
   lprintMakeUUID(system, printer_name, 0, uuid, sizeof(uuid));
@@ -317,7 +318,10 @@ lprintCreatePrinter(
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "printer-get-attributes-supported", NULL, "document-format");
 
   // printer-icons
-  ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-icons", NULL, icons);
+  uris[0] = icons[0];
+  uris[1] = icons[1];
+
+  ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-icons", 2, NULL, (const char * const *)uris);
 
   // printer-info
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-info", NULL, printer_name);
@@ -338,7 +342,7 @@ lprintCreatePrinter(
   uris[0] = ipp_uri;
   uris[1] = ipps_uri;
 
-  ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-uri-supported", 2, NULL, (const char **)uris);
+  ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-uri-supported", 2, NULL, (const char * const *)uris);
 
   // printer-uuid
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-uuid", NULL, uuid);

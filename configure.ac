@@ -1,7 +1,7 @@
 dnl
 dnl LPrint configuration script
 dnl
-dnl Copyright © 2019 by Michael R Sweet
+dnl Copyright © 2019-2020 by Michael R Sweet
 dnl
 dnl Licensed under Apache License v2.0.  See the file "LICENSE" for more
 dnl information.
@@ -13,7 +13,7 @@ AC_PREREQ(2.60)
 
 
 dnl Package name and version...
-AC_INIT([lprint], [0.1], [https://github.com/michaelrsweet/lprint/issues], [lprint], [https://michaelrsweet.github.io/lprint])
+AC_INIT([lprint], [1.0b1], [https://github.com/michaelrsweet/lprint/issues], [lprint], [https://michaelrsweet.github.io/lprint])
 AC_CONFIG_HEADERS(config.h)
 
 LPRINT_VERSION="AC_PACKAGE_VERSION"

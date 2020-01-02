@@ -67,6 +67,7 @@
 		2724351023A441DB00B318AF /* lprint-delete.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-delete.1"; path = "../man/lprint-delete.1"; sourceTree = "<group>"; };
 		2724351123A441DB00B318AF /* lprint-modify.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-modify.1"; path = "../man/lprint-modify.1"; sourceTree = "<group>"; };
 		2724351223A441DB00B318AF /* lprint-add.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-add.1"; path = "../man/lprint-add.1"; sourceTree = "<group>"; };
+		27FB485723BD7D8000BE0E47 /* lprint-large-png.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-large-png.h"; path = "../lprint-large-png.h"; sourceTree = "<group>"; };
 		27FBEEA22396988200BB195A /* server-system.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "server-system.c"; path = "../server-system.c"; sourceTree = "<group>"; };
 		27FBEEA32396988200BB195A /* lprint-jobs.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-jobs.1"; path = "../man/lprint-jobs.1"; sourceTree = "<group>"; };
 		27FBEEA42396988200BB195A /* driver-dymo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "driver-dymo.c"; path = "../driver-dymo.c"; sourceTree = "<group>"; };
@@ -177,6 +178,7 @@
 				27FBEEBC2396988200BB195A /* lprint-devices.c */,
 				27FBEF07239747C200BB195A /* lprint-drivers.c */,
 				27FBEECD2396988300BB195A /* lprint-jobs.c */,
+				27FB485723BD7D8000BE0E47 /* lprint-large-png.h */,
 				27FBEF04239747C200BB195A /* lprint-modify.c */,
 				27FBEEAA2396988200BB195A /* lprint-png.h */,
 				27FBEECB2396988300BB195A /* lprint-printers.c */,
