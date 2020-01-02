@@ -218,7 +218,7 @@ typedef struct lprint_client_s		// Client data
 extern void		lprintAddDefaults(ipp_t *request, int num_options, cups_option_t *options);
 extern void		lprintAddPrinterURI(ipp_t *request, const char *printer_name, char *resource, size_t rsize);
 extern void		lprintCleanJobs(lprint_system_t *system);
-extern http_t		*lprintConnect(void);
+extern http_t		*lprintConnect(int auto_start);
 extern void		lprintCopyAttributes(ipp_t *to, ipp_t *from, cups_array_t *ra, ipp_tag_t group_tag, int quickcopy);
 extern lprint_client_t	*lprintCreateClient(lprint_system_t *system, int sock);
 extern lprint_job_t	*lprintCreateJob(lprint_client_t *client);
@@ -244,9 +244,9 @@ extern int		lprintDoStatus(int num_options, cups_option_t *options);
 extern int		lprintDoSubmit(int num_files, char **files, int num_options, cups_option_t *options);
 extern lprint_job_t	*lprintFindJob(lprint_printer_t *printer, int job_id);
 extern lprint_printer_t	*lprintFindPrinter(lprint_system_t *system, const char *resource, int printer_id);
+extern char		*lprintGetDefaultPrinter(http_t *http, char *buffer, size_t bufsize);
 extern char		*lprintGetServerPath(char *buffer, size_t bufsize);
 extern void		lprintInitDNSSD(lprint_system_t *system);
-extern int		lprintIsServerRunning(void);
 // Note: Log functions currently only support %d, %p, %s, and %u!
 extern void		lprintLog(lprint_system_t *system, lprint_loglevel_t level, const char *message, ...);
 extern void		lprintLogAttributes(lprint_client_t *client, const char *title, ipp_t *ipp, int is_response);

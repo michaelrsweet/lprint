@@ -162,7 +162,7 @@ lprintDoAdd(int           num_options,	// I - Number of options
   }
 
   // Open a connection to the server...
-  if ((http = lprintConnect()) == NULL)
+  if ((http = lprintConnect(1)) == NULL)
     return (1);
 
   // Send a Create-Printer request to the server...

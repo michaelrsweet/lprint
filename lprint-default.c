@@ -32,22 +32,15 @@ lprintDoDefault(
 
 
   // Connect to/start up the server and get the destination printer...
-  http = lprintConnect();
+  http = lprintConnect(1);
 
   if ((printer_name = cupsGetOption("printer-name", num_options, options)) == NULL)
   {
-    // Ask the server for its default printer; can't use cupsGetDefault2
-    // because it will return a default printer for CUPS...
-    request = ippNewRequest(IPP_OP_CUPS_GET_DEFAULT);
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", NULL, "printer-name");
+    char	default_printer[256];	// Default printer
 
-    response = cupsDoRequest(http, request, "/ipp/system");
+    if (lprintGetDefaultPrinter(http, default_printer, sizeof(default_printer)))
+      puts(default_printer);
 
-    if ((printer_name = ippGetString(ippFindAttribute(response, "printer-name", IPP_TAG_NAME), 0, NULL)) != NULL)
-      puts(printer_name);
-
-    ippDelete(response);
     httpClose(http);
     return (0);
   }
@@ -86,4 +79,41 @@ lprintDoDefault(
   }
 
   return (0);
+}
+
+
+//
+// 'lprintGetDefaultPrinter()' - Get the default printer.
+//
+// Note: We can't use cupsGetDefault2() because it uses the defaults set via
+// CUPS environment variables and the lpoptions command, too.
+//
+
+char *					// O - Default printer or `NULL` for none
+lprintGetDefaultPrinter(
+    http_t *http,			// I - HTTP connection
+    char   *buffer,			// I - Buffer for printer name
+    size_t bufsize)			// I - Size of buffer
+{
+  ipp_t		*request,		// IPP request
+		*response;		// IPP response
+  const char	*printer_name;		// Printer name
+
+
+  // Ask the server for its default printer; can't use cupsGetDefault2
+  // because it will return a default printer for CUPS...
+  request = ippNewRequest(IPP_OP_CUPS_GET_DEFAULT);
+  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
+  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", NULL, "printer-name");
+
+  response = cupsDoRequest(http, request, "/ipp/system");
+
+  if ((printer_name = ippGetString(ippFindAttribute(response, "printer-name", IPP_TAG_NAME), 0, NULL)) != NULL)
+    strlcpy(buffer, printer_name, bufsize);
+  else
+    *buffer = '\0';
+
+  ippDelete(response);
+
+  return (*buffer ? buffer : NULL);
 }

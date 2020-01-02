@@ -62,7 +62,7 @@ lprintDoModify(
   }
 
   // Open a connection to the server...
-  if ((http = lprintConnect()) == NULL)
+  if ((http = lprintConnect(1)) == NULL)
     return (1);
 
   // Send a Set-Printer-Attributes request to the server...

@@ -30,7 +30,7 @@ lprintDoPrinters(
 
 
   // Connect to/start up the server and get the list of printers...
-  http = lprintConnect();
+  http = lprintConnect(1);
 
   request = ippNewRequest(IPP_OP_GET_PRINTERS);
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "system-uri", NULL, "ipp://localhost/ipp/system");

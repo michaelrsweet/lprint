@@ -40,7 +40,8 @@ lprintDoSubmit(
   http_t	*http;			// Server connection
   ipp_t		*request,		// IPP request
 		*response;		// IPP response
-  char		resource[1024],		// Resource path
+  char		default_printer[256],	// Default printer name
+		resource[1024],		// Resource path
 		tempfile[1024];		// Temporary file
   int		i;			// Looping var
   char		*stdin_file;		// Dummy filename for passive stdin jobs
@@ -63,11 +64,11 @@ lprintDoSubmit(
   }
 
   // Connect to/start up the server and get the destination printer...
-  http = lprintConnect();
+  http = lprintConnect(1);
 
   if ((printer_name = cupsGetOption("printer-name", num_options, options)) == NULL)
   {
-    if ((printer_name = cupsGetDefault2(http)) == NULL)
+    if ((printer_name = lprintGetDefaultPrinter(http, default_printer, sizeof(default_printer))) == NULL)
     {
       fputs("lprint: No default printer available.\n", stderr);
       httpClose(http);

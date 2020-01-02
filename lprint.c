@@ -272,14 +272,16 @@ main(int  argc,				// I - Number of command-line arguments
 //
 
 http_t *				// O - HTTP connection
-lprintConnect(void)
+lprintConnect(int auto_start)		// I - 1 to start server if not running
 {
   http_t	*http;			// HTTP connection
   char		sockname[1024];		// Socket filename
 
 
   // See if the server is running...
-  if (access(lprintGetServerPath(sockname, sizeof(sockname)), 0))
+  http = httpConnect2(lprintGetServerPath(sockname, sizeof(sockname)), 0, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL);
+
+  if (!http)
   {
     // Nope, start it now...
     pid_t	server_pid;		// Server process ID
@@ -306,9 +308,9 @@ lprintConnect(void)
     // Wait for it to start...
     while (access(lprintGetServerPath(sockname, sizeof(sockname)), 0))
       usleep(250000);
-  }
 
-  http = httpConnect2(sockname, 0, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL);
+    http = httpConnect2(sockname, 0, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL);
+  }
 
   if (!http)
     fprintf(stderr, "lprint: Unable to connect to server - %s\n", cupsLastErrorString());
@@ -339,20 +341,6 @@ lprintGetServerPath(char   *buffer,	// I - Buffer for filenaem
   snprintf(buffer, bufsize, "%s/lprint%d.sock", tmpdir, (int)getuid());
 
   return (buffer);
-}
-
-
-//
-// 'lprintIsServerRunning()' - Determine whether the local server is running.
-//
-
-int					// O - 1 if running, 0 otherwise
-lprintIsServerRunning(void)
-{
-  char	sockname[1024];			// Socket filename
-
-
-  return (!access(lprintGetServerPath(sockname, sizeof(sockname)), 0));
 }
 
 

@@ -24,7 +24,8 @@ lprintDoCancel(
     cups_option_t *options)		// I - Options
 {
   const char	*printer_name;		// Printer name
-  char		resource[1024];		// Resource path
+  char		default_printer[256],	// Default printer
+		resource[1024];		// Resource path
   http_t	*http;			// Server connection
   ipp_t		*request;		// IPP request
   const char	*value;			// Option value
@@ -32,11 +33,11 @@ lprintDoCancel(
 
 
   // Connect to/start up the server and get the destination printer...
-  http = lprintConnect();
+  http = lprintConnect(1);
 
   if ((printer_name = cupsGetOption("printer-name", num_options, options)) == NULL)
   {
-    if ((printer_name = cupsGetDefault2(http)) == NULL)
+    if ((printer_name = lprintGetDefaultPrinter(http, default_printer, sizeof(default_printer))) == NULL)
     {
       fputs("lprint: No default printer available.\n", stderr);
       httpClose(http);

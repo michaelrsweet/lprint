@@ -32,7 +32,7 @@ lprintDoDelete(
 
 
   // Connect to/start up the server and get the destination printer...
-  http = lprintConnect();
+  http = lprintConnect(1);
 
   if ((printer_name = cupsGetOption("printer-name", num_options, options)) == NULL)
   {
