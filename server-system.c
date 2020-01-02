@@ -135,25 +135,25 @@ lprintCreateSystem(
   if (system->loglevel == LPRINT_LOGLEVEL_UNSPEC)
     system->loglevel = LPRINT_LOGLEVEL_ERROR;
 
-  if (system->logfile)
-  {
-    if (!strcmp(system->logfile, "syslog"))
-    {
-      // Log to syslog...
-      system->logfd = -1;
-    }
-    else if (!strcmp(system->logfile, "-"))
-    {
-      // Log to stderr...
-      system->logfd = 2;
-    }
-    else if ((system->logfd = open(system->logfile, O_CREAT | O_WRONLY | O_APPEND | O_NOFOLLOW | O_CLOEXEC, 0600)) < 0)
-    {
-      // Fallback to stderr if we can't open the log file...
-      perror(system->logfile);
+  if (!system->logfile)
+    system->logfile = strdup("syslog");
 
-      system->logfd = 2;
-    }
+  if (!strcmp(system->logfile, "syslog"))
+  {
+    // Log to syslog...
+    system->logfd = -1;
+  }
+  else if (!strcmp(system->logfile, "-"))
+  {
+    // Log to stderr...
+    system->logfd = 2;
+  }
+  else if ((system->logfd = open(system->logfile, O_CREAT | O_WRONLY | O_APPEND | O_NOFOLLOW | O_CLOEXEC, 0600)) < 0)
+  {
+    // Fallback to stderr if we can't open the log file...
+    perror(system->logfile);
+
+    system->logfd = 2;
   }
 
   lprintLog(system, LPRINT_LOGLEVEL_INFO, "System configuration loaded, %d printers.", cupsArrayCount(system->printers));
@@ -181,6 +181,7 @@ lprintDeleteSystem(
     lprint_system_t *system)		// I - System object
 {
   int	i;				// Looping var
+  char	sockname[256];			// Domain socket filename
 
 
   if (!system)
@@ -202,6 +203,8 @@ lprintDeleteSystem(
   pthread_rwlock_destroy(&system->rwlock);
 
   free(system);
+
+  unlink(lprintGetServerPath(sockname, sizeof(sockname)));
 }
 
 

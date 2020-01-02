@@ -370,7 +370,10 @@ lprintCreatePrinter(
   // Add the printer to the system...
   pthread_rwlock_wrlock(&system->rwlock);
 
-  printer->printer_id = system->next_printer_id ++;
+  if (printer_id)
+    printer->printer_id = printer_id;
+  else
+    printer->printer_id = system->next_printer_id ++;
 
   if (!system->printers)
     system->printers = cupsArrayNew3((cups_array_func_t)compare_printers, NULL, NULL, 0, NULL, (cups_afree_func_t)free_printer);

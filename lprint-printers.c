@@ -23,8 +23,26 @@ lprintDoPrinters(
     int           num_options,		// I - Number of options
     cups_option_t *options)		// I - Options
 {
-  (void)num_options;
-  (void)options;
+  http_t	*http;			// Server connection
+  ipp_t		*request,		// IPP request
+		*response;		// IPP response
+  ipp_attribute_t *attr;		// Current attribute
 
-  return (1);
+
+  // Connect to/start up the server and get the list of printers...
+  http = lprintConnect();
+
+  request = ippNewRequest(IPP_OP_GET_PRINTERS);
+  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "system-uri", NULL, "ipp://localhost/ipp/system");
+  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
+
+  response = cupsDoRequest(http, request, "/ipp/system");
+
+  for (attr = ippFindAttribute(response, "printer-name", IPP_TAG_NAME); attr; attr = ippFindNextAttribute(response, "printer-name", IPP_TAG_NAME))
+    puts(ippGetString(attr, 0, NULL));
+
+  ippDelete(response);
+  httpClose(http);
+
+  return (0);
 }

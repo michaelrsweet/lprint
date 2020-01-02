@@ -36,15 +36,19 @@ lprintDoDefault(
 
   if ((printer_name = cupsGetOption("printer-name", num_options, options)) == NULL)
   {
-    if ((printer_name = cupsGetDefault2(http)) == NULL)
-    {
-      fputs("lprint: No default printer available.\n", stderr);
-      httpClose(http);
-      return (1);
-    }
+    // Ask the server for its default printer; can't use cupsGetDefault2
+    // because it will return a default printer for CUPS...
+    request = ippNewRequest(IPP_OP_CUPS_GET_DEFAULT);
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", NULL, "printer-name");
 
+    response = cupsDoRequest(http, request, "/ipp/system");
+
+    if ((printer_name = ippGetString(ippFindAttribute(response, "printer-name", IPP_TAG_NAME), 0, NULL)) != NULL)
+      puts(printer_name);
+
+    ippDelete(response);
     httpClose(http);
-    puts(printer_name);
     return (0);
   }
 
