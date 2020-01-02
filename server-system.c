@@ -59,7 +59,7 @@ lprintCreateSystem(
     tmpdir = "/tmp";
 #endif // __APPLE__
 
-  snprintf(spooldir, sizeof(spooldir), "%s/lprint.%d", tmpdir, getpid());
+  snprintf(spooldir, sizeof(spooldir), "%s/lprint%d.d", tmpdir, (int)getuid());
   if (mkdir(spooldir, 0700))
   {
     perror(spooldir);
@@ -136,7 +136,14 @@ lprintCreateSystem(
     system->loglevel = LPRINT_LOGLEVEL_ERROR;
 
   if (!system->logfile)
-    system->logfile = strdup("syslog");
+  {
+    // Default log file is $TMPDIR/lprintUID.log...
+    char logfile[256];			// Log filename
+
+    snprintf(logfile, sizeof(logfile), "%s/lprint%d.log", tmpdir, (int)getuid());
+
+    system->logfile = strdup(logfile);
+  }
 
   if (!strcmp(system->logfile, "syslog"))
   {
