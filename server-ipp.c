@@ -37,6 +37,7 @@ static int		filter_cb(lprint_filter_t *filter, ipp_t *dst, ipp_attribute_t *attr
 static void		finish_document_data(lprint_client_t *client, lprint_job_t *job);
 
 static void		ipp_cancel_job(lprint_client_t *client);
+static void		ipp_cancel_jobs(lprint_client_t *client);
 static void		ipp_close_job(lprint_client_t *client);
 static void		ipp_create_job(lprint_client_t *client);
 static void		ipp_create_printer(lprint_client_t *client);
@@ -256,7 +257,13 @@ lprintProcessIPP(
 		  break;
 
 	      case IPP_OP_CANCEL_JOB :
+	      case IPP_OP_CANCEL_CURRENT_JOB :
 		  ipp_cancel_job(client);
+		  break;
+
+	      case IPP_OP_CANCEL_JOBS :
+	      case IPP_OP_CANCEL_MY_JOBS :
+		  ipp_cancel_jobs(client);
 		  break;
 
 	      case IPP_OP_GET_JOB_ATTRIBUTES :
@@ -835,10 +842,15 @@ finish_document_data(
 static void
 ipp_cancel_job(lprint_client_t *client)	// I - Client
 {
-  lprint_job_t	*job = client->job;	// Job information
+  lprint_job_t	*job;			// Job information
 
 
   // Get the job...
+  if (ippGetOperation(client->request) == IPP_OP_CANCEL_CURRENT_JOB)
+    job = client->printer->processing_job;
+  else
+    job = client->job;
+
   if (!job)
   {
     lprintRespondIPP(client, IPP_STATUS_ERROR_NOT_FOUND, "Job does not exist.");
@@ -863,7 +875,7 @@ ipp_cancel_job(lprint_client_t *client)	// I - Client
 
     default :
         // Cancel the job...
-	pthread_rwlock_wrlock(&(client->printer->rwlock));
+	pthread_rwlock_wrlock(&client->printer->rwlock);
 
 	if (job->state == IPP_JSTATE_PROCESSING || (job->state == IPP_JSTATE_HELD && job->fd >= 0))
 	{
@@ -878,7 +890,7 @@ ipp_cancel_job(lprint_client_t *client)	// I - Client
 	  cupsArrayAdd(client->printer->completed_jobs, job);
 	}
 
-	pthread_rwlock_unlock(&(client->printer->rwlock));
+	pthread_rwlock_unlock(&client->printer->rwlock);
 
 	lprintRespondIPP(client, IPP_STATUS_OK, NULL);
 
@@ -886,6 +898,52 @@ ipp_cancel_job(lprint_client_t *client)	// I - Client
           client->system->clean_time = time(NULL) + 60;
         break;
   }
+}
+
+
+//
+// 'ipp_cancel_jobs()' - Cancel all jobs.
+//
+
+static void
+ipp_cancel_jobs(lprint_client_t *client)// I - Client
+{
+  lprint_job_t	*job;			// Job information
+
+
+  // Verify the connection is local...
+  if (!is_domain_connection(client))
+  {
+    lprintRespondIPP(client, IPP_STATUS_ERROR_FORBIDDEN, "Administrative requests not supported over network connections.");
+    return;
+  }
+
+  // Loop through all jobs and cancel them...
+  pthread_rwlock_wrlock(&client->printer->rwlock);
+
+  for (job = (lprint_job_t *)cupsArrayFirst(client->printer->jobs); job; job = (lprint_job_t *)cupsArrayNext(client->printer->jobs))
+  {
+    // Cancel this job...
+    if (job->state == IPP_JSTATE_PROCESSING || (job->state == IPP_JSTATE_HELD && job->fd >= 0))
+    {
+      job->cancel = 1;
+    }
+    else
+    {
+      job->state     = IPP_JSTATE_CANCELED;
+      job->completed = time(NULL);
+
+      cupsArrayRemove(client->printer->active_jobs, job);
+      cupsArrayAdd(client->printer->completed_jobs, job);
+    }
+  }
+
+  pthread_rwlock_unlock(&client->printer->rwlock);
+
+  lprintRespondIPP(client, IPP_STATUS_OK, NULL);
+
+  if (!client->system->clean_time)
+    client->system->clean_time = time(NULL) + 60;
 }
 
 

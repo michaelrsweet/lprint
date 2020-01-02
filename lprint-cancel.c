@@ -23,8 +23,52 @@ lprintDoCancel(
     int           num_options,		// I - Number of options
     cups_option_t *options)		// I - Options
 {
-  (void)num_options;
-  (void)options;
+  const char	*printer_name;		// Printer name
+  char		resource[1024];		// Resource path
+  http_t	*http;			// Server connection
+  ipp_t		*request;		// IPP request
+  const char	*value;			// Option value
+  int		job_id = 0;		// job-id
 
-  return (1);
+
+  // Connect to/start up the server and get the destination printer...
+  http = lprintConnect();
+
+  if ((printer_name = cupsGetOption("printer-name", num_options, options)) == NULL)
+  {
+    if ((printer_name = cupsGetDefault2(http)) == NULL)
+    {
+      fputs("lprint: No default printer available.\n", stderr);
+      return (1);
+    }
+  }
+
+  // Figure out which job(s) to cancel...
+  if (cupsGetOption("cancel-all", num_options, options))
+  {
+    request = ippNewRequest(IPP_OP_CANCEL_JOBS);
+  }
+  else if ((value = cupsGetOption("job-id", num_options, options)) != NULL)
+  {
+    request = ippNewRequest(IPP_OP_CANCEL_JOB);
+    job_id  = atoi(value);
+  }
+  else
+    request = ippNewRequest(IPP_OP_CANCEL_CURRENT_JOB);
+
+  lprintAddPrinterURI(request, printer_name, resource, sizeof(resource));
+  if (job_id)
+    ippAddInteger(request, IPP_TAG_OPERATION, IPP_TAG_INTEGER, "job-id", job_id);
+  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
+
+  ippDelete(cupsDoRequest(http, request, resource));
+  httpClose(http);
+
+  if (cupsLastError() != IPP_STATUS_OK)
+  {
+    fprintf(stderr, "lprint: Unable to cancel - %s\n", cupsLastErrorString());
+    return (1);
+  }
+
+  return (0);
 }
