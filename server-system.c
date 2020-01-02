@@ -156,6 +156,9 @@ lprintCreateSystem(
   }
 
   lprintLog(system, LPRINT_LOGLEVEL_INFO, "System configuration loaded, %d printers.", cupsArrayCount(system->printers));
+  lprintLog(system, LPRINT_LOGLEVEL_INFO, "Listening for local connections at '%s'.", sockname);
+  if (system->hostname)
+    lprintLog(system, LPRINT_LOGLEVEL_INFO, "Listening for TCP connections at '%s' on port %d.", system->hostname, system->port);
 
   return (system);
 

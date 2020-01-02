@@ -164,12 +164,12 @@ pngheaders:
 	echo "Generating lprint-png.h from lprint.png..."
 	echo "static const unsigned char lprint_png[] =" >lprint-png.h
 	echo "{" >>lprint-png.h
-	od -t x1 lprint.png | cut -b12- | awk '{printf("  "); for (i = 1; i <= NF; i ++) printf("0x%s,", $$i); print "";}' >>lprint-png.h
+	od -t x1 -A n -v lprint.png | awk '{printf("  "); for (i = 1; i <= NF; i ++) printf("0x%s,", $$i); print "";}' >>lprint-png.h
 	echo "};" >>lprint-png.h
 	echo "Generating lprint-large-png.h from lprint-large.png..."
 	echo "static const unsigned char lprint_large_png[] =" >lprint-large-png.h
 	echo "{" >>lprint-large-png.h
-	od -t x1 lprint-large.png | cut -b12- | awk '{printf("  "); for (i = 1; i <= NF; i ++) printf("0x%s,", $$i); print "";}' >>lprint-large-png.h
+	od -t x1 -A n -v lprint-large.png | awk '{printf("  "); for (i = 1; i <= NF; i ++) printf("0x%s,", $$i); print "";}' >>lprint-large-png.h
 	echo "};" >>lprint-large-png.h
 
 

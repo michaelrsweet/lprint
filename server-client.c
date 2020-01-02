@@ -410,7 +410,7 @@ lprintRespondHTTP(
   char	message[1024];			/* Text message */
 
 
-  lprintLogClient(client, LPRINT_LOGLEVEL_INFO, "%s", httpStatus(code));
+  lprintLogClient(client, LPRINT_LOGLEVEL_INFO, "%s %s %d", httpStatus(code), type, (int)length);
 
   if (code == HTTP_STATUS_CONTINUE)
   {
