@@ -2143,7 +2143,7 @@ valid_doc_attributes(
     else if (!memcmp(header, "UNIRAST", 8))
       format = "image/urf";
     else
-      format = NULL;
+      format = client->printer->driver->format;
 
     if (format)
     {
