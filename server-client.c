@@ -22,15 +22,15 @@
 // Local functions...
 //
 
-//static void		html_escape(lprint_client_t *client, const char *s, size_t slen);
-//static void		html_footer(lprint_client_t *client);
-//static void		html_header(lprint_client_t *client, const char *title, int refresh);
-//static void		html_printf(lprint_client_t *client, const char *format, ...) LPRINT_FORMAT(2, 3);
+static void		html_escape(lprint_client_t *client, const char *s, size_t slen);
+static void		html_footer(lprint_client_t *client);
+static void		html_header(lprint_client_t *client, const char *title, int refresh);
+static void		html_printf(lprint_client_t *client, const char *format, ...) LPRINT_FORMAT(2, 3);
 //static int		parse_options(lprint_client_t *client, cups_option_t **options);
 //static int		show_media(lprint_client_t *client);
-//static int		show_status(lprint_client_t *client);
+static int		show_status(lprint_client_t *client);
 //static int		show_supplies(lprint_client_t *client);
-//static char		*time_string(time_t tv, char *buffer, size_t bufsize);
+static char		*time_string(time_t tv, char *buffer, size_t bufsize);
 
 
 //
@@ -297,6 +297,8 @@ lprintProcessHTTP(
     case HTTP_STATE_HEAD :
         if (!strcmp(client->uri, "/lprint.png") || !strcmp(client->uri, "/lprint-large.png"))
 	  return (lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "image/png", 0));
+	else if (!strcmp(client->uri, "/"))
+	  return (lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/html", 0));
 #if 0
 	else if (!strcmp(client->uri, "/") || !strcmp(client->uri, "/media") || !strcmp(client->uri, "/supplies"))
 	  return (lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/html", 0));
@@ -323,7 +325,6 @@ lprintProcessHTTP(
 	  httpWrite2(client->http, (const char *)lprint_large_png, sizeof(lprint_large_png));
 	  httpFlushWrite(client->http);
 	}
-#if 0
 	else if (!strcmp(client->uri, "/"))
 	{
 	 /*
@@ -332,6 +333,7 @@ lprintProcessHTTP(
 
           return (show_status(client));
 	}
+#if 0
 	else if (!strcmp(client->uri, "/media"))
 	{
 	 /*
@@ -496,7 +498,6 @@ lprintRespondHTTP(
 }
 
 
-#if 0
 /*
  * 'html_escape()' - Write a HTML-safe string.
  */
@@ -825,7 +826,105 @@ html_printf(lprint_client_t *client,	/* I - Client */
 
   va_end(ap);
 }
-#endif // 0
+
+
+/*
+ * 'show_status()' - Show printer/system state.
+ */
+
+static int				/* O - 1 on success, 0 on failure */
+show_status(lprint_client_t  *client)	/* I - Client connection */
+{
+  lprint_system_t	*system = client->system;
+					/* System */
+  lprint_printer_t	*printer;	/* Printer */
+  lprint_job_t		*job;		/* Current job */
+  int			i;		/* Looping var */
+  lprint_preason_t	reason;		/* Current reason */
+  static const char * const reasons[] =	/* Reason strings */
+  {
+    "Other",
+    "Cover Open",
+    "Media Empty",
+    "Media Jam",
+    "Media Low",
+    "Media Needed"
+  };
+  static const char * const state_colors[] =
+  {					/* State colors */
+    "#0C0",				/* Idle */
+    "#EE0",				/* Processing */
+    "#C00"				/* Stopped */
+  };
+
+
+  if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/html", 0))
+    return (0);
+
+  pthread_rwlock_rdlock(&system->rwlock);
+
+  for (printer = (lprint_printer_t *)cupsArrayFirst(system->printers); printer; printer = (lprint_printer_t *)cupsArrayNext(system->printers))
+  {
+    if (printer->state == IPP_PSTATE_PROCESSING)
+      break;
+  }
+
+  html_header(client, "LPrint", printer ? 5 : 15);
+
+  for (printer = (lprint_printer_t *)cupsArrayFirst(system->printers); printer; printer = (lprint_printer_t *)cupsArrayNext(system->printers))
+  {
+    html_printf(client, "<h1><img style=\"background: %s; border-radius: 10px; float: left; margin-right: 10px; padding: 10px;\" src=\"/lprint-large.png\" width=\"64\" height=\"64\">%s</h1>\n", state_colors[printer->state - IPP_PSTATE_IDLE], printer->printer_name);
+    html_printf(client, "<p>%s, %d job(s).", printer->state == IPP_PSTATE_IDLE ? "Idle" : printer->state == IPP_PSTATE_PROCESSING ? "Printing" : "Stopped", cupsArrayCount(printer->jobs));
+    for (i = 0, reason = 1; i < (int)(sizeof(reasons) / sizeof(reasons[0])); i ++, reason <<= 1)
+      if (printer->state_reasons & reason)
+	html_printf(client, "\n<br>&nbsp;&nbsp;&nbsp;&nbsp;%s", reasons[i]);
+    html_printf(client, "</p>\n");
+
+    if (cupsArrayCount(printer->jobs) > 0)
+    {
+      pthread_rwlock_rdlock(&printer->rwlock);
+
+      html_printf(client, "<table class=\"striped\" summary=\"Jobs\"><thead><tr><th>Job #</th><th>Name</th><th>Owner</th><th>Status</th></tr></thead><tbody>\n");
+      for (job = (lprint_job_t *)cupsArrayFirst(printer->jobs); job; job = (lprint_job_t *)cupsArrayNext(printer->jobs))
+      {
+	char	when[256],		/* When job queued/started/finished */
+		hhmmss[64];		/* Time HH:MM:SS */
+
+	switch (job->state)
+	{
+	  case IPP_JSTATE_PENDING :
+	  case IPP_JSTATE_HELD :
+	      snprintf(when, sizeof(when), "Queued at %s", time_string(job->created, hhmmss, sizeof(hhmmss)));
+	      break;
+	  case IPP_JSTATE_PROCESSING :
+	  case IPP_JSTATE_STOPPED :
+	      snprintf(when, sizeof(when), "Started at %s", time_string(job->processing, hhmmss, sizeof(hhmmss)));
+	      break;
+	  case IPP_JSTATE_ABORTED :
+	      snprintf(when, sizeof(when), "Aborted at %s", time_string(job->completed, hhmmss, sizeof(hhmmss)));
+	      break;
+	  case IPP_JSTATE_CANCELED :
+	      snprintf(when, sizeof(when), "Canceled at %s", time_string(job->completed, hhmmss, sizeof(hhmmss)));
+	      break;
+	  case IPP_JSTATE_COMPLETED :
+	      snprintf(when, sizeof(when), "Completed at %s", time_string(job->completed, hhmmss, sizeof(hhmmss)));
+	      break;
+	}
+
+	html_printf(client, "<tr><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n", job->id, job->name, job->username, when);
+      }
+      html_printf(client, "</tbody></table>\n");
+
+      pthread_rwlock_unlock(&printer->rwlock);
+    }
+  }
+
+  html_footer(client);
+
+  pthread_rwlock_unlock(&system->rwlock);
+
+  return (1);
+}
 
 
 #if 0
@@ -1188,100 +1287,6 @@ show_media(lprint_client_t  *client)	/* I - Client connection */
 
 
 /*
- * 'show_status()' - Show printer/system state.
- */
-
-static int				/* O - 1 on success, 0 on failure */
-show_status(lprint_client_t  *client)	/* I - Client connection */
-{
-  lprint_printer_t *printer = client->printer;
-					/* Printer */
-  lprint_job_t		*job;		/* Current job */
-  int			i;		/* Looping var */
-  lprint_preason_t	reason;		/* Current reason */
-  static const char * const reasons[] =	/* Reason strings */
-  {
-    "Other",
-    "Cover Open",
-    "Input Tray Missing",
-    "Marker Supply Empty",
-    "Marker Supply Low",
-    "Marker Waste Almost Full",
-    "Marker Waste Full",
-    "Media Empty",
-    "Media Jam",
-    "Media Low",
-    "Media Needed",
-    "Moving to Paused",
-    "Paused",
-    "Spool Area Full",
-    "Toner Empty",
-    "Toner Low"
-  };
-  static const char * const state_colors[] =
-  {					/* State colors */
-    "#0C0",				/* Idle */
-    "#EE0",				/* Processing */
-    "#C00"				/* Stopped */
-  };
-
-
-  if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/html", 0))
-    return (0);
-
-  html_header(client, printer->name, printer->state == IPP_PSTATE_PROCESSING ? 5 : 15);
-  html_printf(client, "<h1><img style=\"background: %s; border-radius: 10px; float: left; margin-right: 10px; padding: 10px;\" src=\"/icon.png\" width=\"64\" height=\"64\">%s Jobs</h1>\n", state_colors[printer->state - IPP_PSTATE_IDLE], printer->name);
-  html_printf(client, "<p>%s, %d job(s).", printer->state == IPP_PSTATE_IDLE ? "Idle" : printer->state == IPP_PSTATE_PROCESSING ? "Printing" : "Stopped", cupsArrayCount(printer->jobs));
-  for (i = 0, reason = 1; i < (int)(sizeof(reasons) / sizeof(reasons[0])); i ++, reason <<= 1)
-    if (printer->state_reasons & reason)
-      html_printf(client, "\n<br>&nbsp;&nbsp;&nbsp;&nbsp;%s", reasons[i]);
-  html_printf(client, "</p>\n");
-
-  if (cupsArrayCount(printer->jobs) > 0)
-  {
-    _cupsRWLockRead(&(printer->rwlock));
-
-    html_printf(client, "<table class=\"striped\" summary=\"Jobs\"><thead><tr><th>Job #</th><th>Name</th><th>Owner</th><th>Status</th></tr></thead><tbody>\n");
-    for (job = (lprint_job_t *)cupsArrayFirst(printer->jobs); job; job = (lprint_job_t *)cupsArrayNext(printer->jobs))
-    {
-      char	when[256],		/* When job queued/started/finished */
-	      hhmmss[64];		/* Time HH:MM:SS */
-
-      switch (job->state)
-      {
-	case IPP_JSTATE_PENDING :
-	case IPP_JSTATE_HELD :
-	    snprintf(when, sizeof(when), "Queued at %s", time_string(job->created, hhmmss, sizeof(hhmmss)));
-	    break;
-	case IPP_JSTATE_PROCESSING :
-	case IPP_JSTATE_STOPPED :
-	    snprintf(when, sizeof(when), "Started at %s", time_string(job->processing, hhmmss, sizeof(hhmmss)));
-	    break;
-	case IPP_JSTATE_ABORTED :
-	    snprintf(when, sizeof(when), "Aborted at %s", time_string(job->completed, hhmmss, sizeof(hhmmss)));
-	    break;
-	case IPP_JSTATE_CANCELED :
-	    snprintf(when, sizeof(when), "Canceled at %s", time_string(job->completed, hhmmss, sizeof(hhmmss)));
-	    break;
-	case IPP_JSTATE_COMPLETED :
-	    snprintf(when, sizeof(when), "Completed at %s", time_string(job->completed, hhmmss, sizeof(hhmmss)));
-	    break;
-      }
-
-      html_printf(client, "<tr><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n", job->id, job->name, job->username, when);
-    }
-    html_printf(client, "</tbody></table>\n");
-
-    _cupsRWUnlock(&(printer->rwlock));
-  }
-
-  html_footer(client);
-
-  return (1);
-}
-
-
-/*
  * 'show_supplies()' - Show printer supplies.
  */
 
@@ -1469,6 +1474,7 @@ show_supplies(
 
   return (1);
 }
+#endif // 0
 
 
 /*
@@ -1488,4 +1494,3 @@ time_string(time_t tv,			/* I - Time value */
 
   return (buffer);
 }
-#endif // 0
