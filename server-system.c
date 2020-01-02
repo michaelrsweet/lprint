@@ -155,7 +155,7 @@ lprintCreateSystem(
     }
   }
 
-  lprintLog(system, LPRINT_LOGLEVEL_INFO, "System configuration loaded.");
+  lprintLog(system, LPRINT_LOGLEVEL_INFO, "System configuration loaded, %d printers.", cupsArrayCount(system->printers));
 
   return (system);
 
@@ -193,7 +193,6 @@ lprintDeleteSystem(
   for (i = 0; i < system->num_listeners; i ++)
     close(system->listeners[i].fd);
 
-  cupsArrayDelete(system->clients);
   cupsArrayDelete(system->printers);
 
   pthread_rwlock_destroy(&system->rwlock);

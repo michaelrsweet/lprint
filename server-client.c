@@ -54,9 +54,6 @@ lprintCreateClient(
   client->system = system;
 
   pthread_rwlock_wrlock(&system->rwlock);
-  if (!system->clients)
-    system->clients = cupsArrayNew(NULL, NULL);
-  cupsArrayAdd(system->clients, client);
   client->number = system->next_client ++;
   pthread_rwlock_unlock(&system->rwlock);
 
@@ -94,10 +91,6 @@ lprintDeleteClient(
 
   ippDelete(client->request);
   ippDelete(client->response);
-
-  pthread_rwlock_wrlock(&client->system->rwlock);
-  cupsArrayRemove(client->system->clients, client);
-  pthread_rwlock_unlock(&client->system->rwlock);
 
   free(client);
 }

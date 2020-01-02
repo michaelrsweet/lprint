@@ -124,7 +124,6 @@ typedef struct lprint_system_s		// System data
   char			*subtypes;	// DNS-SD sub-types, if any
   int			num_listeners;	// Number of listener sockets
   struct pollfd		listeners[3];	// Listener sockets
-  cups_array_t		*clients;	// Array of client connections
   int			next_client;	// Next client number
   cups_array_t		*printers;	// Array of printers
   int			default_printer,// Default printer-id
