@@ -49,4 +49,35 @@
 #  endif // __GNUC__ || __has_extension
 
 
+//
+// Emulate safe string functions as needed...
+//
+
+#  ifndef __APPLE__
+#    define strlcat(dst,src,dstsize) lprint_strlcat(dst,src,dstsize)
+static inline size_t lprint_strlcat(char *dst, const char *src, size_t dstsize)
+{
+  size_t dstlen, srclen;
+  dstlen = strlen(dst);
+  if (dstsize < (dstlen + 1))
+    return (dstlen);
+  dstsize -= dstlen + 1;
+  if ((srclen = strlen(src)) > dstsize)
+    srclen = dstsize;
+  memmove(dst + dstlen, src, srclen);
+  dst[dstlen + srclen] = '\0';
+  return (dstlen = srclen);
+}
+#    define strlcpy(dst,src,dstsize) lprint_strlcpy(dst,src,dstsize)
+static inline size_t lprint_strlcpy(char *dst, const char *src, size_t dstsize)
+{
+  size_t srclen = strlen(src);
+  dstsize --;
+  if (srclen > dstsize)
+    srclen = dstsize;
+  memmove(dst, src, srclen);
+  dst[srclen] = '\0';
+  return (srclen);
+}
+#  endif // !__APPLE__
 #endif // !_COMMON_H_

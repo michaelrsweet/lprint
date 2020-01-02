@@ -120,8 +120,7 @@ lprintCreateJob(
 
   if ((attr = ippFindAttribute(client->request, "printer-uri", IPP_TAG_URI)) != NULL)
   {
-    strncpy(job_printer_uri, ippGetString(attr, 0, NULL), sizeof(job_printer_uri) - 1);
-    job_printer_uri[sizeof(job_printer_uri) - 1] = '\0';
+    strlcpy(job_printer_uri, ippGetString(attr, 0, NULL), sizeof(job_printer_uri));
 
     snprintf(job_uri, sizeof(job_uri), "%s/%d", ippGetString(attr, 0, NULL), job->id);
   }

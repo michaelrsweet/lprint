@@ -118,8 +118,7 @@ lprintAddDefaults(
       {
         xres = 300;
 
-        strncpy(units, "dpi", sizeof(units) - 1);
-        units[sizeof(units) - 1] = '\0';
+        strlcpy(units, "dpi", sizeof(units));
       }
 
       yres = xres;
