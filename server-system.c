@@ -240,7 +240,7 @@ lprintRunSystem(lprint_system_t *system)// I - System
     if (system->save_time || system->shutdown_time)
       timeout = 5;
     else
-      timeout = 60;
+      timeout = 10;
 
     if (system->clean_time && (i = (int)(time(NULL) - system->clean_time)) < timeout)
       timeout = i;
