@@ -1575,6 +1575,19 @@ static void
 ipp_set_system_attributes(
     lprint_client_t *client)		// I - Client
 {
+  lprint_system_t	*system = client->system;
+					// System
+  ipp_attribute_t	*rattr;		// Current request attribute
+  ipp_tag_t		value_tag;	// Value tag
+  int			count;		// Number of values
+  const char		*name;		// Attribute name
+  int			i;		// Looping var
+  static lprint_attr_t	sattrs[] =	// Settable system attributes
+  {
+    { "default-printer-id",		IPP_TAG_INTEGER,	1 }
+  };
+
+
   // Verify the connection is local...
   if (!is_domain_connection(client))
   {
@@ -1582,7 +1595,70 @@ ipp_set_system_attributes(
     return;
   }
 
-  lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
+  // Preflight request attributes...
+  for (rattr = ippFirstAttribute(client->request); rattr; rattr = ippNextAttribute(client->request))
+  {
+    lprintLogClient(client, LPRINT_LOGLEVEL_DEBUG, "%s %s %s%s ...", ippTagString(ippGetGroupTag(rattr)), ippGetName(rattr), ippGetCount(rattr) > 1 ? "1setOf " : "", ippTagString(ippGetValueTag(rattr)));
+
+    if (ippGetGroupTag(rattr) == IPP_TAG_OPERATION)
+    {
+      continue;
+    }
+    else if (ippGetGroupTag(rattr) != IPP_TAG_SYSTEM)
+    {
+      respond_unsupported(client, rattr);
+      continue;
+    }
+
+    name      = ippGetName(rattr);
+    value_tag = ippGetValueTag(rattr);
+    count     = ippGetCount(rattr);
+
+    for (i = 0; i < (int)(sizeof(sattrs) / sizeof(sattrs[0])); i ++)
+    {
+      if (!strcmp(name, sattrs[i].name) && value_tag == sattrs[i].value_tag && count <= sattrs[i].max_count)
+        break;
+    }
+
+    if (i >= (int)(sizeof(sattrs) / sizeof(sattrs[0])))
+      respond_unsupported(client, rattr);
+
+    if (!strcmp(name, "default-printer-id"))
+    {
+      if (!lprintFindPrinter(system, NULL, ippGetInteger(rattr, 0)))
+      {
+        respond_unsupported(client, rattr);
+        break;
+      }
+    }
+  }
+
+  if (ippGetStatusCode(client->response) != IPP_STATUS_OK)
+    return;
+
+  // Now apply changes...
+  pthread_rwlock_wrlock(&system->rwlock);
+
+  for (rattr = ippFirstAttribute(client->request); rattr; rattr = ippNextAttribute(client->request))
+  {
+    if (ippGetGroupTag(rattr) == IPP_TAG_OPERATION)
+      continue;
+
+    name = ippGetName(rattr);
+
+    if (!strcmp(name, "default-printer-id"))
+    {
+      // Value was checked previously...
+      system->default_printer = ippGetInteger(rattr, 0);
+    }
+  }
+
+  pthread_rwlock_unlock(&system->rwlock);
+
+  if (!system->save_time)
+    system->save_time = time(NULL) + 1;
+
+  lprintRespondIPP(client, IPP_STATUS_OK, NULL);
 }
 
 

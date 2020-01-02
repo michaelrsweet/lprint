@@ -43,6 +43,7 @@ lprintDoJobs(int           num_options,	// I - Number of options
     if ((printer_name = cupsGetDefault2(http)) == NULL)
     {
       fputs("lprint: No default printer available.\n", stderr);
+      httpClose(http);
       return (1);
     }
   }

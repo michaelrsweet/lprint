@@ -1,7 +1,7 @@
 //
 // Cancel sub-command for LPrint, a Label Printer Utility
 //
-// Copyright © 2019 by Michael R Sweet.
+// Copyright © 2019-2020 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -39,6 +39,7 @@ lprintDoCancel(
     if ((printer_name = cupsGetDefault2(http)) == NULL)
     {
       fputs("lprint: No default printer available.\n", stderr);
+      httpClose(http);
       return (1);
     }
   }

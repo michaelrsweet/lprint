@@ -70,6 +70,7 @@ lprintDoSubmit(
     if ((printer_name = cupsGetDefault2(http)) == NULL)
     {
       fputs("lprint: No default printer available.\n", stderr);
+      httpClose(http);
       return (1);
     }
   }
