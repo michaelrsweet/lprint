@@ -336,7 +336,7 @@ lprintGetServerPath(char   *buffer,	// I - Buffer for filenaem
     tmpdir = "/tmp";
 #endif // __APPLE__
 
-  snprintf(buffer, bufsize, "%s/lprint%d", tmpdir, (int)getuid());
+  snprintf(buffer, bufsize, "%s/lprint%d.sock", tmpdir, (int)getuid());
 
   return (buffer);
 }
