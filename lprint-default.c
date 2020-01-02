@@ -65,8 +65,8 @@ lprintDoDefault(
     return (1);
   }
 
-  // Now that we have the printer-id, set the default-printer-id attribute for
-  // the system service...
+  // Now that we have the printer-id, set the system-default-printer-id
+  // attribute for the system service...
   request = ippNewRequest(IPP_OP_SET_SYSTEM_ATTRIBUTES);
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "system-uri", NULL, "ipp://localhost/ipp/system");
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
