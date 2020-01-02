@@ -182,10 +182,10 @@ lprintProcessIPP(
         // Bad character set...
 	lprintRespondIPP(client, IPP_STATUS_ERROR_BAD_REQUEST, "Unsupported character set \"%s\".", ippGetString(charset, 0, NULL));
       }
-      else if (!charset || !language || (!uri && op != IPP_OP_CUPS_GET_PRINTERS))
+      else if (!charset || !language || (!uri && op != IPP_OP_CUPS_GET_DEFAULT && op != IPP_OP_CUPS_GET_PRINTERS))
       {
         // Return an error, since attributes-charset,
-	// attributes-natural-language, and printer-uri/job-uri are required
+	// attributes-natural-language, and system/printer/job-uri are required
 	// for all operations.
 	lprintRespondIPP(client, IPP_STATUS_ERROR_BAD_REQUEST, "Missing required attributes.");
       }
@@ -307,6 +307,7 @@ lprintProcessIPP(
 		  break;
 
 	      case IPP_OP_GET_PRINTER_ATTRIBUTES :
+	      case IPP_OP_CUPS_GET_DEFAULT :
                   client->printer = lprintFindPrinter(client->system, NULL, client->system->default_printer);
 		  ipp_get_printer_attributes(client);
 		  break;
