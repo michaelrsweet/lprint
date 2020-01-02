@@ -211,10 +211,14 @@ lprintCreatePrinter(
   num_formats = 0;
   formats[num_formats ++] = "application/octet-stream";
 
-  if (printer->driver->format)
+  if (printer->driver->format && strcmp(printer->driver->format, "application/octet-stream"))
     formats[num_formats ++] = printer->driver->format;
 
+#ifdef HAVE_LIBPNG
   formats[num_formats ++] = "image/png";
+#endif // HAVE_LIBPNG
+  formats[num_formats ++] = "image/pwg-raster";
+  formats[num_formats ++] = "image/urf";
 
   // Initialize printer structure and attributes...
   pthread_rwlock_init(&printer->rwlock, NULL);

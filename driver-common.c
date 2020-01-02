@@ -106,8 +106,9 @@ lprintCreateDriver(
       if ((driver = calloc(1, sizeof(lprint_driver_t))) != NULL)
       {
 	// Initialize the driver structure...
-	driver->name  = strdup(driver_name);
-	driver->attrs = ippNew();
+	driver->name   = strdup(driver_name);
+	driver->attrs  = ippNew();
+	driver->format = "application/octet-stream";
 
 	if (!strncmp(driver_name, "cpcl_", 5))
 	  lprintInitCPCL(driver);

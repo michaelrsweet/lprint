@@ -1711,7 +1711,7 @@ ipp_send_document(
   else if ((attr = ippFindAttribute(job->attrs, "document-format-supplied", IPP_TAG_MIMETYPE)) != NULL)
     job->format = ippGetString(attr, 0, NULL);
   else
-    job->format = "application/octet-stream";
+    job->format = client->printer->driver->format;
 
   pthread_rwlock_unlock(&(client->printer->rwlock));
 
@@ -2158,10 +2158,6 @@ valid_doc_attributes(
     respond_unsupported(client, attr);
     valid = 0;
   }
-
-  // document-name
-  if ((attr = ippFindAttribute(client->request, "document-name", IPP_TAG_NAME)) != NULL)
-    ippAddString(client->request, IPP_TAG_JOB, IPP_TAG_NAME, "document-name-supplied", NULL, ippGetString(attr, 0, NULL));
 
   return (valid);
 }
