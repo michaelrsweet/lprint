@@ -23,7 +23,7 @@ typedef struct lprint_attr_s		// Input attribute structure
 {
   const char	*name;			// Attribute name
   ipp_tag_t	value_tag;		// Value tag
-  int		multiple;		// 1 if multiple values supported
+  int		max_count;		// Max number of values
 } lprint_attr_t;
 
 
@@ -1610,25 +1610,25 @@ set_printer_attributes(
   int			i;		// Looping var
   static lprint_attr_t	pattrs[] =	// Settable printer attributes
   {
-    { "copies-default",			IPP_TAG_INTEGER,	0 },
-    { "finishings-default",		IPP_TAG_ENUM,		0 },
-    { "media-default",			IPP_TAG_KEYWORD,	0 },
-    { "media-ready",			IPP_TAG_KEYWORD,	1 },
-    { "orientation-requested-default",	IPP_TAG_ENUM,		0 },
-    { "print-color-mode-default",	IPP_TAG_KEYWORD,	0 },
-    { "print-content-optimize-default",	IPP_TAG_KEYWORD,	0 },
-    { "print-quality-default",		IPP_TAG_ENUM,		0 },
-    { "printer-location",		IPP_TAG_TEXT,		0 },
-    { "printer-geo-location",		IPP_TAG_URI,		0 },
-    { "printer-organization",		IPP_TAG_TEXT,		0 },
-    { "printer-organizational-unit",	IPP_TAG_TEXT,		0 },
-    { "printer-resolution-default",	IPP_TAG_RESOLUTION,	0 }
+    { "copies-default",			IPP_TAG_INTEGER,	1 },
+    { "finishings-default",		IPP_TAG_ENUM,		1 },
+    { "media-default",			IPP_TAG_KEYWORD,	1 },
+    { "media-ready",			IPP_TAG_KEYWORD,	LPRINT_MAX_SOURCE },
+    { "orientation-requested-default",	IPP_TAG_ENUM,		1 },
+    { "print-color-mode-default",	IPP_TAG_KEYWORD,	1 },
+    { "print-content-optimize-default",	IPP_TAG_KEYWORD,	1 },
+    { "print-quality-default",		IPP_TAG_ENUM,		1 },
+    { "printer-location",		IPP_TAG_TEXT,		1 },
+    { "printer-geo-location",		IPP_TAG_URI,		1 },
+    { "printer-organization",		IPP_TAG_TEXT,		1 },
+    { "printer-organizational-unit",	IPP_TAG_TEXT,		1 },
+    { "printer-resolution-default",	IPP_TAG_RESOLUTION,	1 }
   };
 
 
+  // Preflight request attributes...
   create_printer = ippGetOperation(client->request) == IPP_OP_CREATE_PRINTER;
 
-  // Preflight request attributes...
   for (rattr = ippFirstAttribute(client->request); rattr; rattr = ippNextAttribute(client->request))
   {
     if (ippGetGroupTag(rattr) == IPP_TAG_OPERATION)
@@ -1638,33 +1638,36 @@ set_printer_attributes(
     else if (ippGetGroupTag(rattr) != IPP_TAG_PRINTER)
     {
       respond_unsupported(client, rattr);
-      return (0);
+      continue;
     }
 
-    name      = ippGetName(rattr);
+    name = ippGetName(rattr);
+
+    if (create_printer && (!strcmp(name, "printer-name") || !strcmp(name, "device-uri") || !strcmp(name, "lprint-driver")))
+      continue;
+
     value_tag = ippGetValueTag(rattr);
     count     = ippGetCount(rattr);
 
     for (i = 0; i < (int)(sizeof(pattrs) / sizeof(pattrs[0])); i ++)
     {
       if (strcmp(name, pattrs[i].name))
+      {
         continue;
-      else if (value_tag != pattrs[i].value_tag || (count > 1 && !pattrs[i].multiple))
+      }
+      else if (value_tag != pattrs[i].value_tag || (count > pattrs[i].max_count))
       {
         respond_unsupported(client, rattr);
-        return (0);
+        break;
       }
     }
 
-    if (create_printer && (!strcmp(name, "printer-name") || !strcmp(name, "device-uri") || !strcmp(name, "lprint-driver")))
-      continue;
-
     if (i >= (int)(sizeof(pattrs) / sizeof(pattrs[0])))
-    {
       respond_unsupported(client, rattr);
-      return (0);
-    }
   }
+
+  if (ippGetStatusCode(client->response) != IPP_STATUS_OK)
+    return (0);
 
   // Now apply changes...
   pthread_rwlock_wrlock(&printer->rwlock);
@@ -1678,7 +1681,18 @@ set_printer_attributes(
 
     if (!strcmp(name, "media-ready"))
     {
-      // TODO: Implement changes to media-ready
+      count = ippGetCount(rattr);
+
+      for (i = 0; i < count; i ++)
+      {
+        const char *media = ippGetString(rattr, i, NULL);
+					// Media value
+
+        strlcpy(printer->driver->ready_media[i], media, sizeof(printer->driver->ready_media[i]));
+      }
+
+      for (; i < LPRINT_MAX_SOURCE; i ++)
+        printer->driver->ready_media[i][0] = '\0';
     }
     else if (!strcmp(name, "printer-geo-location"))
     {
