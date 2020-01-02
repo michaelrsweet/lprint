@@ -281,7 +281,7 @@ lprintConnect(int auto_start)		// I - 1 to start server if not running
   // See if the server is running...
   http = httpConnect2(lprintGetServerPath(sockname, sizeof(sockname)), 0, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL);
 
-  if (!http)
+  if (!http && auto_start)
   {
     // Nope, start it now...
     pid_t	server_pid;		// Server process ID
@@ -310,10 +310,10 @@ lprintConnect(int auto_start)		// I - 1 to start server if not running
       usleep(250000);
 
     http = httpConnect2(sockname, 0, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL);
-  }
 
-  if (!http)
-    fprintf(stderr, "lprint: Unable to connect to server - %s\n", cupsLastErrorString());
+    if (!http)
+      fprintf(stderr, "lprint: Unable to connect to server - %s\n", cupsLastErrorString());
+  }
 
   return (http);
 }

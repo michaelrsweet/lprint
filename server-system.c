@@ -60,7 +60,7 @@ lprintCreateSystem(
 #endif // __APPLE__
 
   snprintf(spooldir, sizeof(spooldir), "%s/lprint%d.d", tmpdir, (int)getuid());
-  if (mkdir(spooldir, 0700))
+  if (mkdir(spooldir, 0700) && errno != EEXIST)
   {
     perror(spooldir);
     return (NULL);
