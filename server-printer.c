@@ -35,6 +35,7 @@ static int	compare_jobs(lprint_job_t *a, lprint_job_t *b);
 static int	compare_printers(lprint_printer_t *a, lprint_printer_t *b);
 static void	free_printer(lprint_printer_t *printer);
 static unsigned	lprint_rand(void);
+static ipp_t	*make_xri(const char *uri, const char *authentication, const char *security);
 
 
 //
@@ -62,6 +63,7 @@ lprintCreatePrinter(
 			adminurl[1024],	// printer-more-info URI
 			supplyurl[1024],// printer-supply-info-uri URI
 			uuid[128];	// printer-uuid
+  ipp_t			*xris[2];	// All XRIs
   int			k_supported;	// Maximum file size supported
   int			num_formats;	// Number of supported document formats
   const char		*formats[10];	// Supported document formats
@@ -347,6 +349,15 @@ lprintCreatePrinter(
   // printer-uuid
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-uuid", NULL, uuid);
 
+  // printer-xri-supported
+  xris[0] = make_xri(ipp_uri, uri_authentication[0], uri_security[0]);
+  xris[1] = make_xri(ipps_uri, uri_authentication[1], uri_security[1]);
+
+  printer->xri_supported = ippAddCollections(printer->attrs, IPP_TAG_PRINTER, "printer-xri-supported", 2, (const ipp_t **)xris);
+
+  ippDelete(xris[0]);
+  ippDelete(xris[1]);
+
   // uri-authentication-supported
   ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "uri-authentication-supported", 2, NULL, uri_authentication);
 
@@ -587,4 +598,24 @@ lprint_rand(void)
 
   return ((unsigned)random());
 #endif // __APPLE__
+}
+
+
+//
+// 'make_xri()' - Make a printer-xri collection value.
+//
+
+static ipp_t *				// O - Collection value
+make_xri(const char *uri,		// I - xri-uri
+         const char *authentication,	// I - xri-authentication
+         const char *security)		// I - xri-security
+{
+  ipp_t	*col = ippNew();		// Collection value
+
+
+  ippAddString(col, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "xri-authentication", NULL, authentication);
+  ippAddString(col, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "xri-security", NULL, security);
+  ippAddString(col, IPP_TAG_PRINTER, IPP_TAG_URI, "xri-uri", NULL, uri);
+
+  return (col);
 }

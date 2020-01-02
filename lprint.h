@@ -112,7 +112,8 @@ typedef struct lprint_filter_s		// Attribute filter
 typedef struct lprint_system_s		// System data
 {
   pthread_rwlock_t	rwlock;		// Reader/writer lock
-  time_t		clean_time,	// Next clean time
+  time_t		start_time,	// Startup time
+			clean_time,	// Next clean time
 			save_time,	// Do we need to save the config?
 			shutdown_time;	// Shutdown requested?
   char			*hostname;	// Hostname
@@ -151,6 +152,7 @@ struct lprint_printer_s			// Printer data
 			*driver_name;	// Driver name
   lprint_driver_t	*driver;	// Driver
   ipp_t			*attrs;		// Static attributes
+  ipp_attribute_t	*xri_supported;	// printer-xri-supported attribute
   time_t		start_time;	// Startup time
   time_t		config_time;	// printer-config-change-time
   ipp_pstate_t		state;		// printer-state value

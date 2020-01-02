@@ -70,7 +70,7 @@ lprintDoDefault(
   request = ippNewRequest(IPP_OP_SET_SYSTEM_ATTRIBUTES);
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "system-uri", NULL, "ipp://localhost/ipp/system");
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
-  ippAddInteger(request, IPP_TAG_SYSTEM, IPP_TAG_INTEGER, "default-printer-id", printer_id);
+  ippAddInteger(request, IPP_TAG_SYSTEM, IPP_TAG_INTEGER, "system-default-printer-id", printer_id);
 
   ippDelete(cupsDoRequest(http, request, "/ipp/system"));
   httpClose(http);

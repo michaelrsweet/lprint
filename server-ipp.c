@@ -33,6 +33,7 @@ typedef struct lprint_attr_s		// Input attribute structure
 
 static void		copy_job_attributes(lprint_client_t *client, lprint_job_t *job, cups_array_t *ra);
 static void		copy_printer_attributes(lprint_client_t *client, lprint_printer_t *printer, cups_array_t *ra);
+static void		copy_printer_state(ipp_t *ipp, lprint_printer_t *printer, cups_array_t *ra);
 static int		filter_cb(lprint_filter_t *filter, ipp_t *dst, ipp_attribute_t *attr);
 static void		finish_document_data(lprint_client_t *client, lprint_job_t *job);
 
@@ -538,6 +539,7 @@ copy_printer_attributes(
 {
   lprintCopyAttributes(client->response, printer->attrs, ra, IPP_TAG_ZERO, IPP_TAG_CUPS_CONST);
   lprintCopyAttributes(client->response, printer->driver->attrs, ra, IPP_TAG_ZERO, IPP_TAG_CUPS_CONST);
+  copy_printer_state(client->response, printer, ra);
 
   if ((!ra || cupsArrayFind(ra, "media-col-default")) && printer->driver->default_media[0])
   {
@@ -633,27 +635,47 @@ copy_printer_attributes(
   if (!ra || cupsArrayFind(ra, "printer-organizational-unit"))
     ippAddString(client->response, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-organizational-unit", NULL, printer->org_unit ? printer->org_unit : "");
 
-  if (!ra || cupsArrayFind(ra, "printer-state"))
-    ippAddInteger(client->response, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", (int)printer->state);
-
   if (!ra || cupsArrayFind(ra, "printer-state-change-date-time"))
     ippAddDate(client->response, IPP_TAG_PRINTER, "printer-state-change-date-time", ippTimeToDate(printer->state_time));
 
   if (!ra || cupsArrayFind(ra, "printer-state-change-time"))
     ippAddInteger(client->response, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "printer-state-change-time", (int)(printer->state_time - printer->start_time));
 
+  if (!ra || cupsArrayFind(ra, "printer-up-time"))
+    ippAddInteger(client->response, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "printer-up-time", (int)(time(NULL) - printer->start_time));
+
+#if 0 // TODO: Fix me
+  if (!ra || cupsArrayFind(ra, "queued-job-count"))
+    ippAddInteger(client->response, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "queued-job-count", printer->active_job && printer->active_job->state < IPP_JSTATE_CANCELED);
+#endif // 0
+}
+
+
+//
+// 'copy_printer_state()' - Copy the printer-state-xxx attributes.
+//
+
+static void
+copy_printer_state(
+    ipp_t            *ipp,		// I - IPP message
+    lprint_printer_t *printer,		// I - Printer
+    cups_array_t     *ra)		// I - Requested attributes
+{
+  if (!ra || cupsArrayFind(ra, "printer-state"))
+    ippAddInteger(ipp, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", (int)printer->state);
+
   if (!ra || cupsArrayFind(ra, "printer-state-message"))
   {
     static const char * const messages[] = { "Idle.", "Printing.", "Stopped." };
 
-    ippAddString(client->response, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_TEXT), "printer-state-message", NULL, messages[printer->state - IPP_PSTATE_IDLE]);
+    ippAddString(ipp, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_TEXT), "printer-state-message", NULL, messages[printer->state - IPP_PSTATE_IDLE]);
   }
 
   if (!ra || cupsArrayFind(ra, "printer-state-reasons"))
   {
     if (printer->state_reasons == LPRINT_PREASON_NONE)
     {
-      ippAddString(client->response, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "printer-state-reasons", NULL, "none");
+      ippAddString(ipp, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "printer-state-reasons", NULL, "none");
     }
     else
     {
@@ -668,21 +690,13 @@ copy_printer_attributes(
 	{
 	  snprintf(reason, sizeof(reason), "%s-%s", lprint_preason_strings[i], printer->state == IPP_PSTATE_IDLE ? "report" : printer->state == IPP_PSTATE_PROCESSING ? "warning" : "error");
 	  if (attr)
-	    ippSetString(client->response, &attr, ippGetCount(attr), reason);
+	    ippSetString(ipp, &attr, ippGetCount(attr), reason);
 	  else
-	    attr = ippAddString(client->response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "printer-state-reasons", NULL, reason);
+	    attr = ippAddString(ipp, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "printer-state-reasons", NULL, reason);
 	}
       }
     }
   }
-
-  if (!ra || cupsArrayFind(ra, "printer-up-time"))
-    ippAddInteger(client->response, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "printer-up-time", (int)(time(NULL) - printer->start_time));
-
-#if 0 // TODO: Fix me
-  if (!ra || cupsArrayFind(ra, "queued-job-count"))
-    ippAddInteger(client->response, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "queued-job-count", printer->active_job && printer->active_job->state < IPP_JSTATE_CANCELED);
-#endif // 0
 }
 
 
@@ -1350,7 +1364,7 @@ ipp_get_printer_attributes(
   lprint_printer_t	*printer;	// Printer
 
 
-  // TODO: Update status as needed
+  // TODO: Update status attributes as needed (querying printer, etc.)
 
   // Send the attributes...
   ra      = ippCreateRequestedArray(client->request);
@@ -1376,7 +1390,38 @@ static void
 ipp_get_printers(
     lprint_client_t *client)		// I - Client
 {
-  lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
+  lprint_system_t	*system = client->system;
+					// System
+  cups_array_t		*ra;		// Requested attributes array
+  int			i,		// Looping var
+			limit;		// Maximum number to return
+  lprint_printer_t	*printer;	// Current printer
+
+
+  // Get request attributes...
+  limit = ippGetInteger(ippFindAttribute(client->request, "limit", IPP_TAG_INTEGER), 0);
+  ra    = ippCreateRequestedArray(client->request);
+
+  lprintRespondIPP(client, IPP_STATUS_OK, NULL);
+
+  pthread_rwlock_rdlock(&system->rwlock);
+
+  for (i = 0, printer = (lprint_printer_t *)cupsArrayFirst(system->printers); printer; i ++, printer = (lprint_printer_t *)cupsArrayNext(system->printers))
+  {
+    if (limit && i >= limit)
+      break;
+
+    if (i)
+      ippAddSeparator(client->response);
+
+    pthread_rwlock_rdlock(&printer->rwlock);
+    copy_printer_attributes(client, printer, ra);
+    pthread_rwlock_unlock(&printer->rwlock);
+  }
+
+  pthread_rwlock_unlock(&system->rwlock);
+
+  cupsArrayDelete(ra);
 }
 
 
@@ -1388,6 +1433,15 @@ static void
 ipp_get_system_attributes(
     lprint_client_t *client)		// I - Client
 {
+  lprint_system_t	*system = client->system;
+					// System
+  cups_array_t		*ra;		// Requested attributes array
+  int			i;		// Looping var
+  lprint_printer_t	*printer;	// Current printer
+  ipp_attribute_t	*attr;		// Current attribute
+  ipp_t			*col;		// configured-printers value
+
+
   // Verify the connection is local...
   if (!is_domain_connection(client))
   {
@@ -1395,7 +1449,50 @@ ipp_get_system_attributes(
     return;
   }
 
-  lprintRespondIPP(client, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED, "Not supported");
+  ra = ippCreateRequestedArray(client->request);
+
+  lprintRespondIPP(client, IPP_STATUS_OK, NULL);
+
+  pthread_rwlock_rdlock(&system->rwlock);
+
+  // TODO: Add remaining system attributes, like system-state, etc.
+  if (!ra || cupsArrayFind(ra, "system-configured-printers"))
+  {
+    attr = ippAddCollections(client->response, IPP_TAG_SYSTEM, "system-configured-printers", cupsArrayCount(system->printers), NULL);
+
+    for (i = 0, printer = (lprint_printer_t *)cupsArrayFirst(system->printers); printer; i ++, printer = (lprint_printer_t *)cupsArrayNext(system->printers))
+    {
+      col = ippNew();
+
+      pthread_rwlock_rdlock(&printer->rwlock);
+
+      ippAddInteger(col, IPP_TAG_SYSTEM, IPP_TAG_INTEGER, "printer-id", printer->printer_id);
+      ippAddString(col, IPP_TAG_SYSTEM, IPP_TAG_TEXT, "printer-info", NULL, printer->printer_name);
+      ippAddBoolean(col, IPP_TAG_SYSTEM, "printer-is-accepting-jobs", 1);
+      ippAddString(col, IPP_TAG_SYSTEM, IPP_TAG_TEXT, "printer-name", NULL, printer->printer_name);
+      ippAddString(col, IPP_TAG_SYSTEM, IPP_TAG_KEYWORD, "printer-service-type", NULL, "print");
+      copy_printer_state(col, printer, NULL);
+      ippCopyAttribute(col, printer->xri_supported, 0);
+
+      pthread_rwlock_unlock(&printer->rwlock);
+
+      ippSetCollection(client->response, &attr, i, col);
+      ippDelete(col);
+    }
+  }
+
+  if (!ra || cupsArrayFind(ra, "system-current-time"))
+    ippAddDate(client->response, IPP_TAG_SYSTEM, "system-current-time", ippTimeToDate(time(NULL)));
+
+  if (!ra || cupsArrayFind(ra, "system-default-printer-id"))
+    ippAddInteger(client->response, IPP_TAG_SYSTEM, IPP_TAG_INTEGER, "system-default-printer-id", system->default_printer);
+
+  if (!ra || cupsArrayFind(ra, "system-up-time"))
+    ippAddInteger(client->response, IPP_TAG_SYSTEM, IPP_TAG_INTEGER, "system-up-time", (int)(time(NULL) - system->start_time));
+
+  pthread_rwlock_unlock(&system->rwlock);
+
+  cupsArrayDelete(ra);
 }
 
 

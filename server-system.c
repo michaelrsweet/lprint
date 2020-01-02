@@ -79,6 +79,7 @@ lprintCreateSystem(
     system->port     = port ? port : 8000 + (getuid() % 1000);
   }
 
+  system->start_time      = time(NULL);
   system->directory       = strdup(spooldir);
   system->logfd           = 2;
   system->logfile         = logfile ? strdup(logfile) : NULL;
