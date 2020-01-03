@@ -541,9 +541,9 @@ copy_printer_attributes(
   lprintCopyAttributes(client->response, printer->driver->attrs, ra, IPP_TAG_ZERO, IPP_TAG_CUPS_CONST);
   copy_printer_state(client->response, printer, ra);
 
-  if ((!ra || cupsArrayFind(ra, "media-col-default")) && printer->driver->default_media[0])
+  if ((!ra || cupsArrayFind(ra, "media-col-default")) && printer->driver->media_default[0])
   {
-    ipp_t *col = lprintCreateMediaCol(printer->driver->default_media, NULL, NULL, printer->driver->left_right, printer->driver->bottom_top);
+    ipp_t *col = lprintCreateMediaCol(printer->driver->media_default, NULL, NULL, printer->driver->left_right, printer->driver->bottom_top);
 					// Collection value
 
     ippAddCollection(client->response, IPP_TAG_PRINTER, "media-col", col);
@@ -559,7 +559,7 @@ copy_printer_attributes(
 
     for (i = 0, count = 0; i < printer->driver->num_source; i ++)
     {
-      if (printer->driver->ready_media[i][0])
+      if (printer->driver->media_ready[i][0])
         count ++;
     }
 
@@ -569,9 +569,9 @@ copy_printer_attributes(
 
       for (i = 0, j = 0; i < printer->driver->num_source && j < count; i ++)
       {
-	if (printer->driver->ready_media[i][0])
+	if (printer->driver->media_ready[i][0])
 	{
-	  col = lprintCreateMediaCol(printer->driver->ready_media[i], printer->driver->source[i], NULL, printer->driver->left_right, printer->driver->bottom_top);
+	  col = lprintCreateMediaCol(printer->driver->media_ready[i], printer->driver->source[i], NULL, printer->driver->left_right, printer->driver->bottom_top);
           ippSetCollection(client->response, &attr, j ++, col);
           ippDelete(col);
 	}
@@ -579,8 +579,8 @@ copy_printer_attributes(
     }
   }
 
-  if ((!ra || cupsArrayFind(ra, "media-default")) && printer->driver->default_media[0])
-    ippAddString(client->response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-default", NULL, printer->driver->default_media);
+  if ((!ra || cupsArrayFind(ra, "media-default")) && printer->driver->media_default[0])
+    ippAddString(client->response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-default", NULL, printer->driver->media_default);
 
   if (!ra || cupsArrayFind(ra, "media-ready"))
   {
@@ -590,7 +590,7 @@ copy_printer_attributes(
 
     for (i = 0, count = 0; i < printer->driver->num_source; i ++)
     {
-      if (printer->driver->ready_media[i][0])
+      if (printer->driver->media_ready[i][0])
         count ++;
     }
 
@@ -600,8 +600,8 @@ copy_printer_attributes(
 
       for (i = 0, j = 0; i < printer->driver->num_source && j < count; i ++)
       {
-	if (printer->driver->ready_media[i][0])
-	  ippSetString(client->response, &attr, j ++, printer->driver->ready_media[i]);
+	if (printer->driver->media_ready[i][0])
+	  ippSetString(client->response, &attr, j ++, printer->driver->media_ready[i]);
       }
     }
   }
@@ -1921,15 +1921,20 @@ set_printer_attributes(
   {
     { "copies-default",			IPP_TAG_INTEGER,	1 },
     { "document-format-default",	IPP_TAG_MIMETYPE,	1 },
-    { "finishings-default",		IPP_TAG_ENUM,		1 },
+    { "label-mode-configured",		IPP_TAG_KEYWORD,	1 },
+    { "label-tear-off-configured",	IPP_TAG_INTEGER,	1 },
     { "media-default",			IPP_TAG_KEYWORD,	1 },
     { "media-ready",			IPP_TAG_KEYWORD,	LPRINT_MAX_SOURCE },
+    { "multiple-document-handling-default", IPP_TAG_KEYWORD,	1 },
     { "orientation-requested-default",	IPP_TAG_ENUM,		1 },
     { "print-color-mode-default",	IPP_TAG_KEYWORD,	1 },
     { "print-content-optimize-default",	IPP_TAG_KEYWORD,	1 },
+    { "print-darkness-default",		IPP_TAG_INTEGER,	1 },
     { "print-quality-default",		IPP_TAG_ENUM,		1 },
-    { "printer-location",		IPP_TAG_TEXT,		1 },
+    { "print-speed-default",		IPP_TAG_INTEGER,	1 },
+    { "printer-darkness-configured",	IPP_TAG_INTEGER,	1 },
     { "printer-geo-location",		IPP_TAG_URI,		1 },
+    { "printer-location",		IPP_TAG_TEXT,		1 },
     { "printer-organization",		IPP_TAG_TEXT,		1 },
     { "printer-organizational-unit",	IPP_TAG_TEXT,		1 },
     { "printer-resolution-default",	IPP_TAG_RESOLUTION,	1 }
@@ -1984,7 +1989,11 @@ set_printer_attributes(
 
     name = ippGetName(rattr);
 
-    if (!strcmp(name, "media-ready"))
+    if (!strcmp(name, "media-default"))
+    {
+      strlcpy(printer->driver->media_default, ippGetString(rattr, 0, NULL), sizeof(printer->driver->media_default));
+    }
+    else if (!strcmp(name, "media-ready"))
     {
       count = ippGetCount(rattr);
 
@@ -1993,11 +2002,11 @@ set_printer_attributes(
         const char *media = ippGetString(rattr, i, NULL);
 					// Media value
 
-        strlcpy(printer->driver->ready_media[i], media, sizeof(printer->driver->ready_media[i]));
+        strlcpy(printer->driver->media_ready[i], media, sizeof(printer->driver->media_ready[i]));
       }
 
       for (; i < LPRINT_MAX_SOURCE; i ++)
-        printer->driver->ready_media[i][0] = '\0';
+        printer->driver->media_ready[i][0] = '\0';
     }
     else if (!strcmp(name, "printer-geo-location"))
     {

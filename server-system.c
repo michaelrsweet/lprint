@@ -486,7 +486,7 @@ load_config(lprint_system_t *system)	// I - System
 	  if ((attr = ippFindAttribute(printer->attrs, line, IPP_TAG_ZERO)) != NULL)
 	    ippDeleteAttribute(printer->attrs, attr);
 
-	  if (!strcmp(line, "copies-default"))
+	  if (!strcmp(line, "copies-default") || !strcmp(line, "print-darkness-default") || !strcmp(line, "print-speed-default"))
 	  {
 	    ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, line, atoi(value));
 	  }
@@ -494,13 +494,21 @@ load_config(lprint_system_t *system)	// I - System
 	  {
 	    ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_MIMETYPE, line, NULL, value);
 	  }
-	  else if (!strcmp(line, "finishings-default") || !strcmp(line, "print-quality-default") || !strcmp(line, "orientation-requested-default"))
+	  else if (!strcmp(line, "print-quality-default") || !strcmp(line, "orientation-requested-default"))
 	  {
 	    ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_ENUM, line, atoi(value));
 	  }
-	  else if (!strcmp(line, "media-default") || !strcmp(line, "print-color-mode-default") || !strcmp(line, "print-content-optimize-default"))
+	  else if (!strcmp(line, "label-mode-configured"))
 	  {
-	    ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, line, NULL, value);
+	    printer->driver->mode_configured = lprintLabelModeValue(value);
+	  }
+	  else if (!strcmp(line, "label-tear-off-configured"))
+	  {
+	    printer->driver->tear_off_configured = atoi(value);
+	  }
+	  else if (!strcmp(line, "media-default"))
+	  {
+	    strlcpy(printer->driver->media_default, value, sizeof(printer->driver->media_default));
 	  }
 	  else if (!strcmp(line, "media-ready"))
 	  {
@@ -513,8 +521,16 @@ load_config(lprint_system_t *system)	// I - System
               if ((next = strchr(current, ',')) != NULL)
                 *next++ = '\0';
 
-	      strlcpy(printer->driver->ready_media[i], current, sizeof(printer->driver->ready_media[i]));
+	      strlcpy(printer->driver->media_ready[i], current, sizeof(printer->driver->media_ready[i]));
 	    }
+	  }
+	  else if (!strcmp(line, "print-color-mode-default") || !strcmp(line, "print-content-optimize-default"))
+	  {
+	    ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, line, NULL, value);
+	  }
+	  else if (!strcmp(line, "printer-darkness-configured"))
+	  {
+	    printer->driver->darkness_configured = atoi(value);
 	  }
 	  else if (!strcmp(line, "printer-geo-location"))
 	  {
@@ -595,13 +611,12 @@ save_config(lprint_system_t *system)	// I - System
   {
     "copies-default",
     "document-format-default-default",
-    "finishings-default",
-    "media-default",
-    "media-ready",
     "orientation-requested-default",
     "print-color-mode-default",
     "print-content-optimize-default",
+    "print-darkness-default",
     "print-quality-default",
+    "print-speed-default",
     "printer-resolution-default"
   };
 
@@ -624,6 +639,14 @@ save_config(lprint_system_t *system)	// I - System
   for (printer = (lprint_printer_t *)cupsArrayFirst(system->printers); printer; printer = (lprint_printer_t *)cupsArrayNext(system->printers))
   {
     cupsFilePrintf(fp, "Printer %s %d %s %s\n", printer->printer_name, printer->printer_id, printer->device_uri, printer->driver_name);
+    if (printer->driver->mode_supported)
+      cupsFilePutConf(fp, "label-mode-configured", lprintLabelModeString(printer->driver->mode_configured));
+    if (printer->driver->tear_off_supported[0] != printer->driver->tear_off_supported[1])
+      cupsFilePrintf(fp, "label-tear-off-configured %d\n", printer->driver->tear_off_configured);
+    cupsFilePutConf(fp, "media-default", printer->driver->media_default);
+    // TODO: add media-ready
+    if (printer->driver->darkness_supported)
+      cupsFilePrintf(fp, "printer-darkness-configured %d\n", printer->driver->darkness_configured);
     if (printer->geo_location)
       cupsFilePutConf(fp, "printer-geo-location", printer->geo_location);
     if (printer->location)

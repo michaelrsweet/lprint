@@ -14,6 +14,16 @@
 #include "lprint.h"
 
 
+// ZPL commands:
+//
+// print-darkness: Map 0 to 100 to ^MD command with values from -30 to 30;
+//                 print-darkness-supported=61, -default=50
+//
+// ZPL Auto-configuration:
+//
+// ~HI returns model, firmware version, and dots-per-millimeter
+// ~HQES returns status information
+// ~HS returns other status and mode information
 //
 // Local globals...
 //
@@ -118,7 +128,7 @@ lprintInitZPL(
 
   driver->printfunc  = lprint_zpl_print;
   driver->statusfunc = lprint_zpl_status;
-  driver->format     = "application/vnd.-";
+  driver->format     = "application/vnd.zebra-zpl";
 
   driver->num_resolution  = 1;
   driver->x_resolution[0] = 203;

@@ -42,15 +42,11 @@ lprintAddDefaults(
   if (value)
     ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "copies-default", atoi(value));
 
-  if ((value = cupsGetOption("finishings-default", num_options, options)) == NULL)
-    value = cupsGetOption("finishings", num_options, options);
-  if (value)
-  {
-    if ((intvalue = ippEnumValue("finishings", value)) != 0)
-      ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_ENUM, "finishings-default", intvalue);
-    else
-      ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_ENUM, "finishings-default", atoi(value));
-  }
+  if ((value = cupsGetOption("label-mode-configured", num_options, options)) != NULL)
+    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "label-model-configured", NULL, value);
+
+  if ((value = cupsGetOption("label-tear-off-configured", num_options, options)) != NULL)
+    ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "label-tear-off-configured", atoi(value));
 
   if ((value = cupsGetOption("media-default", num_options, options)) == NULL)
     value = cupsGetOption("media", num_options, options);
@@ -95,6 +91,11 @@ lprintAddDefaults(
   if (value)
     ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "print-content-optimize-mode-default", NULL, value);
 
+  if ((value = cupsGetOption("print-darkness-default", num_options, options)) == NULL)
+    value = cupsGetOption("print-darkness", num_options, options);
+  if (value)
+    ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "print-darkness-default", atoi(value));
+
   if ((value = cupsGetOption("print-quality-default", num_options, options)) == NULL)
     value = cupsGetOption("print-quality", num_options, options);
   if (value)
@@ -104,6 +105,14 @@ lprintAddDefaults(
     else
       ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_ENUM, "print-quality-default", atoi(value));
   }
+
+  if ((value = cupsGetOption("print-speed-default", num_options, options)) == NULL)
+    value = cupsGetOption("print-speed", num_options, options);
+  if (value)
+    ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "print-speed-default", atoi(value));
+
+  if ((value = cupsGetOption("printer-darkness-configured", num_options, options)) != NULL)
+    ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "printer-darkness-configured", atoi(value));
 
   if ((value = cupsGetOption("printer-resolution-default", num_options, options)) == NULL)
     value = cupsGetOption("printer-resolution", num_options, options);

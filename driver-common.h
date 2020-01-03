@@ -49,6 +49,28 @@ typedef int (*lprint_rwritefunc_t)(lprint_printer_t *printer, lprint_job_t *job,
 typedef int (*lprint_statusfunc_t)(lprint_printer_t *printer);
 					// Update printer status
 
+enum lprint_label_mode_e		// Label printing modes
+{
+  LPRINT_LABEL_MODE_APPLICATOR = 0x0001,
+  LPRINT_LABEL_MODE_CUTTER = 0x0002,
+  LPRINT_LABEL_MODE_CUTTER_DELAYED = 0x0004,
+  LPRINT_LABEL_MODE_KIOSK = 0x0008,
+  LPRINT_LABEL_MODE_PEEL_OFF = 0x0010,
+  LPRINT_LABEL_MODE_PEEL_OFF_PREPEEL = 0x0020,
+  LPRINT_LABEL_MODE_REWIND = 0x0040,
+  LPRINT_LABEL_MODE_RFID = 0x0080,
+  LPRINT_LABEL_MODE_TEAR_OFF = 0x0100
+};
+typedef unsigned short lprint_label_mode_t;
+
+enum lprint_media_tracking_e		// Media tracking modes
+{
+  LPRINT_MEDIA_TRACKING_CONTINUOUS = 0x0001,
+  LPRINT_MEDIA_TRACKING_MARK = 0x0002,
+  LPRINT_MEDIA_TRACKING_WEB = 0x0004
+};
+typedef unsigned short lprint_media_tracking_t;
+
 typedef struct lprint_supply_s		// Supply data
 {
   const char		*color;		// Colorant, if any
@@ -81,19 +103,38 @@ typedef struct lprint_driver_s		// Driver data
 					// Supported media
   char			max_media[64],	// Maximum media size
 			min_media[64],	// Minimum media size
-			default_media[64],
+			media_default[64],
 					// Default media
-			ready_media[LPRINT_MAX_SOURCE][64];
+			media_ready[LPRINT_MAX_SOURCE][64];
 					// Ready media sizes
   int			num_source;	// Number of media sources (rolls)
   const char		*source[LPRINT_MAX_SOURCE];
 					// Media sources
+  int			top_offset_default,
+					// Default media-top-offset
+			top_offset_supported[2];
+					// media-top-offset-supported (0,0 for none)
+  lprint_media_tracking_t tracking_default,
+					// Default media-tracking
+			tracking_supported;
+					// media-tracking-supported
   int			num_type;	// Number of media types
   const char		*type[LPRINT_MAX_TYPE];
 					// Media types
-  int			num_supply;	// Number of supplies
+  lprint_label_mode_t	mode_configured,// label-mode-configured
+			mode_supported;	// label-mode-supported
+  int			tear_off_configured,
+					// label-tear-off-configured
+			tear_off_supported[2];
+					// label-tear-off-supported (0,0 for none)
+  int			speed_supported[2];// print-speed-supported (0,0 for none)
+  int			darkness_configured,
+					// printer-darkness-configured
+			darkness_supported;
+					// printer-darkness-supported (0 for none)
+  int			num_supply;	// Number of printer-supply
   lprint_supply_t	supply[LPRINT_MAX_SUPPLY];
-					// Supplies
+					// printer-supply
 } lprint_driver_t;
 
 
@@ -113,5 +154,10 @@ extern void		lprintInitEPL2(lprint_driver_t *driver);
 extern void		lprintInitFGL(lprint_driver_t *driver);
 extern void		lprintInitPCL(lprint_driver_t *driver);
 extern void		lprintInitZPL(lprint_driver_t *driver);
+
+extern const char	*lprintLabelModeString(lprint_label_mode_t v);
+extern lprint_label_mode_t lprintLabelModeValue(const char *s);
+extern const char	*lprintMediaTrackingString(lprint_media_tracking_t v);
+extern lprint_media_tracking_t lprintMediaTrackingValue(const char *s);
 
 #endif // !_DRIVER_COMMON_H_

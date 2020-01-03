@@ -261,6 +261,116 @@ lprintGetMakeAndModel(
 
 
 //
+// 'lprintLabelModeString()' - Return the string associated with a label mode bit value.
+//
+
+const char *				// O - String
+lprintLabelModeString(
+    lprint_label_mode_t v)		// I - Bit value
+{
+  switch (v)
+  {
+    case LPRINT_LABEL_MODE_APPLICATOR :
+        return ("applicator");
+
+    case LPRINT_LABEL_MODE_CUTTER :
+        return ("cutter");
+
+    case LPRINT_LABEL_MODE_CUTTER_DELAYED :
+        return ("cutter-delayed");
+
+    case LPRINT_LABEL_MODE_KIOSK :
+        return ("kiosk");
+
+    case LPRINT_LABEL_MODE_PEEL_OFF :
+        return ("peel-off");
+
+    case LPRINT_LABEL_MODE_PEEL_OFF_PREPEEL :
+        return ("peel-off-prepeel");
+
+    case LPRINT_LABEL_MODE_REWIND :
+        return ("rewind");
+
+    case LPRINT_LABEL_MODE_RFID :
+        return ("rfid");
+
+    case LPRINT_LABEL_MODE_TEAR_OFF :
+        return ("tear-off");
+
+    default :
+        return ("unknown");
+  }
+}
+
+
+//
+// 'lprintLabelModeValue()' - Return the bit value associated with a string.
+//
+
+lprint_label_mode_t			// O - Bit value
+lprintLabelModeValue(const char *s)	// I - String
+{
+  if (!strcmp(s, "applicator"))
+    return (LPRINT_LABEL_MODE_APPLICATOR);
+  else if (!strcmp(s, "cutter"))
+    return (LPRINT_LABEL_MODE_CUTTER);
+  else if (!strcmp(s, "cutter-delayed"))
+    return (LPRINT_LABEL_MODE_CUTTER_DELAYED);
+  else if (!strcmp(s, "kiosk"))
+    return (LPRINT_LABEL_MODE_KIOSK);
+  else if (!strcmp(s, "peel-off"))
+    return (LPRINT_LABEL_MODE_PEEL_OFF);
+  else if (!strcmp(s, "peel-off-prepeel"))
+    return (LPRINT_LABEL_MODE_PEEL_OFF_PREPEEL);
+  else if (!strcmp(s, "rewind"))
+    return (LPRINT_LABEL_MODE_REWIND);
+  else if (!strcmp(s, "rfid"))
+    return (LPRINT_LABEL_MODE_RFID);
+  else if (!strcmp(s, "tear-off"))
+    return (LPRINT_LABEL_MODE_TEAR_OFF);
+  else
+    return (0);
+}
+
+
+//
+// 'lprintMediaTrackingString()' - Return the string associated with a bit value.
+//
+
+const char *				// O - String
+lprintMediaTrackingString(
+    lprint_media_tracking_t v)		// I - Bit value
+{
+  if (v == LPRINT_MEDIA_TRACKING_CONTINUOUS)
+    return ("continuous");
+  else if (v == LPRINT_MEDIA_TRACKING_MARK)
+    return ("mark");
+  else if (v == LPRINT_MEDIA_TRACKING_WEB)
+    return ("web");
+  else
+    return ("unknown");
+}
+
+
+//
+// 'lprintMediaTrackingValue()' - Return the bit value associated with a string.
+//
+
+lprint_media_tracking_t			// O - Bit value
+lprintMediaTrackingValue(const char *s)	// I - String
+{
+  if (!strcmp(s, "continuous"))
+    return (LPRINT_MEDIA_TRACKING_CONTINUOUS);
+  else if (!strcmp(s, "mark"))
+    return (LPRINT_MEDIA_TRACKING_MARK);
+  else if (!strcmp(s, "web"))
+    return (LPRINT_MEDIA_TRACKING_WEB);
+  else
+    return (0);
+}
+
+
+//
 // 'lprint_copy_media()' - Copy media capability attributes.
 //
 

@@ -114,7 +114,6 @@ lprintCreatePrinter(
     "copies",
     "document-format",
     "document-name",
-    "finishings",
     "ipp-attribute-fidelity",
     "job-name",
     "job-priority",
@@ -123,8 +122,10 @@ lprintCreatePrinter(
     "multiple-document-handling",
     "orientation-requested",
     "print-color-mode",
+    "print-darkness",
     "print-content-optimize",
     "print-quality",
+    "print-speed",
     "printer-resolution"
   };
   static const char * const media_col[] =
@@ -136,6 +137,8 @@ lprintCreatePrinter(
     "media-size-name",
     "media-source",
     "media-top-margin",
+    "media-top-offset",
+    "media-tracking",
     "media-type"
   };
   static const char * const multiple_document_handling[] =
@@ -147,12 +150,18 @@ lprintCreatePrinter(
   {					// printer-settable-attributes values
     "copies-default",
     "document-format-default",
-    "finishings-default",
+    "label-mode-configured",
+    "label-tear-off-configured",
     "media-default",
+    "media-ready",
+    "multiple-document-handling-default",
     "orientation-requested-default",
     "print-color-mode-default",
     "print-content-optimize-default",
+    "print-darkness-default",
     "print-quality-default",
+    "print-speed-default",
+    "printer-darkness-configured",
     "printer-geo-location",
     "printer-location",
     "printer-organization",
