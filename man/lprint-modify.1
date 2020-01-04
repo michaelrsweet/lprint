@@ -1,28 +1,28 @@
 .\"
 .\" lprint-modify man page for LPrint, a Label Printer Utility
 .\"
-.\" Copyright © 2019 by Michael R Sweet.
+.\" Copyright © 2019-2020 by Michael R Sweet.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint-modify 1 "LPrint" "December 13, 2019" "Michael R Sweet"
+.TH lprint-modify 1 "LPrint" "January 4, 2020" "Michael R Sweet"
 .SH NAME
 lprint-modify \- modify a printer queue.
 .SH SYNOPSIS
 .B lprint
 .B modify
 .B \-d
-.I printer-name
+.I PRINTER
 [
 .B \-m
-.I driver-name
+.I DRIVER-NAME
 ] [
 .B \-v
-.I device-uri
+.I DEVICE-URI
 ] [
 .B \-o
-.I option-name=value
+.I OPTION=VALUE
 ]
 .SH DESCRIPTION
 This command modifies an existing label printer queue.
@@ -39,11 +39,35 @@ See
 .BR lprint-drivers (1)
 for the command to list the available print drivers.
 .TP 5
-\fB\-o \fIOPTION-NAME=VALUE\fR
+\fB\-o \fIOPTION=VALUE\fR
 Specifies the default value for the given option name.
 See
 .BR lprint-submit (1)
 for a list of supported options.
+.TP 5
+\fB\-o label-mode-configured\fI=VALUE\fR
+Specifies the label printing mode: "applicator", "cutter", "cutter-delayed", "kiosk", "peel-off", "peel-off-prepeel", "rewind", "rfid", or "tear-off".
+.TP 5
+\fB\-o label-tear-off-configured\fI=NNNin\fR
+.TP 5
+\fB\-o label-tear-off-configured\fI=NNNmm\fR
+Specifies the label tear-off offset in inches ("NNNin") or millimeters ("NNNmm").
+.TP 5
+\fB\-o printer-darkness\fI=NNN\fR
+Specifies the base darkness setting for all print jobs as a percentage.
+0 represents the lightest printing while 100 represents the darkest printing.
+.TP 5
+\fB\-o printer-geo-location=geo:\fI=LATLON\fR
+Specifies the geographic location of the printer as a "geo:" URI.
+.TP 5
+\fB\-o printer-location\fI=LOCATION\fR
+Specifies the human-readable location, for example "Rack 42".
+.TP 5
+\fB\-o printer-organization\fI=ORGANIZATION\fR
+Specifies the organization name, for example "Acme, Inc.".
+.TP 5
+\fB\-o printer-organizational-unit\fI=UNIT\fR
+Specifies the organizational unit, for example "Shipping Department".
 .TP 5
 \fB\-v \fIDEVICE-URI\fR
 Specifies the device for the print queue.
@@ -58,4 +82,4 @@ command.
 .BR lprint-drivers (1),
 .BR lprint-submit (1)
 .SH COPYRIGHT
-Copyright \[co] 2019 by Michael R Sweet.
+Copyright \[co] 2019-2020 by Michael R Sweet.

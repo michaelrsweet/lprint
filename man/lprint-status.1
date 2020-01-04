@@ -6,7 +6,7 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint-status 1 "LPrint" "January 2, 2020" "Michael R Sweet"
+.TH lprint-status 1 "LPrint" "January 4, 2020" "Michael R Sweet"
 .SH NAME
 lprint-status \- show the current status of a printer
 .SH SYNOPSIS
@@ -14,7 +14,10 @@ lprint-status \- show the current status of a printer
 .B status
 [
 .B \-d
-.I printer-name
+.I PRINTER
+] [
+.B \-u
+.I PRINTER-URI
 ]
 .SH DESCRIPTION
 This command shows the current status of a printer.
@@ -23,8 +26,11 @@ If no printer is specified, the combined server state is shown.
 The following options are recognized by
 .B lprint status:
 .TP 5
-\fB\-d \fIPRINTER-NAME\fR
+\fB\-d \fIPRINTER\fR
 Specifies the name of a printer.
+.TP 5
+\fB\-u \fIPRINTER-URI\fR
+Specifies an "ipp:" or "ipps:" URI for a remote printer.
 .SH SEE ALSO
 .BR lprint (1),
 .BR lprint-default (1).

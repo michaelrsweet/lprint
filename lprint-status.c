@@ -24,7 +24,8 @@ lprintDoStatus(
     cups_option_t *options)		// I - Options
 {
   http_t		*http;		// HTTP connection
-  const char		*printer_name;	// Printer name
+  const char		*printer_uri,	// Printer URI
+			*printer_name;	// Printer name
   char			resource[1024];	// Resource path
   ipp_t			*request,	// IPP request
 			*response;	// IPP response
@@ -54,17 +55,30 @@ lprintDoStatus(
   };
 
 
-  // Try connecting to the server...
-  if ((http = lprintConnect(0)) == NULL)
+  if ((printer_uri = cupsGetOption("printer-uri", num_options, options)) != NULL)
   {
-    puts("Not running.");
-    return (0);
+    // Connect to the remote printer...
+    if ((http = lprintConnectURI(printer_uri, resource, sizeof(resource))) == NULL)
+      return (1);
+  }
+  else
+  {
+    // Try connecting to the server...
+    if ((http = lprintConnect(0)) == NULL)
+    {
+      puts("Not running.");
+      return (0);
+    }
   }
 
-  if ((printer_name = cupsGetOption("printer-name", num_options, options)) != NULL)
+  if (printer_uri || (printer_name = cupsGetOption("printer-name", num_options, options)) != NULL)
   {
+    // Get the printer status
     request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
-    lprintAddPrinterURI(request, printer_name, resource, sizeof(resource));
+    if (printer_uri)
+      ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, printer_uri);
+    else
+      lprintAddPrinterURI(request, printer_name, resource, sizeof(resource));
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
     ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", (int)(sizeof(pattrs) / sizeof(pattrs[0])), NULL, pattrs);
 

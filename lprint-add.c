@@ -15,107 +15,175 @@
 
 
 //
-// 'lprintAddDefaults()' - Add default printer attributes from options.
+// Local functions...
+//
+
+static int	get_length(const char *value);
+
+
+//
+// 'lprintAddOptions()' - Add default/Job Template attributes from options.
 //
 
 void
-lprintAddDefaults(
+lprintAddOptions(
     ipp_t         *request,		// I - IPP request
     int           num_options,		// I - Number of options
     cups_option_t *options)		// I - Options
 {
+  int		is_default;		// Adding xxx-default attributes?
+  ipp_tag_t	group_tag;		// Group to add to
   const char	*value;			// String value
   int		intvalue;		// Integer value
 
 
-  if ((value = cupsGetOption("printer-location", num_options, options)) != NULL)
-    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-location", NULL, value);
-  if ((value = cupsGetOption("printer-geo-location", num_options, options)) != NULL)
-    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-geo-location", NULL, value);
-  if ((value = cupsGetOption("printer-organization", num_options, options)) != NULL)
-    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-organization", NULL, value);
-  if ((value = cupsGetOption("printer-organizational-unit", num_options, options)) != NULL)
-    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-organizational-unit", NULL, value);
+  group_tag  = ippGetOperation(request) == IPP_PRINT_JOB ? IPP_TAG_JOB : IPP_TAG_PRINTER;
+  is_default = group_tag == IPP_TAG_PRINTER;
 
-  if ((value = cupsGetOption("copies-default", num_options, options)) == NULL)
-    value = cupsGetOption("copies", num_options, options);
-  if (value)
-    ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "copies-default", atoi(value));
-
-  if ((value = cupsGetOption("label-mode-configured", num_options, options)) != NULL)
-    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "label-model-configured", NULL, value);
-
-  if ((value = cupsGetOption("label-tear-off-configured", num_options, options)) != NULL)
-    ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "label-tear-off-configured", atoi(value));
-
-  if ((value = cupsGetOption("media-default", num_options, options)) == NULL)
-    value = cupsGetOption("media", num_options, options);
-  if (value)
-    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-default", NULL, value);
-
-  if ((value = cupsGetOption("media-ready", num_options, options)) != NULL)
+  if (is_default)
   {
-    int		num_values;		// Number of values
-    char	*values[4],		// Pointers to size strings
-		sizes[4][256];		// Size strings
+    // Add Printer Description attributes...
+    if ((value = cupsGetOption("label-mode-configured", num_options, options)) != NULL)
+      ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "label-model-configured", NULL, value);
 
+    if ((value = cupsGetOption("label-tear-off-configured", num_options, options)) != NULL)
+      ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "label-tear-off-configured", get_length(value));
 
-    if ((num_values = sscanf(value, "%255s,%255s,%255s,%255s", sizes[0], sizes[1], sizes[2], sizes[3])) > 0)
+    if ((value = cupsGetOption("media-default", num_options, options)) == NULL)
+      value = cupsGetOption("media", num_options, options);
+    if (value)
+      ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-default", NULL, value);
+
+    if ((value = cupsGetOption("media-ready", num_options, options)) != NULL)
     {
-      values[0] = sizes[0];
-      values[1] = sizes[1];
-      values[2] = sizes[2];
-      values[3] = sizes[3];
+      int		num_values;		// Number of values
+      char	*values[4],		// Pointers to size strings
+		  sizes[4][256];		// Size strings
 
-      ippAddStrings(request, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-ready", num_values, NULL, (const char * const *)values);
+
+      if ((num_values = sscanf(value, "%255s,%255s,%255s,%255s", sizes[0], sizes[1], sizes[2], sizes[3])) > 0)
+      {
+	values[0] = sizes[0];
+	values[1] = sizes[1];
+	values[2] = sizes[2];
+	values[3] = sizes[3];
+
+	ippAddStrings(request, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-ready", num_values, NULL, (const char * const *)values);
+      }
+    }
+
+    if ((value = cupsGetOption("printer-darkness-configured", num_options, options)) != NULL)
+      ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "printer-darkness-configured", atoi(value));
+
+    if ((value = cupsGetOption("printer-geo-location", num_options, options)) != NULL)
+      ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-geo-location", NULL, value);
+
+    if ((value = cupsGetOption("printer-location", num_options, options)) != NULL)
+      ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-location", NULL, value);
+
+    if ((value = cupsGetOption("printer-organization", num_options, options)) != NULL)
+      ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-organization", NULL, value);
+
+    if ((value = cupsGetOption("printer-organizational-unit", num_options, options)) != NULL)
+      ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-organizational-unit", NULL, value);
+  }
+  else
+  {
+    // Add Job Template attributes...
+    const char	*media_source = cupsGetOption("media-source", num_options, options),
+		*media_top_offset = cupsGetOption("media-top-offset", num_options, options),
+		*media_tracking = cupsGetOption("media-tracking", num_options, options),
+		*media_type = cupsGetOption("media-type", num_options, options);
+					// media-xxx member values
+
+    value = cupsGetOption("media", num_options, options);
+    if (value || media_source || media_top_offset || media_tracking || media_type)
+    {
+      // Add media-col
+      ipp_t 	*media_col = ippNew();	// media-col value
+      pwg_media_t *pwg = pwgMediaForPWG(value);
+					// Size
+
+      if (pwg)
+      {
+        ipp_t		*media_size = ippNew();
+					// media-size value
+
+        ippAddInteger(media_size, IPP_TAG_JOB, IPP_TAG_INTEGER, "x-dimension", pwg->width);
+        ippAddInteger(media_size, IPP_TAG_JOB, IPP_TAG_INTEGER, "y-dimension", pwg->length);
+        ippAddCollection(media_col, IPP_TAG_JOB, "media-size", media_size);
+        ippDelete(media_size);
+      }
+
+      if (media_source)
+        ippAddString(media_col, IPP_TAG_JOB, IPP_TAG_KEYWORD, "media-source", NULL, media_source);
+
+      if (media_top_offset)
+        ippAddInteger(media_col, IPP_TAG_JOB, IPP_TAG_INTEGER, "media-top-offset", get_length(media_top_offset));
+
+      if (media_tracking)
+        ippAddString(media_col, IPP_TAG_JOB, IPP_TAG_KEYWORD, "media-tracking", NULL, media_tracking);
+
+      if (media_type)
+        ippAddString(media_col, IPP_TAG_JOB, IPP_TAG_KEYWORD, "media-type", NULL, media_type);
+
+      ippAddCollection(request, IPP_TAG_JOB, "media-col", media_col);
+      ippDelete(media_col);
+    }
+    else if (value)
+    {
+      // Add media
+      ippAddString(request, IPP_TAG_JOB, IPP_TAG_KEYWORD, "media", NULL, value);
     }
   }
 
-  if ((value = cupsGetOption("orientation-requested-default", num_options, options)) == NULL)
-    value = cupsGetOption("orientation-requested", num_options, options);
+  if ((value = cupsGetOption("copies", num_options, options)) == NULL)
+    value = cupsGetOption("copies-default", num_options, options);
+  if (value)
+    ippAddInteger(request, group_tag, IPP_TAG_INTEGER, is_default ? "copies-default" : "copies", atoi(value));
+
+  if ((value = cupsGetOption("orientation-requested", num_options, options)) == NULL)
+    value = cupsGetOption("orientation-requested-default", num_options, options);
   if (value)
   {
     if ((intvalue = ippEnumValue("orientation-requested", value)) != 0)
-      ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_ENUM, "orientation-requested-default", intvalue);
+      ippAddInteger(request, group_tag, IPP_TAG_ENUM, is_default ? "orientation-requested-default" : "orientation-requested", intvalue);
     else
-      ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_ENUM, "orientation-requested-default", atoi(value));
+      ippAddInteger(request, group_tag, IPP_TAG_ENUM, is_default ? "orientation-requested-default" : "orientation-requested", atoi(value));
   }
 
-  if ((value = cupsGetOption("print-color-mode-default", num_options, options)) == NULL)
-    value = cupsGetOption("print-color-mode", num_options, options);
+  if ((value = cupsGetOption("print-color-mode", num_options, options)) == NULL)
+    value = cupsGetOption("print-color-mode-default", num_options, options);
   if (value)
-    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "print-color-mode-default", NULL, value);
+    ippAddString(request, group_tag, IPP_TAG_KEYWORD, is_default ? "print-color-mode-default" : "print-color-mode", NULL, value);
 
-  if ((value = cupsGetOption("print-content-optimize-default", num_options, options)) == NULL)
-    value = cupsGetOption("print-content-optimize-mode", num_options, options);
+  if ((value = cupsGetOption("print-content-optimize", num_options, options)) == NULL)
+    value = cupsGetOption("print-content-optimize-default", num_options, options);
   if (value)
-    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "print-content-optimize-mode-default", NULL, value);
+    ippAddString(request, group_tag, IPP_TAG_KEYWORD, is_default ? "print-content-optimize-mode-default" : "print-content-optimize", NULL, value);
 
-  if ((value = cupsGetOption("print-darkness-default", num_options, options)) == NULL)
-    value = cupsGetOption("print-darkness", num_options, options);
+  if ((value = cupsGetOption("print-darkness", num_options, options)) == NULL)
+    value = cupsGetOption("print-darkness-default", num_options, options);
   if (value)
-    ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "print-darkness-default", atoi(value));
+    ippAddInteger(request, group_tag, IPP_TAG_INTEGER, is_default ? "print-darkness-default" : "print-darkness", atoi(value));
 
-  if ((value = cupsGetOption("print-quality-default", num_options, options)) == NULL)
-    value = cupsGetOption("print-quality", num_options, options);
+  if ((value = cupsGetOption("print-quality", num_options, options)) == NULL)
+    value = cupsGetOption("print-quality-default", num_options, options);
   if (value)
   {
     if ((intvalue = ippEnumValue("print-quality", value)) != 0)
-      ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_ENUM, "print-quality-default", intvalue);
+      ippAddInteger(request, group_tag, IPP_TAG_ENUM, is_default ? "print-quality-default" : "print-quality", intvalue);
     else
-      ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_ENUM, "print-quality-default", atoi(value));
+      ippAddInteger(request, group_tag, IPP_TAG_ENUM, is_default ? "print-quality-default" : "print-quality", atoi(value));
   }
 
-  if ((value = cupsGetOption("print-speed-default", num_options, options)) == NULL)
-    value = cupsGetOption("print-speed", num_options, options);
+  if ((value = cupsGetOption("print-speed", num_options, options)) == NULL)
+    value = cupsGetOption("print-speed-default", num_options, options);
   if (value)
-    ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "print-speed-default", atoi(value));
+    ippAddInteger(request, group_tag, IPP_TAG_INTEGER, is_default ? "print-speed-default" : "print-speed", get_length(value));
 
-  if ((value = cupsGetOption("printer-darkness-configured", num_options, options)) != NULL)
-    ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "printer-darkness-configured", atoi(value));
-
-  if ((value = cupsGetOption("printer-resolution-default", num_options, options)) == NULL)
-    value = cupsGetOption("printer-resolution", num_options, options);
+  if ((value = cupsGetOption("printer-resolution", num_options, options)) == NULL)
+    value = cupsGetOption("printer-resolution-default", num_options, options);
   if (value)
   {
     int		xres, yres;		// Resolution values
@@ -133,7 +201,7 @@ lprintAddDefaults(
       yres = xres;
     }
 
-    ippAddResolution(request, IPP_TAG_PRINTER, "printer-resolution-default", xres, yres, !strcmp(units, "dpi") ? IPP_RES_PER_INCH : IPP_RES_PER_CM);
+    ippAddResolution(request, group_tag, is_default ? "printer-resolution-default" : "printer-resolution", xres, yres, !strcmp(units, "dpi") ? IPP_RES_PER_INCH : IPP_RES_PER_CM);
   }
 }
 
@@ -182,7 +250,7 @@ lprintDoAdd(int           num_options,	// I - Number of options
   ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "lprint-driver", NULL, lprint_driver);
   ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_URI, "device-uri", NULL, device_uri);
 
-  lprintAddDefaults(request, num_options, options);
+  lprintAddOptions(request, num_options, options);
 
   ippDelete(cupsDoRequest(http, request, "/ipp/system"));
 
@@ -195,4 +263,29 @@ lprintDoAdd(int           num_options,	// I - Number of options
   }
 
   return (0);
+}
+
+
+//
+// 'get_length()' - Get a length in hundredths of millimeters.
+//
+
+static int				// O - Length value
+get_length(const char *value)		// I - Length string
+{
+  double	n;			// Number
+  char		*units;			// Pointer to units
+
+  n = strtod(value, &units);
+
+  if (units && !strcmp(units, "cm"))
+    return ((int)(n * 1000.0));
+  if (units && !strcmp(units, "in"))
+    return ((int)(n * 2540.0));
+  else if (units && !strcmp(units, "mm"))
+    return ((int)(n * 100.0));
+  else if (units && !strcmp(units, "m"))
+    return ((int)(n * 100000.0));
+  else
+    return ((int)n);
 }

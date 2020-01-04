@@ -23,7 +23,8 @@ lprintDoCancel(
     int           num_options,		// I - Number of options
     cups_option_t *options)		// I - Options
 {
-  const char	*printer_name;		// Printer name
+  const char	*printer_uri,		// Printer URI
+		*printer_name;		// Printer name
   char		default_printer[256],	// Default printer
 		resource[1024];		// Resource path
   http_t	*http;			// Server connection
@@ -32,23 +33,32 @@ lprintDoCancel(
   int		job_id = 0;		// job-id
 
 
-  // Connect to/start up the server and get the destination printer...
-  http = lprintConnect(1);
-
-  if ((printer_name = cupsGetOption("printer-name", num_options, options)) == NULL)
+  if ((printer_uri = cupsGetOption("printer-uri", num_options, options)) != NULL)
   {
-    if ((printer_name = lprintGetDefaultPrinter(http, default_printer, sizeof(default_printer))) == NULL)
-    {
-      fputs("lprint: No default printer available.\n", stderr);
-      httpClose(http);
+    // Connect to the remote printer...
+    if ((http = lprintConnectURI(printer_uri, resource, sizeof(resource))) == NULL)
       return (1);
+  }
+  else
+  {
+    // Connect to/start up the server and get the destination printer...
+    http = lprintConnect(1);
+
+    if ((printer_name = cupsGetOption("printer-name", num_options, options)) == NULL)
+    {
+      if ((printer_name = lprintGetDefaultPrinter(http, default_printer, sizeof(default_printer))) == NULL)
+      {
+	fputs("lprint: No default printer available.\n", stderr);
+	httpClose(http);
+	return (1);
+      }
     }
   }
 
   // Figure out which job(s) to cancel...
   if (cupsGetOption("cancel-all", num_options, options))
   {
-    request = ippNewRequest(IPP_OP_CANCEL_JOBS);
+    request = ippNewRequest(IPP_OP_CANCEL_MY_JOBS);
   }
   else if ((value = cupsGetOption("job-id", num_options, options)) != NULL)
   {
@@ -58,7 +68,10 @@ lprintDoCancel(
   else
     request = ippNewRequest(IPP_OP_CANCEL_CURRENT_JOB);
 
-  lprintAddPrinterURI(request, printer_name, resource, sizeof(resource));
+  if (printer_uri)
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, printer_uri);
+  else
+    lprintAddPrinterURI(request, printer_name, resource, sizeof(resource));
   if (job_id)
     ippAddInteger(request, IPP_TAG_OPERATION, IPP_TAG_INTEGER, "job-id", job_id);
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());

@@ -197,6 +197,17 @@ main(int  argc,				// I - Number of command-line arguments
               num_options = cupsAddOption("job-name", argv[i], num_options, &options);
               break;
 
+          case 'u' : // printer-uri
+              i ++;
+              if (i >= argc)
+              {
+                fputs("lprint: Missing printer URI.\n", stderr);
+                usage(1);
+	      }
+
+              num_options = cupsAddOption("printer-uri", argv[i], num_options, &options);
+              break;
+
           case 'v' : // device-uri
               i ++;
               if (i >= argc)
@@ -268,6 +279,27 @@ main(int  argc,				// I - Number of command-line arguments
 
 
 //
+// 'lprintAddPrinterURI()' - Add the printer-uri attribute and return a resource path.
+//
+
+void
+lprintAddPrinterURI(
+    ipp_t      *request,		// I - IPP request
+    const char *printer_name,		// I - Printer name
+    char       *resource,		// I - Resource path buffer
+    size_t     rsize)			// I - Size of buffer
+{
+  char	uri[1024];			// printer-uri value
+
+
+  snprintf(resource, rsize, "/ipp/print/%s", printer_name);
+  httpAssembleURI(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, resource);
+
+  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
+}
+
+
+//
 // 'lprintConnect()' - Connect to the local server.
 //
 
@@ -314,6 +346,52 @@ lprintConnect(int auto_start)		// I - 1 to start server if not running
     if (!http)
       fprintf(stderr, "lprint: Unable to connect to server - %s\n", cupsLastErrorString());
   }
+
+  return (http);
+}
+
+
+//
+// 'lprintConnectURI()' - Connect to an IPP printer directly.
+//
+
+http_t *				// O - HTTP connection or `NULL` on error
+lprintConnectURI(
+    const char *printer_uri,		// I - Printer URI
+    char       *resource,		// I - Resource path buffer
+    size_t     rsize)			// I - Size of buffer
+{
+  char			scheme[32],	// Scheme (ipp or ipps)
+			userpass[256],	// Username/password (unused)
+			hostname[256];	// Hostname
+  int			port;		// Port number
+  http_encryption_t	encryption;	// Type of encryption to use
+  http_t		*http;		// HTTP connection
+
+
+  // First extract the components of the URI...
+  if (httpSeparateURI(HTTP_URI_CODING_ALL, printer_uri, scheme, sizeof(scheme), userpass, sizeof(userpass), hostname, sizeof(hostname), &port, resource, (int)rsize) < HTTP_URI_STATUS_OK)
+  {
+    fprintf(stderr, "lprint: Bad printer URI '%s'.\n", printer_uri);
+    return (NULL);
+  }
+
+  if (strcmp(scheme, "ipp") && strcmp(scheme, "ipps"))
+  {
+    fprintf(stderr, "lprint: Unsupported URI scheme '%s'.\n", scheme);
+    return (NULL);
+  }
+
+  if (userpass[0])
+    fputs("lprint: User credentials are not supported in URIs.\n", stderr);
+
+  if (!strcmp(scheme, "ipps") || port == 443)
+    encryption = HTTP_ENCRYPTION_ALWAYS;
+  else
+    encryption = HTTP_ENCRYPTION_IF_REQUESTED;
+
+  if ((http = httpConnect2(hostname, port, NULL, AF_UNSPEC, encryption, 1, 30000, NULL)) == NULL)
+    fprintf(stderr, "lprint: Unable to connect to printer at '%s' - %s\n", printer_uri, cupsLastErrorString());
 
   return (http);
 }
@@ -380,6 +458,7 @@ usage(int status)			// O - Exit status
   fputs("  -m DRIVER        Specify driver (add/modify).\n", fp);
   fputs("  -n copies        Specify number of copies (submit).\n", fp);
   fputs("  -o NAME=VALUE    Specify option (add,modify,server,submit).\n", fp);
+  fputs("  -u PRINTER-URI   Specify ipp: or ipps: printer (cancel/status/submit).\n", fp);
   fputs("  -v DEVICE-URI    Specify socket: or usb: device (add/modify).\n", fp);
 
   exit(status);

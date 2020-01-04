@@ -15,27 +15,6 @@
 
 
 //
-// 'lprintAddPrinterURI()' - Add the printer-uri attribute and return a resource path.
-//
-
-void
-lprintAddPrinterURI(
-    ipp_t      *request,		// I - IPP request
-    const char *printer_name,		// I - Printer name
-    char       *resource,		// I - Resource path buffer
-    size_t     rsize)			// I - Size of buffer
-{
-  char	uri[1024];			// printer-uri value
-
-
-  snprintf(resource, rsize, "/ipp/print/%s", printer_name);
-  httpAssembleURI(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, resource);
-
-  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
-}
-
-
-//
 // 'lprintDoModify()' - Do the modify printer sub-command.
 //
 
@@ -68,7 +47,7 @@ lprintDoModify(
   // Send a Set-Printer-Attributes request to the server...
   request = ippNewRequest(IPP_OP_SET_PRINTER_ATTRIBUTES);
   lprintAddPrinterURI(request, printer_name, resource, sizeof(resource));
-  lprintAddDefaults(request, num_options, options);
+  lprintAddOptions(request, num_options, options);
 
   ippDelete(cupsDoRequest(http, request, resource));
 

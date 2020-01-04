@@ -22,7 +22,8 @@ int					// O - Exit status
 lprintDoJobs(int           num_options,	// I - Number of options
 	     cups_option_t *options)	// I - Options
 {
-  const char	*printer_name;		// Printer name
+  const char	*printer_uri,		// Printer URI
+		*printer_name;		// Printer name
   char		default_printer[256],	// Default printer
 		resource[1024];		// Resource path
   http_t	*http;			// Server connection
@@ -36,22 +37,34 @@ lprintDoJobs(int           num_options,	// I - Number of options
 		*job_user;		// Current job-originating-user-name
 
 
-  // Connect to/start up the server and get the destination printer...
-  http = lprintConnect(1);
-
-  if ((printer_name = cupsGetOption("printer-name", num_options, options)) == NULL)
+  if ((printer_uri = cupsGetOption("printer-uri", num_options, options)) != NULL)
   {
-    if ((printer_name = lprintGetDefaultPrinter(http, default_printer, sizeof(default_printer))) == NULL)
-    {
-      fputs("lprint: No default printer available.\n", stderr);
-      httpClose(http);
+    // Connect to the remote printer...
+    if ((http = lprintConnectURI(printer_uri, resource, sizeof(resource))) == NULL)
       return (1);
+  }
+  else
+  {
+    // Connect to/start up the server and get the destination printer...
+    http = lprintConnect(1);
+
+    if ((printer_name = cupsGetOption("printer-name", num_options, options)) == NULL)
+    {
+      if ((printer_name = lprintGetDefaultPrinter(http, default_printer, sizeof(default_printer))) == NULL)
+      {
+	fputs("lprint: No default printer available.\n", stderr);
+	httpClose(http);
+	return (1);
+      }
     }
   }
 
   // Send a Get-Jobs request...
   request = ippNewRequest(IPP_OP_GET_JOBS);
-  lprintAddPrinterURI(request, printer_name, resource, sizeof(resource));
+  if (printer_uri)
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, printer_uri);
+  else
+    lprintAddPrinterURI(request, printer_name, resource, sizeof(resource));
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
 
   response = cupsDoRequest(http, request, resource);

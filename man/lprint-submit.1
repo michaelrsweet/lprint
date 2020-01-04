@@ -1,12 +1,12 @@
 .\"
 .\" lprint-submit man page for LPrint, a Label Printer Utility
 .\"
-.\" Copyright © 2019 by Michael R Sweet.
+.\" Copyright © 2019-2020 by Michael R Sweet.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint-submit 1 "LPrint" "December 13, 2019" "Michael R Sweet"
+.TH lprint-submit 1 "LPrint" "January 4, 2020" "Michael R Sweet"
 .SH NAME
 lprint-submit \- submit a file for printing.
 .SH SYNOPSIS
@@ -15,18 +15,21 @@ lprint-submit \- submit a file for printing.
 .B submit
 ] [
 .B \-d
-.I printer-name
+.I PRINTER
+] [
+.B \-u
+.I PRINTER-URI
 ] [
 .B \-n
-.I copies
+.I COPIES
 ] [
 .B \-o
-.I option-name=value
+.I OPTION=VALUE
 ] [
 .B \-t
-.I title
+.I TITLE
 ] [
-.I file [ ... fileN ]
+.I FILE [ ... FILE ]
 ]
 .br
 .B lprint
@@ -34,16 +37,19 @@ lprint-submit \- submit a file for printing.
 .B submit
 ] [
 .B \-d
-.I printer-name
+.I PRINTER
+] [
+.B \-u
+.I PRINTER-URI
 ] [
 .B \-n
-.I copies
+.I COPIES
 ] [
 .B \-o
-.I option-name=value
+.I OPTION=VALUE
 ] [
 .B \-t
-.I title
+.I TITLE
 ]
 \-
 .SH DESCRIPTION
@@ -54,18 +60,12 @@ The second form copies the print file from the standard input.
 The following options are recognized by
 .B lprint submit:
 .TP 5
-\fB\-d \fIPRINTER-NAME\fR
+\fB\-d \fIPRINTER\fR
 Specifies the name of the printer queue.
 If not specified, the default printer is used.
 .TP 5
 \fB\-n \fICOPIES\fR
 Specifies the number of copies.
-.TP 5
-\fB\-o finishings=3\fR
-Do not cut the labels after printing.
-.TP 5
-\fB\-o finishings=11\fR
-Cut the labels after printing.
 .TP 5
 \fB\-o media=\fISIZE-NAME\fR
 Specifies the label size.
@@ -73,10 +73,27 @@ Specifies the label size.
 \fB\-o media-source=\fIROLL-NAME\fR
 Specifies the label roll.
 .TP 5
-.B \-o orientation-requested=3
+\fB\-o media-top-offset=\fINNN\fBin\fR
+.TP 5
+\fB\-o media-top-offset=\fINNN\fBmm\fR
+Specifies the distance to offset printing from the top of the label in inches ("NNNin") or millimeters ("NNNmm").
+.TP 5
+\fB\-o media-tracking=continuous\fR
+.TP 5
+\fB\-o media-tracking=mark\fR
+.TP 5
+\fB\-o media-tracking=web\fR
+Specifies how labels are tracked on the carrier backing - "continuous" for a continuous label or receipt paper, "mark" for labels that are separated with a visible mark on the carrier backing, or "web" for labels that are separated with a hole in the carrier backing.
+.TP 5
+\fB\-o media-type=continuous\fR
+.TP 5
+\fB\-o media-type=labels\fR
+Specifies the type of roll media being used - "continuous" for continuous labels or receipt paper, or "labels" for cut labels on a carrier backing.
+.TP 5
+.B \-o orientation-requested=portrait
 Print images in portrait orientation.
 .TP 5
-.B \-o orientation-requested=4
+.B \-o orientation-requested=landscape
 Print images in landscape orientation.
 .TP 5
 .B \-o print-color-mode=bi-level
@@ -94,27 +111,32 @@ Optimize printing for graphics only.
 Optimize printing for text and graphics.
 .TP 5
 \fB\-o print-darkness=\fINNN\fR
-Specifies the print darkness from 0 to 100.
+Specifies the print darkness from -100 (lightest) to 100 (darkest).
 .TP 5
-\fB\-o print-quality=3\fR
+\fB\-o print-quality=draft\fR
 Print using draft quality.
 .TP 5
-\fB\-o print-quality=4\fR
+\fB\-o print-quality=normal\fR
 Print using normal quality.
 .TP 5
-\fB\-o print-quality=5\fR
-Print using best quality.
+\fB\-o print-quality=high\fR
+Print using high/best quality.
 .TP 5
-\fB\-o print-speed=\fINNN\fR
-Specifies the print speed in inches per second.
+\fB\-o print-speed=\fINNNin\fR
+.TP 5
+\fB\-o print-speed=\fINNNmm\fR
+Specifies the print speed in inches ("NNNin") or millimeters ("NNNmm") per second.
 .TP 5
 \fB\-o printer-resolution=\fINNN\fBdpi\fR
 Specifies the print resolution in dots per inch.
 .TP 5
-\fB\-t \fItitle\fR
+\fB\-t \fITITLE\fR
 Specifies the print job name.
+.TP 5
+\fB\-u \fIPRINTER-URI\fR
+Specifies an "ipp:" or "ipps:" URI for a remote printer.
 .SH SEE ALSO
 .BR lprint-cancel (1),
 .BR lprint-default (1).
 .SH COPYRIGHT
-Copyright \[co] 2019 by Michael R Sweet.
+Copyright \[co] 2019-2020 by Michael R Sweet.

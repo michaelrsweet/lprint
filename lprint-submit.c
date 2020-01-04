@@ -32,7 +32,8 @@ lprintDoSubmit(
     int           num_options,		// I - Number of options
     cups_option_t *options)		// I - Options
 {
-  const char	*printer_name,		// Printer name
+  const char	*printer_uri,		// Printer URI
+		*printer_name,		// Printer name
 		*filename,		// Current print filename
 		*document_format,	// Document format
 		*document_name,		// Document name
@@ -63,16 +64,25 @@ lprintDoSubmit(
     return (1);
   }
 
-  // Connect to/start up the server and get the destination printer...
-  http = lprintConnect(1);
-
-  if ((printer_name = cupsGetOption("printer-name", num_options, options)) == NULL)
+  if ((printer_uri = cupsGetOption("printer-uri", num_options, options)) != NULL)
   {
-    if ((printer_name = lprintGetDefaultPrinter(http, default_printer, sizeof(default_printer))) == NULL)
-    {
-      fputs("lprint: No default printer available.\n", stderr);
-      httpClose(http);
+    // Connect to the remote printer...
+    if ((http = lprintConnectURI(printer_uri, resource, sizeof(resource))) == NULL)
       return (1);
+  }
+  else
+  {
+    // Connect to/start up the server and get the destination printer...
+    http = lprintConnect(1);
+
+    if ((printer_name = cupsGetOption("printer-name", num_options, options)) == NULL)
+    {
+      if ((printer_name = lprintGetDefaultPrinter(http, default_printer, sizeof(default_printer))) == NULL)
+      {
+	fputs("lprint: No default printer available.\n", stderr);
+	httpClose(http);
+	return (1);
+      }
     }
   }
 
@@ -103,13 +113,16 @@ lprintDoSubmit(
 
     // Send a Print-Job request...
     request = ippNewRequest(IPP_OP_PRINT_JOB);
-    lprintAddPrinterURI(request, printer_name, resource, sizeof(resource));
+    if (printer_uri)
+      ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, printer_uri);
+    else
+      lprintAddPrinterURI(request, printer_name, resource, sizeof(resource));
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "job-name", NULL, job_name ? job_name : document_name);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "document-name", NULL, document_name);
     if (document_format)
       ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_MIMETYPE, "document-format", NULL, document_format);
-    cupsEncodeOptions2(request, num_options, options, IPP_TAG_JOB);
+    lprintAddOptions(request, num_options, options);
 
     response = cupsDoFileRequest(http, request, resource, filename);
 
@@ -120,7 +133,10 @@ lprintDoSubmit(
       break;
     }
 
-    printf("%s-%d\n", printer_name, ippGetInteger(job_id, 0));
+    if (printer_uri)
+      printf("%d\n", ippGetInteger(job_id, 0));
+    else
+      printf("%s-%d\n", printer_name, ippGetInteger(job_id, 0));
 
     ippDelete(response);
 
