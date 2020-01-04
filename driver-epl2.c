@@ -1,5 +1,5 @@
 //
-// EPL2 driver for LPrint, a Label Printer Utility
+// UNIMPLEMENTED EPL2 driver for LPrint, a Label Printer Utility
 //
 // Copyright © 2019 by Michael R Sweet.
 //

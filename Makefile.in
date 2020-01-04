@@ -82,12 +82,8 @@ MAN5		=	\
 OBJS		=	\
 			device-common.o \
 			driver-common.o \
-			driver-cpcl.o \
 			driver-dymo.o \
-			driver-epl1.o \
-			driver-epl2.o \
-			driver-fgl.o \
-			driver-pcl.o \
+			driver-pwg.o \
 			driver-zpl.o \
 			lprint.o \
 			lprint-add.o \

@@ -5,15 +5,29 @@ LPrint implements printing for a variety of common label and receipt printers
 connected via network or USB.  Features include:
 
 - A single executable handles spooling, status, and server functionality.
-- Multiple printers can be managed.
-- Implements an IPP Everywhere print service.
-- Exposes printer-specific options such as print darkness, resolution, and
-  speed.
-- Can print "raw", PWG Raster, and PNG files.
+- Multiple printer support.
+- Each printer implements an IPP Everywhere™ print service and is compatible
+  with the driverless printing support in iOS, macOS, and Linux clients.
+- Each printer can support options such as label modes, tear-off offsets,
+  media tracking, media top offset, print darkness, resolution, roll selection,
+  and speed.
+- Each printer can print "raw", Apple/PWG Raster, and/or PNG files.
 
-LPrint depends on the [CUPS software](https://www.cups.org) to provide the
-HTTP, IPP, and PWG Raster support, and the
-[libpng library](https://www.libpng.org) to provide PNG printing support.
+For more information, see the file "DOCUMENTATION.md", the man pages in the
+"man" directory, and/or the [LPrint Home Page](https://www.msweet.org/lprint).
+
+
+Requirements
+------------
+
+LPrint depends on:
+
+- A "make" program (both GNU and BSD make are known to work),
+- A C99 compiler (both Clang and GCC are known to work),
+- [CUPS](https://www.cups.org) to provide HTTP, IPP, and Apple/PWG Raster
+  support,
+- [libpng](https://www.libpng.org) to provide PNG printing support, and
+- [libusb](https://libusb.info) to provide USB printing support.
 
 
 Supported Printers
@@ -22,12 +36,21 @@ Supported Printers
 The following printers are currently supported:
 
 - Dymo LabelWriter printers
-- Intellitech PCL printers
-- Various FGL printers
-- Zebra CPCL printers
-- Zebra EPL1 printers
-- Zebra EPL2 printers
 - Zebra ZPL printers
+
+Others will be added as time and access to printers permits.
+
+
+Standards
+---------
+
+LPrint implements PWG 5100.14-2013: IPP Everywhere™ for each printer, and has a
+partial implementation of PWG 5100.22-2019: IPP System Service v1.0 for
+managing the print queues and default printer.
+
+IPP extensions for label printers have been proposed in the Printer Working
+Group in the IPP Label Printing Extensions v1.0 document; LPrint will be updated
+to conform to the final names and values that are approved by the IPP workgroup.
 
 
 Legal Stuff

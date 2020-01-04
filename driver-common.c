@@ -1,7 +1,7 @@
 //
 // Common driver code for LPrint, a Label Printer Utility
 //
-// Copyright © 2019 by Michael R Sweet.
+// Copyright © 2019-2020 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -55,6 +55,9 @@ static const char * const lprint_drivers[] =
   "dymo_lw-duo-tape-128",
   "dymo_lw-se450",
   "dymo_lw-wireless",
+  "pwg_2inch",
+  "pwg_4inch",
+  "zebra_zpl"
 };
 
 static const char * const lprint_models[] =
@@ -84,6 +87,9 @@ static const char * const lprint_models[] =
   "Dymo LabelWriter DUO Tape 128",
   "Dymo LabelWriter SE450",
   "Dymo LabelWriter Wireless",
+  "PWG Raster 2 inch Test Printer",
+  "PWG Raster 4 inch Test Printer",
+  "Zebra ZPL Label Printer"
 };
 
 
@@ -110,18 +116,10 @@ lprintCreateDriver(
 	driver->attrs  = ippNew();
 	driver->format = "application/octet-stream";
 
-	if (!strncmp(driver_name, "cpcl_", 5))
-	  lprintInitCPCL(driver);
-	else if (!strncmp(driver_name, "dymo_", 5))
+	if (!strncmp(driver_name, "dymo_", 5))
 	  lprintInitDYMO(driver);
-	else if (!strncmp(driver_name, "epl1_", 5))
-	  lprintInitEPL1(driver);
-	else if (!strncmp(driver_name, "epl2_", 5))
-	  lprintInitEPL2(driver);
-	else if (!strncmp(driver_name, "fgl_", 4))
-	  lprintInitFGL(driver);
-	else if (!strncmp(driver_name, "pcl_", 4))
-	  lprintInitPCL(driver);
+	else if (!strncmp(driver_name, "pwg_", 4))
+	  lprintInitPWG(driver);
 	else
 	  lprintInitZPL(driver);
 

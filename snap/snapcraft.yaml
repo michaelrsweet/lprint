@@ -1,16 +1,22 @@
 name: lprint
-version: 0.1
+version: 1.0b1
 summary: Label Printer Utility
 description: |
    LPrint implements printing for a variety of common label and receipt printers
    connected via network or USB.  Features include:
 
    - A single executable handles spooling, status, and server functionality.
-   - Multiple printers can be managed.
-   - Implements an IPP Everywhere print service.
-   - Exposes printer-specific options such as print darkness, resolution, and
-     speed.
-   - Can print "raw", PWG Raster, and PNG files.
+   - Multiple printer support.
+   - Each printer implements an IPP Everywhere™ print service and is compatible
+     with the driverless printing support in iOS, macOS, and Linux clients.
+   - Each printer can support options such as label modes, tear-off offsets,
+     media tracking, media top offset, print darkness, resolution, roll
+     selection, and speed.
+   - Each printer can print "raw", Apple/PWG Raster, and/or PNG files.
+
+   For more information, see the file "DOCUMENTATION.md", the man pages in the
+   "man" directory, and/or the LPrint Home Page at
+   "https://www.msweet.org/lprint".
 
 grade: stable
 confinement: strict

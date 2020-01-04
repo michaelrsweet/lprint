@@ -1,7 +1,7 @@
 //
 // Driver header file for LPrint, a Label Printer Utility
 //
-// Copyright © 2019 by Michael R Sweet.
+// Copyright © 2019-2020 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -147,17 +147,20 @@ extern ipp_t		*lprintCreateMediaCol(const char *size_name, const char *source, c
 extern void		lprintDeleteDriver(lprint_driver_t *driver);
 extern const char * const *lprintGetDrivers(int *num_drivers);
 extern const char	*lprintGetMakeAndModel(const char *driver_name);
-extern void		lprintInitCPCL(lprint_driver_t *driver);
 extern void		lprintInitDYMO(lprint_driver_t *driver);
-extern void		lprintInitEPL1(lprint_driver_t *driver);
-extern void		lprintInitEPL2(lprint_driver_t *driver);
-extern void		lprintInitFGL(lprint_driver_t *driver);
-extern void		lprintInitPCL(lprint_driver_t *driver);
+extern void		lprintInitPWG(lprint_driver_t *driver);
 extern void		lprintInitZPL(lprint_driver_t *driver);
 
 extern const char	*lprintLabelModeString(lprint_label_mode_t v);
 extern lprint_label_mode_t lprintLabelModeValue(const char *s);
 extern const char	*lprintMediaTrackingString(lprint_media_tracking_t v);
 extern lprint_media_tracking_t lprintMediaTrackingValue(const char *s);
+
+// Future planned drivers that are not yet implemented
+//extern void		lprintInitCPCL(lprint_driver_t *driver);
+//extern void		lprintInitEPL1(lprint_driver_t *driver);
+//extern void		lprintInitEPL2(lprint_driver_t *driver);
+//extern void		lprintInitFGL(lprint_driver_t *driver);
+//extern void		lprintInitPCL(lprint_driver_t *driver);
 
 #endif // !_DRIVER_COMMON_H_
