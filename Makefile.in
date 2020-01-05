@@ -172,3 +172,5 @@ pngheaders:
 # Dependencies...
 $(OBJS):	common.h config.h device-common.h driver-common.h lprint.h Makefile
 server-client.o: lprint-png.h lprint-large-png.h
+server-print.o: clustered.h
+
