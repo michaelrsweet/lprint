@@ -33,17 +33,47 @@ static void	process_raw(lprint_job_t *job);
 void *					// O - Thread exit status
 lprintProcessJob(lprint_job_t *job)	// I - Job
 {
+  int	first_open = 1;			// Is this the first time we try to open the device?
+
+
   // Move the job to the processing state...
   pthread_rwlock_wrlock(&job->rwlock);
 
-  job->state          = IPP_JSTATE_PROCESSING;
-  job->printer->state = IPP_PSTATE_PROCESSING;
-  job->processing     = time(NULL);
+  job->state                   = IPP_JSTATE_PROCESSING;
+  job->processing              = time(NULL);
   job->printer->processing_job = job;
 
   pthread_rwlock_wrlock(&job->rwlock);
 
+  // Open the output device...
+  pthread_rwlock_wrlock(&job->printer->driver->rwlock);
+
+  while (!job->printer->driver->device)
+  {
+    job->printer->driver->device = lprintOpenDevice(job->printer->device_uri);
+
+    if (!job->printer->driver->device)
+    {
+      // Log that the printer is unavailable then sleep for 5 seconds to retry.
+      if (first_open)
+      {
+        lprintLogPrinter(job->printer, LPRINT_LOGLEVEL_ERROR, "Unable to open device '%s', pausing queue until printer becomes available.", job->printer->device_uri);
+        first_open = 0;
+
+	job->printer->state      = IPP_PSTATE_STOPPED;
+	job->printer->state_time = time(NULL);
+      }
+
+      sleep(5);
+    }
+  }
+
+  pthread_rwlock_unlock(&job->printer->driver->rwlock);
+
   // Process the job...
+  job->printer->state      = IPP_PSTATE_PROCESSING;
+  job->printer->state_time = time(NULL);
+
   if (!strcmp(job->format, "image/pwg-raster") || !strcmp(job->format, "image/urf"))
   {
     process_raster(job);
@@ -75,6 +105,7 @@ lprintProcessJob(lprint_job_t *job)	// I - Job
 
   job->completed               = time(NULL);
   job->printer->state          = IPP_PSTATE_IDLE;
+  job->printer->state_time     = time(NULL);
   job->printer->processing_job = NULL;
 
   pthread_rwlock_wrlock(&job->rwlock);
@@ -90,9 +121,22 @@ lprintProcessJob(lprint_job_t *job)	// I - Job
   pthread_rwlock_unlock(&job->printer->rwlock);
 
   if (job->printer->is_deleted)
+  {
     lprintDeletePrinter(job->printer);
-  else
+  }
+  else if (cupsArrayCount(job->printer->active_jobs) > 0)
+  {
     lprintCheckJobs(job->printer);
+  }
+  else
+  {
+    pthread_rwlock_wrlock(&job->printer->driver->rwlock);
+
+    lprintCloseDevice(job->printer->driver->device);
+    job->printer->driver->device = NULL;
+
+    pthread_rwlock_unlock(&job->printer->driver->rwlock);
+  }
 
   return (NULL);
 }

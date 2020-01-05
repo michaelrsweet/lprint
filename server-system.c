@@ -502,9 +502,9 @@ load_config(lprint_system_t *system)	// I - System
 	  {
 	    printer->driver->mode_configured = lprintLabelModeValue(value);
 	  }
-	  else if (!strcmp(line, "label-tear-off-configured"))
+	  else if (!strcmp(line, "label-tear-offset-configured"))
 	  {
-	    printer->driver->tear_off_configured = atoi(value);
+	    printer->driver->tear_offset_configured = atoi(value);
 	  }
 	  else if (!strcmp(line, "media-default"))
 	  {
@@ -641,8 +641,8 @@ save_config(lprint_system_t *system)	// I - System
     cupsFilePrintf(fp, "Printer %s %d %s %s\n", printer->printer_name, printer->printer_id, printer->device_uri, printer->driver_name);
     if (printer->driver->mode_supported)
       cupsFilePutConf(fp, "label-mode-configured", lprintLabelModeString(printer->driver->mode_configured));
-    if (printer->driver->tear_off_supported[0] != printer->driver->tear_off_supported[1])
-      cupsFilePrintf(fp, "label-tear-off-configured %d\n", printer->driver->tear_off_configured);
+    if (printer->driver->tear_offset_supported[0] != printer->driver->tear_offset_supported[1])
+      cupsFilePrintf(fp, "label-tear-offset-configured %d\n", printer->driver->tear_offset_configured);
     cupsFilePutConf(fp, "media-default", printer->driver->media_default);
     // TODO: add media-ready
     if (printer->driver->darkness_supported)

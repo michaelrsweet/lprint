@@ -239,6 +239,7 @@ extern int		lprintDoDevices(int num_options, cups_option_t *options);
 extern int		lprintDoDrivers(int num_options, cups_option_t *options);
 extern int		lprintDoJobs(int num_options, cups_option_t *options);
 extern int		lprintDoModify(int num_options, cups_option_t *options);
+extern int		lprintDoOptions(int num_options, cups_option_t *options);
 extern int		lprintDoPrinters(int num_options, cups_option_t *options);
 extern int		lprintDoServer(int num_options, cups_option_t *options);
 extern int		lprintDoShutdown(int num_options, cups_option_t *options);

@@ -12,9 +12,16 @@ connected via network or USB.  Features include:
   media tracking, media top offset, print darkness, resolution, roll selection,
   and speed.
 - Each printer can print "raw", Apple/PWG Raster, and/or PNG files.
+- Each printer automatically recovers from out-of-media, power loss, and
+  disconnected/bad cable issues.
 
 For more information, see the file "DOCUMENTATION.md", the man pages in the
-"man" directory, and/or the [LPrint Home Page](https://www.msweet.org/lprint).
+"man" directory, and/or the LPrint Home Page at <https://www.msweet.org/lprint>.
+
+> Note: Please use the Github issue tracker to report issues or request
+> features/improvements in LPrint:
+>
+> <https://github.com/michaelrsweet/lprint/issues>
 
 
 Requirements

@@ -123,10 +123,10 @@ typedef struct lprint_driver_s		// Driver data
 					// Media types
   lprint_label_mode_t	mode_configured,// label-mode-configured
 			mode_supported;	// label-mode-supported
-  int			tear_off_configured,
-					// label-tear-off-configured
-			tear_off_supported[2];
-					// label-tear-off-supported (0,0 for none)
+  int			tear_offset_configured,
+					// label-tear-offset-configured
+			tear_offset_supported[2];
+					// label-tear-offset-supported (0,0 for none)
   int			speed_supported[2];// print-speed-supported (0,0 for none)
   int			darkness_configured,
 					// printer-darkness-configured

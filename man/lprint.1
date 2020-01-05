@@ -6,24 +6,22 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint 1 "LPrint" "January 4, 2020" "Michael R Sweet"
+.TH lprint 1 "LPrint" "January 5, 2020" "Michael R Sweet"
 .SH NAME
 lprint \- a label printer utility
 .SH SYNOPSIS
 .B lprint
 [
-.I subcommand
-] [ options ]
-[ files]
-
+.I SUB-COMMAND
+] [ OPTIONS ] [ FILES ]
 .SH DESCRIPTION
 .B lprint
 is a label printer utility that can be run standalone or as a dedicated IPP Everywhere network service.
 .B lprint
-supports printing PNG images, PWG raster files, and printer-specific label files to USB and network label printers.
-If no subcommand is specified, "submit" is assumed.
-.SH SUBCOMMANDS
-The following subcommands are recognized by
+supports printing PNG images, Apple/PWG raster files, and printer-specific label files to USB and network label printers.
+If no sub-command is specified, "submit" is assumed.
+.SH SUB-COMMANDS
+The following sub-commands are recognized by
 .B lprint:
 .TP 5
 add
@@ -50,6 +48,9 @@ List pending print jobs.
 modify
 Modify a printer queue.
 .TP 5
+options
+List supported options.
+.TP 5
 printers
 List the printer queues.
 .TP 5
@@ -73,6 +74,7 @@ Submit a file for printing.
 .BR lprint-drivers (1),
 .BR lprint-jobs (1),
 .BR lprint-modify (1),
+.BR lprint-options (1),
 .BR lprint-printers (1),
 .BR lprint-server (1),
 .BR lprint-shutdown (1),

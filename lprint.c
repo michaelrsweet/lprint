@@ -46,7 +46,7 @@ main(int  argc,				// I - Number of command-line arguments
   int		num_options = 0;	// Number of options
   cups_option_t	*options = NULL;	// Options
   static const char * const subcommands[] =
-  {					// List of subcommands
+  {					// List of sub-commands
     "add",
     "cancel",
     "default",
@@ -55,6 +55,7 @@ main(int  argc,				// I - Number of command-line arguments
     "drivers",
     "jobs",
     "modify",
+    "options",
     "printers",
     "server",
     "shutdown",
@@ -262,6 +263,8 @@ main(int  argc,				// I - Number of command-line arguments
     return (lprintDoJobs(num_options, options));
   else if (!strcmp(subcommand, "modify"))
     return (lprintDoModify(num_options, options));
+  else if (!strcmp(subcommand, "options"))
+    return (lprintDoOptions(num_options, options));
   else if (!strcmp(subcommand, "printers"))
     return (lprintDoPrinters(num_options, options));
   else if (!strcmp(subcommand, "server"))
@@ -272,7 +275,7 @@ main(int  argc,				// I - Number of command-line arguments
     return (lprintDoStatus(num_options, options));
   else
   {
-    fprintf(stderr, "lprint: Unhandled subcommand '%s'.\n", subcommand);
+    fprintf(stderr, "lprint: Unhandled sub-command '%s'.\n", subcommand);
     usage(1);
   }
 }
@@ -432,11 +435,11 @@ usage(int status)			// O - Exit status
   FILE	*fp = status ? stderr : stdout;	// Where to send message
 
 
-  fputs("Usage: lprint command [options] [filename]\n", fp);
-  fputs("       lprint [options] [filename]\n", fp);
-  fputs("       lprint [options] -\n", fp);
+  fputs("Usage: lprint SUB-COMMAND [OPTIONS] [FILENAME]\n", fp);
+  fputs("       lprint [OPTIONS] [FILENAME]\n", fp);
+  fputs("       lprint [OPTIONS] -\n", fp);
   fputs("\n", fp);
-  fputs("Commands:\n", fp);
+  fputs("Sub-commands:\n", fp);
   fputs("  add PRINTER      Add a printer.\n", fp);
   fputs("  cancel           Cancel one or more jobs.\n", fp);
   fputs("  default          Set the default printer.\n", fp);
@@ -445,6 +448,7 @@ usage(int status)			// O - Exit status
   fputs("  drivers          List drivers.\n", fp);
   fputs("  jobs             List jobs.\n", fp);
   fputs("  modify           Modify a printer.\n", fp);
+  fputs("  options          List printer options.\n", fp);
   fputs("  printers         List printers.\n", fp);
   fputs("  server           Run a server.\n", fp);
   fputs("  shutdown         Shutdown a running server.\n", fp);
@@ -455,10 +459,10 @@ usage(int status)			// O - Exit status
   fputs("  -a               Cancel all jobs (cancel).\n", fp);
   fputs("  -d PRINTER       Specify printer.\n", fp);
   fputs("  -j JOB-ID        Specify job ID (cancel).\n", fp);
-  fputs("  -m DRIVER        Specify driver (add/modify).\n", fp);
-  fputs("  -n copies        Specify number of copies (submit).\n", fp);
+  fputs("  -m DRIVER-NAME   Specify driver (add/modify).\n", fp);
+  fputs("  -n COPIES        Specify number of copies (submit).\n", fp);
   fputs("  -o NAME=VALUE    Specify option (add,modify,server,submit).\n", fp);
-  fputs("  -u PRINTER-URI   Specify ipp: or ipps: printer (cancel/status/submit).\n", fp);
+  fputs("  -u PRINTER-URI   Specify ipp: or ipps: printer (cancel/options/status/submit).\n", fp);
   fputs("  -v DEVICE-URI    Specify socket: or usb: device (add/modify).\n", fp);
 
   exit(status);

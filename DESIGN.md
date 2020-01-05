@@ -103,8 +103,8 @@ The following Printer Description attributes are supported:
   "label-mode-supported (1setOf type2 keyword)": The label printing mode -
   'applicator', 'cutter', 'cutter-delayed', 'kiosk', 'peel-off',
   'peel-off-prepeel', 'rewind', 'rfid', 'tear-off'
-- "label-tear-off-configured (integer)" and
-  "label-tear-off-supported (rangeOfInteger)": Offset in hundredths of
+- "label-tear-offset-configured (integer)" and
+  "label-tear-offset-supported (rangeOfInteger)": Offset in hundredths of
   millimeters to allow labels/receipts to be torn off safely. Positive values
   extend the media roll while negative values retract the media roll.
 - "media-default (type2 keyword | name(MAX))",

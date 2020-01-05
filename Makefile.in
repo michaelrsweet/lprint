@@ -94,6 +94,7 @@ OBJS		=	\
 			lprint-drivers.o \
 			lprint-jobs.o \
 			lprint-modify.o \
+			lprint-options.o \
 			lprint-printers.o \
 			lprint-server.o \
 			lprint-shutdown.o \

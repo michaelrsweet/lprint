@@ -1,0 +1,40 @@
+.\"
+.\" lprint-options man page for LPrint, a Label Printer Utility
+.\"
+.\" Copyright © 2020 by Michael R Sweet.
+.\"
+.\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
+.\" information.
+.\"
+.TH lprint-default 1 "LPrint" "January 5, 2020" "Michael R Sweet"
+.SH NAME
+lprint-options \- get the supported options for a printer queue.
+.SH SYNOPSIS
+.B lprint
+.B options
+[
+.B \-d
+.I PRINTER
+] [
+.B \-u
+.I PRINTER-URI
+]
+.SH DESCRIPTION
+This command gets the supported options for a printer queue.
+.SH OPTIONS
+The following options are recognized by
+.B lprint default:
+.TP 5
+\fB\-d \fIPRINTER\fR
+Specifies the new default printer queue.
+.TP 5
+\fB\-u \fIPRINTER-URI\fR
+Specifies an "ipp:" or "ipps:" URI for a remote printer.
+.SH SEE ALSO
+.BR lprint (1),
+.BR lprint-add (1),
+.BR lprint-modify (1),
+.BR lprint-printers (1),
+.BR lprint-submit (1).
+.SH COPYRIGHT
+Copyright \[co] 2019-2020 by Michael R Sweet.

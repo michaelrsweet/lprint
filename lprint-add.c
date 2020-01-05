@@ -46,8 +46,8 @@ lprintAddOptions(
     if ((value = cupsGetOption("label-mode-configured", num_options, options)) != NULL)
       ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "label-model-configured", NULL, value);
 
-    if ((value = cupsGetOption("label-tear-off-configured", num_options, options)) != NULL)
-      ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "label-tear-off-configured", get_length(value));
+    if ((value = cupsGetOption("label-tear-offset-configured", num_options, options)) != NULL)
+      ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "label-tear-offset-configured", get_length(value));
 
     if ((value = cupsGetOption("media-default", num_options, options)) == NULL)
       value = cupsGetOption("media", num_options, options);

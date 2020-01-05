@@ -6,7 +6,7 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint-add 1 "LPrint" "January 4, 2020" "Michael R Sweet"
+.TH lprint-add 1 "LPrint" "January 5, 2020" "Michael R Sweet"
 .SH NAME
 lprint-add \- add a printer queue.
 .SH SYNOPSIS
@@ -46,9 +46,9 @@ for a list of supported options.
 \fB\-o label-mode-configured\fI=VALUE\fR
 Specifies the label printing mode: "applicator", "cutter", "cutter-delayed", "kiosk", "peel-off", "peel-off-prepeel", "rewind", "rfid", or "tear-off".
 .TP 5
-\fB\-o label-tear-off-configured\fI=NNNin\fR
+\fB\-o label-tear-offset-configured\fI=NNNin\fR
 .TP 5
-\fB\-o label-tear-off-configured\fI=NNNmm\fR
+\fB\-o label-tear-offset-configured\fI=NNNmm\fR
 Specifies the label tear-off offset in inches ("NNNin") or millimeters ("NNNmm").
 .TP 5
 \fB\-o printer-darkness\fI=NNN\fR
@@ -78,6 +78,7 @@ command.
 .BR lprint-devices (1),
 .BR lprint-drivers (1),
 .BR lprint-modify (1),
+.BR lprint-options (1),
 .BR lprint-submit (1)
 .SH COPYRIGHT
 Copyright \[co] 2019-2020 by Michael R Sweet.
