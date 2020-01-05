@@ -164,7 +164,7 @@ struct lprint_printer_s			// Printer data
 			*completed_jobs,// Array of completed jobs
 			*jobs;		// Array of all jobs
   int			next_job_id,	// Next job-id
-			deleted,	// Non-zero if deleted
+			is_deleted,	// Non-zero if deleted
 			impcompleted;	// printer-impressions-completed
 };
 
@@ -217,6 +217,7 @@ typedef struct lprint_client_s		// Client data
 
 extern void		lprintAddOptions(ipp_t *request, int num_options, cups_option_t *options);
 extern void		lprintAddPrinterURI(ipp_t *request, const char *printer_name, char *resource, size_t rsize);
+extern void		lprintCheckJobs(lprint_printer_t *printer);
 extern void		lprintCleanJobs(lprint_system_t *system);
 extern http_t		*lprintConnect(int auto_start);
 extern http_t		*lprintConnectURI(const char *printer_uri, char *resource, size_t rsize);

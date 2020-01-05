@@ -735,7 +735,6 @@ finish_document_data(
 			buffer[4096];	// Copy buffer
   ssize_t		bytes;		// Bytes read
   cups_array_t		*ra;		// Attributes to send in response
-  pthread_t		t;              // Thread
 
 
   // Create a file for the request data...
@@ -798,13 +797,7 @@ finish_document_data(
   job->state    = IPP_JSTATE_PENDING;
 
   // Process the job...
-  if (pthread_create(&t, NULL, (void *(*)(void *))lprintProcessJob, job))
-  {
-    lprintRespondIPP(client, IPP_STATUS_ERROR_INTERNAL, "Unable to process job.");
-    goto abort_job;
-  }
-  else
-    pthread_detach(t);
+  lprintCheckJobs(client->printer);
 
   // Return the job info...
   lprintRespondIPP(client, IPP_STATUS_OK, NULL);
@@ -1194,7 +1187,7 @@ ipp_delete_printer(
   if (!client->printer->processing_job)
     lprintDeletePrinter(client->printer);
   else
-    client->printer->deleted = 1;
+    client->printer->is_deleted = 1;
 
   lprintRespondIPP(client, IPP_STATUS_OK, NULL);
 }

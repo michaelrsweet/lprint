@@ -16,6 +16,70 @@
 #include <ctype.h>
 
 
+/*
+ * 'lprintCheckJobs()' - Check for new jobs to process.
+ */
+
+void
+lprintCheckJobs(
+    lprint_printer_t *printer)		// I - Printer
+{
+  lprint_job_t	*job;			// Current job
+
+
+  lprintLogPrinter(printer, LPRINT_LOGLEVEL_DEBUG, "Checking for new jobs to process.");
+
+  if (printer->processing_job)
+  {
+    lprintLogPrinter(printer, LPRINT_LOGLEVEL_DEBUG, "Printer is already processing job %d.", printer->processing_job->id);
+    return;
+  }
+  else if (printer->is_deleted)
+  {
+    lprintLogPrinter(printer, LPRINT_LOGLEVEL_DEBUG, "Printer is being deleted.");
+    return;
+  }
+
+  pthread_rwlock_wrlock(&printer->rwlock);
+
+  for (job = (lprint_job_t *)cupsArrayFirst(printer->active_jobs);
+       job;
+       job = (lprint_job_t *)cupsArrayNext(printer->active_jobs))
+  {
+    if (job->state == IPP_JSTATE_PENDING)
+    {
+      pthread_t	t;			// Thread
+
+      lprintLogPrinter(printer, LPRINT_LOGLEVEL_DEBUG, "Starting job %d.", job->id);
+
+      if (pthread_create(&t, NULL, (void *(*)(void *))lprintProcessJob, job))
+      {
+	job->state     = IPP_JSTATE_ABORTED;
+	job->completed = time(NULL);
+
+	pthread_rwlock_wrlock(&printer->rwlock);
+
+	cupsArrayRemove(printer->active_jobs, job);
+	cupsArrayAdd(printer->completed_jobs, job);
+
+	if (!printer->system->clean_time)
+	  printer->system->clean_time = time(NULL) + 60;
+
+	pthread_rwlock_unlock(&printer->rwlock);
+      }
+      else
+	pthread_detach(t);
+      break;
+    }
+  }
+
+  if (!job)
+    lprintLogPrinter(printer, LPRINT_LOGLEVEL_DEBUG, "No jobs to process at this time.");
+
+  pthread_rwlock_unlock(&printer->rwlock);
+}
+
+
 //
 // 'lprintCleanJobs()' - Clean out old (completed) jobs.
 //
