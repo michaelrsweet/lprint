@@ -212,6 +212,18 @@ particular printer.
 Running a Server
 ----------------
 
+The "server" sub-command runs a standalone spooler.  The following options
+control the server operation:
+
+- "-o server-name=HOSTNAME": Sets the network hostname to advertise.
+- "-o server-port=NNN": Sets the network port number; the default is randomly
+  assigned.
+- "-o log-file=FILENAME": Specifies a log file.
+- "-o log-file=-": Specifies that log entries are written to the standard error.
+- "-o log-file=syslog": Specifies that log entries are sent to the system log.
+- "-o log-level=LEVEL": Specifies the log level - "debug", "info", "warn",
+  "error", or "fatal".
+
 
 Resources
 ---------
