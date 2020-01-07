@@ -19,6 +19,7 @@
 // Local functions...
 //
 
+static void	prepare_options(lprint_job_t *job, lprint_options_t *options);
 #ifdef HAVE_LIBPNG
 static void	process_png(lprint_job_t *job);
 #endif // HAVE_LIBPNG
@@ -139,6 +140,19 @@ lprintProcessJob(lprint_job_t *job)	// I - Job
   }
 
   return (NULL);
+}
+
+
+//
+// 'prepare_options()' - Prepare the job options.
+//
+
+static void
+prepare_options(
+    lprint_job_t     *job,		// I - Job
+    lprint_options_t *options)		// I - Job options data
+{
+//  ipp_attribute_t	*attr;		// Attribute
 }
 
 

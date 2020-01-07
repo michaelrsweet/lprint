@@ -40,9 +40,11 @@ typedef struct lprint_job_s lprint_job_t;
 
 typedef unsigned char lprint_dither_t[16];
 					// Dither array
+
 typedef struct lprint_options_s		// Computed job options
 {
   cups_page_header2_t	header;		// Raster header
+  unsigned		num_pages;	// Number of pages in job
   lprint_dither_t	*dither;	// Dither array
   int			copies;	 	// copies
   pwg_size_t		*media_size;	// media dimensions
