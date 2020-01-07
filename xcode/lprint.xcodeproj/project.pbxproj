@@ -66,7 +66,7 @@
 		2724351223A441DB00B318AF /* lprint-add.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-add.1"; path = "../man/lprint-add.1"; sourceTree = "<group>"; };
 		27FB485723BD7D8000BE0E47 /* lprint-large-png.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-large-png.h"; path = "../lprint-large-png.h"; sourceTree = "<group>"; };
 		27FB485823C0D84800BE0E47 /* driver-pwg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "driver-pwg.c"; path = "../driver-pwg.c"; sourceTree = "<group>"; };
-		27FB485F23C1B02A00BE0E47 /* clustered.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = clustered.h; path = ../clustered.h; sourceTree = "<group>"; };
+		27FB485F23C1B02A00BE0E47 /* dither.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dither.h; path = ../dither.h; sourceTree = "<group>"; };
 		27FB486023C2519B00BE0E47 /* lprint-drivers.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-drivers.1"; path = "../man/lprint-drivers.1"; sourceTree = "<group>"; };
 		27FB486123C2519B00BE0E47 /* lprint-options.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-options.1"; path = "../man/lprint-options.1"; sourceTree = "<group>"; };
 		27FB486223C251C000BE0E47 /* lprint-options.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-options.c"; path = "../lprint-options.c"; sourceTree = "<group>"; };
@@ -188,6 +188,7 @@
 		27FB485B23C0D89300BE0E47 /* Drivers */ = {
 			isa = PBXGroup;
 			children = (
+				27FB485F23C1B02A00BE0E47 /* dither.h */,
 				27FBEEB82396988200BB195A /* driver-common.c */,
 				27FBEEAF2396988200BB195A /* driver-common.h */,
 				27FBEEA42396988200BB195A /* driver-dymo.c */,
@@ -222,7 +223,6 @@
 		27FB485D23C0D8F400BE0E47 /* Server */ = {
 			isa = PBXGroup;
 			children = (
-				27FB485F23C1B02A00BE0E47 /* clustered.h */,
 				27FBEECE2396988300BB195A /* server-client.c */,
 				27FBEECA2396988300BB195A /* server-dnssd.c */,
 				27FBEEBB2396988200BB195A /* server-ipp.c */,

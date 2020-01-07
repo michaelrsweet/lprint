@@ -12,7 +12,7 @@
 //
 
 #include "lprint.h"
-#include "clustered.h"
+#include "dither.h"
 
 
 //

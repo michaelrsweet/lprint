@@ -38,13 +38,41 @@ typedef struct lprint_printer_s lprint_printer_t;
 typedef struct lprint_job_s lprint_job_t;
 					// Forward defined job
 
-typedef int (*lprint_printfunc_t)(lprint_printer_t *printer, lprint_job_t *job);
+typedef unsigned char lprint_dither_t[16];
+					// Dither array
+typedef struct lprint_options_s		// Computed job options
+{
+  cups_page_header2_t	header;		// Raster header
+  lprint_dither_t	*dither;	// Dither array
+  int			copies;	 	// copies
+  pwg_size_t		*media_size;	// media dimensions
+  const char		*media_size_name,
+					// media name
+			*media_source;	// media-source
+  int			*media_top_offset;
+					// media-top-offset
+  const char		*media_tracking,// media-tracking
+			*media_type;	// media-type
+  ipp_orient_t		orientation_requested;
+					// orientation-requested
+  const char		*print_color_mode,
+					// print-color-mode
+			*print_content_optimize;
+					// print-content-optimize
+  int			print_darkness;	// print-darkness
+  ipp_quality_t		print_quality;	// print-quality
+  int			print_speed;	// print-speed
+  int			printer_resolution[2];
+					// printer-resolution
+} lprint_options_t;
+
+typedef int (*lprint_printfunc_t)(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options);
 					// Print a job
-typedef int (*lprint_rendfunc_t)(lprint_printer_t *printer, lprint_job_t *job, cups_page_header2_t *header, void *user_data, unsigned page);
+typedef int (*lprint_rendfunc_t)(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options, void *user_data, unsigned page);
 					// End a raster job
-typedef int (*lprint_rstartfunc_t)(lprint_printer_t *printer, lprint_job_t *job, cups_page_header2_t *header, void *user_data, unsigned page);
+typedef int (*lprint_rstartfunc_t)(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options, void *user_data, unsigned page);
 					// Start a raster job
-typedef int (*lprint_rwritefunc_t)(lprint_printer_t *printer, lprint_job_t *job, cups_page_header2_t *header, void *user_data, unsigned y, const unsigned char *line);
+typedef int (*lprint_rwritefunc_t)(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options, void *user_data, unsigned y, const unsigned char *line);
 					// Write a line of raster graphics
 typedef int (*lprint_statusfunc_t)(lprint_printer_t *printer);
 					// Update printer status
