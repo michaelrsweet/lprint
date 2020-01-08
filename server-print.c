@@ -276,6 +276,11 @@ prepare_options(
   else
     options->print_color_mode = "bi-level";
 
+  if (!strcmp(options->print_color_mode, "bi-level"))
+    options->dither = dithert;
+  else
+    options->dither = ditherc;
+
   // print-content-optimize
   if ((attr = find_attr(job, "print-content-optimize", IPP_TAG_KEYWORD)) != NULL)
     options->print_color_mode = ippGetString(attr, 0, NULL);
