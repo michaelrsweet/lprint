@@ -47,11 +47,11 @@ typedef struct lprint_options_s		// Computed job options
   unsigned		num_pages;	// Number of pages in job
   lprint_dither_t	*dither;	// Dither array
   int			copies;	 	// copies
-  pwg_size_t		*media_size;	// media dimensions
+  pwg_media_t		*media_size;	// media dimensions
   const char		*media_size_name,
 					// media name
 			*media_source;	// media-source
-  int			*media_top_offset;
+  int			media_top_offset;
 					// media-top-offset
   const char		*media_tracking,// media-tracking
 			*media_type;	// media-type
@@ -138,8 +138,9 @@ typedef struct lprint_driver_s		// Driver data
 			media_ready[LPRINT_MAX_SOURCE][64];
 					// Ready media sizes
   int			num_source;	// Number of media sources (rolls)
-  const char		*source[LPRINT_MAX_SOURCE];
+  const char		*source[LPRINT_MAX_SOURCE],
 					// Media sources
+			*source_default;// Default media source
   int			top_offset_default,
 					// Default media-top-offset
 			top_offset_supported[2];
@@ -149,15 +150,17 @@ typedef struct lprint_driver_s		// Driver data
 			tracking_supported;
 					// media-tracking-supported
   int			num_type;	// Number of media types
-  const char		*type[LPRINT_MAX_TYPE];
+  const char		*type[LPRINT_MAX_TYPE],
 					// Media types
+			*type_default;	// Default media type
   lprint_label_mode_t	mode_configured,// label-mode-configured
 			mode_supported;	// label-mode-supported
   int			tear_offset_configured,
 					// label-tear-offset-configured
 			tear_offset_supported[2];
 					// label-tear-offset-supported (0,0 for none)
-  int			speed_supported[2];// print-speed-supported (0,0 for none)
+  int			speed_supported[2],// print-speed-supported (0,0 for none)
+			speed_default;	// print-speed-default
   int			darkness_configured,
 					// printer-darkness-configured
 			darkness_supported;
