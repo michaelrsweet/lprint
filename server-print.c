@@ -383,7 +383,7 @@ process_png(lprint_job_t *job)		// I - Job
   lprint_options_t	options;	// Job options
   png_image		png;		// PNG image data
   png_color		bg;		// Background color
-  unsigned char		*line,		// Output line
+  unsigned char		*line = NULL,	// Output line
 			*lineptr,	// Pointer in line
 			byte,		// Byte in line
 			*pixels,	// Pixels in image
@@ -551,6 +551,8 @@ process_png(lprint_job_t *job)		// I - Job
   // Free the image data when we're done...
   png_image_free(&png);
   free(pixels);
+  free(line);
+
   return;
 
   // If we get there then something bad happened...
@@ -561,6 +563,7 @@ process_png(lprint_job_t *job)		// I - Job
   // Free the image data when we're done...
   png_image_free(&png);
   free(pixels);
+  free(line);
 }
 #endif // HAVE_LIBPNG
 
