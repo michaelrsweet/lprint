@@ -209,6 +209,8 @@ lprint_pwg_rstartjob(
   pwg->fd  = lprintCreateJobFile(job, outname, sizeof(outname), job->system->directory, "out");
   pwg->ras = cupsRasterOpen(pwg->fd, CUPS_RASTER_WRITE_PWG);
 
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "Writing PWG output to '%s'.", outname);
+
   return (1);
 }
 

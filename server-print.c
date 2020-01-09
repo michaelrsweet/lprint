@@ -307,7 +307,7 @@ prepare_options(
     options->print_speed = driver->speed_default;
 
   // printer-resolution
-  if ((attr = find_attr(job, "printer_resolution", IPP_TAG_RESOLUTION)) != NULL)
+  if ((attr = find_attr(job, "printer-resolution", IPP_TAG_RESOLUTION)) != NULL)
   {
     ipp_res_t	units;			// Resolution units
 
@@ -337,6 +337,33 @@ prepare_options(
   // Figure out the PWG raster header...
   cupsRasterInitPWGHeader(&options->header, options->media_size, "black_1", options->printer_resolution[0], options->printer_resolution[1], "one-sided", "normal");
 
+  // Log options...
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "header.cupsWidth=%u", options->header.cupsWidth);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "header.cupsHeight=%u", options->header.cupsHeight);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "header.cupsBitsPerColor=%u", options->header.cupsBitsPerColor);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "header.cupsBitsPerPixel=%u", options->header.cupsBitsPerPixel);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "header.cupsBytesPerLine=%u", options->header.cupsBytesPerLine);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "header.cupsColorOrder=%u", options->header.cupsColorOrder);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "header.cupsColorSpace=%u", options->header.cupsColorSpace);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "header.cupsNumColors=%u", options->header.cupsNumColors);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "header.HWResolution=[%u %u]", options->header.HWResolution[0], options->header.HWResolution[1]);
+
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "num_pages=%u", options->num_pages);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "copies=%d", options->copies);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media_size=%dx%d", options->media_size->width, options->media_size->length);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media_size_name='%s'", options->media_size_name);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media_source='%s'", options->media_source);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media_top_offset=%d", options->media_top_offset);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media_tracking='%s'", options->media_tracking);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media_type='%s'", options->media_type);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "orientation_requested=%d", (int)options->orientation_requested);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "print_color_mode='%s'", options->print_color_mode);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "print_content_optimize='%s'", options->print_content_optimize);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "print_darkness=%d", options->print_darkness);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "print_quality=%d", (int)options->print_quality);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "print_speed=%d", options->print_speed);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "printer_resolution=%dx%d", options->printer_resolution[0], options->printer_resolution[1]);
+
   pthread_rwlock_unlock(&job->printer->driver->rwlock);
   pthread_rwlock_unlock(&job->printer->rwlock);
 }
@@ -363,8 +390,6 @@ process_png(lprint_job_t *job)		// I - Job
 			*pixptr,	// Pointer into image
 			bit;		// Current bit
   unsigned		x,		// X position
-			xerr,		// X error accumulator
-			xmod,		// X modulus
 			xsize,		// Scaled width
 			xstep,		// X step
 			xstart,		// X start position
@@ -373,6 +398,8 @@ process_png(lprint_job_t *job)		// I - Job
 			ysize,		// Scaled height
 			ystart,		// Y start position
 			yend;		// Y end position
+  int			xerr,		// X error accumulator
+			xmod;		// X modulus
 
 
   // Prepare options...
@@ -386,10 +413,22 @@ process_png(lprint_job_t *job)		// I - Job
 
   png_image_begin_read_from_file(&png, job->filename);
 
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "png.version=%u", png.version);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "png.width=%u", png.width);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "png.height=%u", png.height);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "png.format=%u", png.format);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "png.flags=%u", png.flags);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "png.colormap_entries=%u", png.colormap_entries);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "BEGIN png.warning_or_error=%u", png.warning_or_error);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "BEGIN png.message='%s'", png.message);
+
   png.format = PNG_FORMAT_GRAY;
   pixels     = malloc(PNG_IMAGE_SIZE(png));
 
-  png_image_finish_read(&png, &bg, pixels, 1, NULL);
+  png_image_finish_read(&png, &bg, pixels, 0, NULL);
+
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "FINISH png.warning_or_error=%u", png.warning_or_error);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "FINISH png.message='%s'", png.message);
 
   if (png.warning_or_error & PNG_IMAGE_ERROR)
   {
@@ -413,6 +452,9 @@ process_png(lprint_job_t *job)		// I - Job
 
   xmod   = png.width % xsize;
   xstep  = png.width / xsize;
+
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "xsize=%u, xstart=%u, xend=%u, xmod=%d, xstep=%d", xsize, xstart, xend, xmod, xstep);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "ysize=%u, ystart=%u, yend=%u", ysize, ystart, yend);
 
   // Start the job/page...
   line = malloc(options.header.cupsBytesPerLine);

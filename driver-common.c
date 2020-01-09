@@ -131,10 +131,7 @@ lprintCreateDriver(
 
 	// printer-resolution-supported, -default
 	if (driver->num_resolution > 0)
-	{
-	  ippAddResolution(driver->attrs, IPP_TAG_PRINTER, "printer-resolution-default", IPP_RES_PER_INCH, driver->x_resolution[driver->num_resolution - 1], driver->y_resolution[driver->num_resolution - 1]);
 	  ippAddResolutions(driver->attrs, IPP_TAG_PRINTER, "printer-resolution-supported", driver->num_resolution, IPP_RES_PER_INCH, driver->x_resolution, driver->y_resolution);
-	}
 
 	// pwg-raster-document-resolution-supported
 	if (driver->num_resolution > 0)

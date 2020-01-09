@@ -250,7 +250,7 @@ extern lprint_printer_t	*lprintFindPrinter(lprint_system_t *system, const char *
 extern char		*lprintGetDefaultPrinter(http_t *http, char *buffer, size_t bufsize);
 extern char		*lprintGetServerPath(char *buffer, size_t bufsize);
 extern void		lprintInitDNSSD(lprint_system_t *system);
-// Note: Log functions currently only support %d, %p, %s, and %u!
+// Note: Log functions currently only support %d, %p, %s, %u, and %x!
 extern void		lprintLog(lprint_system_t *system, lprint_loglevel_t level, const char *message, ...);
 extern void		lprintLogAttributes(lprint_client_t *client, const char *title, ipp_t *ipp, int is_response);
 extern void		lprintLogClient(lprint_client_t *client, lprint_loglevel_t level, const char *message, ...) LPRINT_FORMAT(3, 4);

@@ -40,6 +40,8 @@ lprintAddOptions(
   group_tag  = ippGetOperation(request) == IPP_PRINT_JOB ? IPP_TAG_JOB : IPP_TAG_PRINTER;
   is_default = group_tag == IPP_TAG_PRINTER;
 
+  LPRINT_DEBUG("group_tag=%s, is_default=%d\n", ippTagString(group_tag), is_default);
+
   if (is_default)
   {
     // Add Printer Description attributes...
@@ -184,6 +186,7 @@ lprintAddOptions(
 
   if ((value = cupsGetOption("printer-resolution", num_options, options)) == NULL)
     value = cupsGetOption("printer-resolution-default", num_options, options);
+  LPRINT_DEBUG("printer-resolution=%s\n", value);
   if (value)
   {
     int		xres, yres;		// Resolution values
@@ -201,7 +204,7 @@ lprintAddOptions(
       yres = xres;
     }
 
-    ippAddResolution(request, group_tag, is_default ? "printer-resolution-default" : "printer-resolution", xres, yres, !strcmp(units, "dpi") ? IPP_RES_PER_INCH : IPP_RES_PER_CM);
+    ippAddResolution(request, group_tag, is_default ? "printer-resolution-default" : "printer-resolution", !strcmp(units, "dpi") ? IPP_RES_PER_INCH : IPP_RES_PER_CM, xres, yres);
   }
 }
 

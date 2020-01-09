@@ -264,6 +264,11 @@ write_log(lprint_system_t   *system,	// I - System
             bufptr += strlen(bufptr);
             break;
 
+        case 'x' : // Log an unsigned integer as hex
+            snprintf(bufptr, bufptr - bufend + 1, "%x", va_arg(ap, unsigned));
+            bufptr += strlen(bufptr);
+            break;
+
         default : // Something else we don't support
             *bufptr++ = '%';
 
