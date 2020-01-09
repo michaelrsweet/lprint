@@ -15,6 +15,17 @@
 
 
 //
+// local typs...
+//
+
+typedef struct lprint_pwg_s
+{
+  int		fd;			// Output file descriptor
+  cups_raster_t	*ras;			// PWG raster file
+} lprint_pwg_t;
+
+
+//
 // Local globals...
 //
 
@@ -44,10 +55,12 @@ static const char * const lprint_pwg_4inch_media[] =
 // Local functions...
 //
 
-static int	lprint_pwg_print(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options);
-static int	lprint_pwg_rend(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options, void *user_data, unsigned page);
-static int	lprint_pwg_rstart(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options, void *user_data, unsigned page);
-static int	lprint_pwg_rwrite(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options, void *user_data, unsigned y, const unsigned char *line);
+static int	lprint_pwg_print(lprint_job_t *job, lprint_options_t *options);
+static int	lprint_pwg_rendjob(lprint_job_t *job, lprint_options_t *options);
+static int	lprint_pwg_rendpage(lprint_job_t *job, lprint_options_t *options, unsigned page);
+static int	lprint_pwg_rstartjob(lprint_job_t *job, lprint_options_t *options);
+static int	lprint_pwg_rstartpage(lprint_job_t *job, lprint_options_t *options, unsigned page);
+static int	lprint_pwg_rwrite(lprint_job_t *job, lprint_options_t *options, unsigned y, const unsigned char *line);
 static int	lprint_pwg_status(lprint_printer_t *printer);
 
 
@@ -61,11 +74,13 @@ lprintInitPWG(
 {
   pthread_rwlock_wrlock(&driver->rwlock);
 
-  driver->printfunc  = lprint_pwg_print;
-  driver->rendfunc   = lprint_pwg_rend;
-  driver->rstartfunc = lprint_pwg_rstart;
-  driver->rwritefunc = lprint_pwg_rwrite;
-  driver->statusfunc = lprint_pwg_status;
+  driver->print      = lprint_pwg_print;
+  driver->rendjob    = lprint_pwg_rendjob;
+  driver->rendpage   = lprint_pwg_rendpage;
+  driver->rstartjob  = lprint_pwg_rstartjob;
+  driver->rstartpage = lprint_pwg_rstartpage;
+  driver->rwrite     = lprint_pwg_rwrite;
+  driver->status     = lprint_pwg_status;
   driver->format     = "image/pwg-raster";
 
   driver->num_resolution  = 2;
@@ -105,34 +120,68 @@ lprintInitPWG(
 
 static int				// O - 1 on success, 0 on failure
 lprint_pwg_print(
-    lprint_printer_t *printer,		// I - Printer
     lprint_job_t     *job,		// I - Job
     lprint_options_t *options)		// I - Job options
 {
-  (void)printer;
-  (void)job;
-  (void)options;
+  int		infd,			// Input file
+		outfd;			// Output file
+  char		outname[1024];		// Output filename
+  ssize_t	bytes;			// Bytes read/written
+  char		buffer[65536];		// Read/write buffer
+
+
+  job->impressions = 1;
+
+  infd  = open(job->filename, O_RDONLY);
+  outfd = lprintCreateJobFile(job, outname, sizeof(outname), job->system->directory, "out");
+
+  while ((bytes = read(infd, buffer, sizeof(buffer))) > 0)
+    write(outfd, buffer, (size_t)bytes);
+
+  close(infd);
+  close(outfd);
+
+  job->impcompleted = 1;
 
   return (1);
 }
 
 
 //
-// 'lprint_pwg_rend()' - End a page/job.
+// 'lprint_pwg_rendjob()' - End a job.
 //
 
 static int				// O - 1 on success, 0 on failure
-lprint_pwg_rend(
-    lprint_printer_t *printer,		// I - Printer
+lprint_pwg_rendjob(
+    lprint_job_t     *job,		// I - Job
+    lprint_options_t *options)		// I - Job options
+{
+  lprint_pwg_t	*pwg = (lprint_pwg_t *)job->printer->driver->job_data;
+
+  (void)options;
+
+  cupsRasterClose(pwg->ras);
+  close(pwg->fd);
+
+  free(pwg);
+  job->printer->driver->job_data = NULL;
+
+  return (1);
+}
+
+
+//
+// 'lprint_pwg_rendpage()' - End a page.
+//
+
+static int				// O - 1 on success, 0 on failure
+lprint_pwg_rendpage(
     lprint_job_t     *job,		// I - Job
     lprint_options_t *options,		// I - Job options
-    void             *user_data,	// I - User data
     unsigned         page)		// I - Page number
 {
-  (void)printer;
   (void)job;
   (void)options;
-  (void)user_data;
   (void)page;
 
   return (1);
@@ -140,24 +189,46 @@ lprint_pwg_rend(
 
 
 //
-// 'lprint_pwg_rstart()' - Start a page/job.
+// 'lprint_pwg_rstartjob()' - Start a job.
 //
 
 static int				// O - 1 on success, 0 on failure
-lprint_pwg_rstart(
-    lprint_printer_t *printer,		// I - Printer
+lprint_pwg_rstartjob(
     lprint_job_t     *job,		// I - Job
-    lprint_options_t *options,		// I - Job options
-    void             *user_data,	// I - User data
-    unsigned         page)		// I - Page number
+    lprint_options_t *options)		// I - Job options
 {
-  (void)printer;
-  (void)job;
+  lprint_pwg_t	*pwg = (lprint_pwg_t *)calloc(1, sizeof(lprint_pwg_t));
+					// PWG driver data
+  char		outname[1024];		// Output filename
+
+
   (void)options;
-  (void)user_data;
-  (void)page;
+
+  job->printer->driver->job_data = pwg;
+
+  pwg->fd  = lprintCreateJobFile(job, outname, sizeof(outname), job->system->directory, "out");
+  pwg->ras = cupsRasterOpen(pwg->fd, CUPS_RASTER_WRITE_PWG);
 
   return (1);
+}
+
+
+//
+// 'lprint_pwg_rstartpage()' - Start a page.
+//
+
+static int				// O - 1 on success, 0 on failure
+lprint_pwg_rstartpage(
+    lprint_job_t     *job,		// I - Job
+    lprint_options_t *options,		// I - Job options
+    unsigned         page)		// I - Page number
+{
+  lprint_pwg_t	*pwg = (lprint_pwg_t *)job->printer->driver->job_data;
+					// PWG driver data
+
+  (void)page;
+
+  return (cupsRasterWriteHeader2(pwg->ras, &options->header));
 }
 
 
@@ -167,21 +238,17 @@ lprint_pwg_rstart(
 
 static int				// O - 1 on success, 0 on failure
 lprint_pwg_rwrite(
-    lprint_printer_t    *printer,	// I - Printer
     lprint_job_t        *job,		// I - Job
     lprint_options_t    *options,	// I - Job options
-    void                *user_data,	// I - User data
     unsigned            y,		// I - Line number
     const unsigned char *line)		// I - Line
 {
-  (void)printer;
-  (void)job;
-  (void)options;
-  (void)user_data;
-  (void)y;
-  (void)line;
+  lprint_pwg_t	*pwg = (lprint_pwg_t *)job->printer->driver->job_data;
+					// PWG driver data
 
-  return (1);
+  (void)y;
+
+  return (cupsRasterWritePixels(pwg->ras, (unsigned char *)line, options->header.cupsBytesPerLine));
 }
 
 

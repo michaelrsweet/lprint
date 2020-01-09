@@ -64,10 +64,12 @@ static const char * const lprint_dymo_media[] =
 // Local functions...
 //
 
-static int	lprint_dymo_print(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options);
-static int	lprint_dymo_rend(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options, void *user_data, unsigned page);
-static int	lprint_dymo_rstart(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options, void *user_data, unsigned page);
-static int	lprint_dymo_rwrite(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options, void *user_data, unsigned y, const unsigned char *line);
+static int	lprint_dymo_print(lprint_job_t *job, lprint_options_t *options);
+static int	lprint_dymo_rendjob(lprint_job_t *job, lprint_options_t *options);
+static int	lprint_dymo_rendpage(lprint_job_t *job, lprint_options_t *options, unsigned page);
+static int	lprint_dymo_rstartjob(lprint_job_t *job, lprint_options_t *options);
+static int	lprint_dymo_rstartpage(lprint_job_t *job, lprint_options_t *options, unsigned page);
+static int	lprint_dymo_rwrite(lprint_job_t *job, lprint_options_t *options, unsigned y, const unsigned char *line);
 static int	lprint_dymo_status(lprint_printer_t *printer);
 
 
@@ -81,11 +83,13 @@ lprintInitDYMO(
 {
   pthread_rwlock_wrlock(&driver->rwlock);
 
-  driver->printfunc  = lprint_dymo_print;
-  driver->rendfunc   = lprint_dymo_rend;
-  driver->rstartfunc = lprint_dymo_rstart;
-  driver->rwritefunc = lprint_dymo_rwrite;
-  driver->statusfunc = lprint_dymo_status;
+  driver->print      = lprint_dymo_print;
+  driver->rendjob    = lprint_dymo_rendjob;
+  driver->rendpage   = lprint_dymo_rendpage;
+  driver->rstartjob  = lprint_dymo_rstartjob;
+  driver->rstartpage = lprint_dymo_rstartpage;
+  driver->rwrite     = lprint_dymo_rwrite;
+  driver->status     = lprint_dymo_status;
   driver->format     = "application/vnd.dymo-lw";
 
   driver->num_resolution  = 1;
@@ -113,11 +117,9 @@ lprintInitDYMO(
 
 static int				// O - 1 on success, 0 on failure
 lprint_dymo_print(
-    lprint_printer_t *printer,		// I - Printer
     lprint_job_t     *job,		// I - Job
     lprint_options_t *options)		// I - Job options
 {
-  (void)printer;
   (void)job;
   (void)options;
 
@@ -126,21 +128,33 @@ lprint_dymo_print(
 
 
 //
-// 'lprint_dymo_rend()' - End a page/job.
+// 'lprint_dymo_rend()' - End a job.
 //
 
 static int				// O - 1 on success, 0 on failure
-lprint_dymo_rend(
-    lprint_printer_t *printer,		// I - Printer
+lprint_dymo_rendjob(
     lprint_job_t     *job,		// I - Job
-    lprint_options_t *options,		// I - Job options
-    void             *user_data,	// I - User data
-    unsigned         page)		// I - Page number
+    lprint_options_t *options)		// I - Job options
 {
-  (void)printer;
   (void)job;
   (void)options;
-  (void)user_data;
+
+  return (1);
+}
+
+
+//
+// 'lprint_dymo_rendpage()' - End a page.
+//
+
+static int				// O - 1 on success, 0 on failure
+lprint_dymo_rendpage(
+    lprint_job_t     *job,		// I - Job
+    lprint_options_t *options,		// I - Job options
+    unsigned         page)		// I - Page number
+{
+  (void)job;
+  (void)options;
   (void)page;
 
   return (1);
@@ -148,21 +162,33 @@ lprint_dymo_rend(
 
 
 //
-// 'lprint_dymo_rstart()' - Start a page/job.
+// 'lprint_dymo_rstartjob()' - Start a job.
 //
 
 static int				// O - 1 on success, 0 on failure
-lprint_dymo_rstart(
-    lprint_printer_t *printer,		// I - Printer
+lprint_dymo_rstartjob(
     lprint_job_t     *job,		// I - Job
-    lprint_options_t *options,		// I - Job options
-    void             *user_data,	// I - User data
-    unsigned         page)		// I - Page number
+    lprint_options_t *options)		// I - Job options
 {
-  (void)printer;
   (void)job;
   (void)options;
-  (void)user_data;
+
+  return (1);
+}
+
+
+//
+// 'lprint_dymo_rstartpage()' - Start a page.
+//
+
+static int				// O - 1 on success, 0 on failure
+lprint_dymo_rstartpage(
+    lprint_job_t     *job,		// I - Job
+    lprint_options_t *options,		// I - Job options
+    unsigned         page)		// I - Page number
+{
+  (void)job;
+  (void)options;
   (void)page;
 
   return (1);
@@ -175,17 +201,13 @@ lprint_dymo_rstart(
 
 static int				// O - 1 on success, 0 on failure
 lprint_dymo_rwrite(
-    lprint_printer_t    *printer,	// I - Printer
     lprint_job_t        *job,		// I - Job
     lprint_options_t    *options,	// I - Job options
-    void                *user_data,	// I - User data
     unsigned            y,		// I - Line number
     const unsigned char *line)		// I - Line
 {
-  (void)printer;
   (void)job;
   (void)options;
-  (void)user_data;
   (void)y;
   (void)line;
 

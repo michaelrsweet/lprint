@@ -362,10 +362,93 @@ process_png(lprint_job_t *job)		// I - Job
 static void
 process_raster(lprint_job_t *job)	// I - Job
 {
+  lprint_driver_t	*driver = job->printer->driver;
+					// Driver for job
   lprint_options_t	options;	// Job options
+  int			fd = -1;	// Job file
+  cups_raster_t		*ras = NULL;	// Raster stream
+  cups_page_header2_t	header;		// Page header
+  unsigned char		*line;		// Pixel line
+  unsigned		page = 0,	// Current page
+			y;		// Current line
 
 
-  prepare_options(job, &options, 1);
+  // Open the raster stream...
+  if ((fd = open(job->filename, O_RDONLY)) < 0)
+  {
+    lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to open job file '%s' - %s", job->filename, strerror(errno));
+    goto abort_job;
+  }
+
+  if ((ras = cupsRasterOpen(fd, CUPS_RASTER_READ)) == NULL)
+  {
+    lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to open raster stream for file '%s' - %s", job->filename, cupsLastErrorString());
+    goto abort_job;
+  }
+
+  // Prepare options...
+  if (!cupsRasterReadHeader2(ras, &header))
+  {
+    lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to read raster stream for file '%s' - %s", job->filename, cupsLastErrorString());
+    goto abort_job;
+  }
+
+  job->impressions = (int)header.cupsInteger[CUPS_RASTER_PWG_TotalPageCount];
+  prepare_options(job, &options, job->impressions);
+
+  if (!(driver->rstartjob)(job, &options))
+    goto abort_job;
+
+  // Print pages...
+  do
+  {
+    page ++;
+    job->impcompleted ++;
+
+    if (!(driver->rstartpage)(job, &options, page))
+      goto abort_job;
+
+    line = malloc(header.cupsBytesPerLine);
+
+    for (y = 0; y < header.cupsHeight; y ++)
+    {
+      if (cupsRasterReadPixels(ras, line, header.cupsBytesPerLine))
+        (driver->rwrite)(job, &options, y, line);
+      else
+        break;
+    }
+
+    free(line);
+
+    if (!(driver->rendpage)(job, &options, page))
+      goto abort_job;
+
+    if (y < header.cupsHeight)
+    {
+      lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to read page from raster stream for file '%s' - %s", job->filename, cupsLastErrorString());
+      (driver->rendjob)(job, &options);
+      goto abort_job;
+    }
+  }
+  while (cupsRasterReadHeader2(ras, &header));
+
+  if (!(driver->rendjob)(job, &options))
+    goto abort_job;
+
+  cupsRasterClose(ras);
+  close(fd);
+
+  return;
+
+  // If we get here something went wrong...
+  abort_job:
+
+  if (ras)
+    cupsRasterClose(ras);
+  if (fd >= 0)
+    close(fd);
+
+  job->state = IPP_JSTATE_ABORTED;
 }
 
 
@@ -380,4 +463,6 @@ process_raw(lprint_job_t *job)		// I - Job
 
 
   prepare_options(job, &options, 1);
+  if (!(job->printer->driver->print)(job, &options))
+    job->state = IPP_JSTATE_ABORTED;
 }

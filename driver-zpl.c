@@ -112,10 +112,12 @@ static const char * const lprint_zpl_media[] =
 // Local functions...
 //
 
-static int	lprint_zpl_print(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options);
-static int	lprint_zpl_rend(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options, void *user_data, unsigned page);
-static int	lprint_zpl_rstart(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options, void *user_data, unsigned page);
-static int	lprint_zpl_rwrite(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options, void *user_data, unsigned y, const unsigned char *line);
+static int	lprint_zpl_print(lprint_job_t *job, lprint_options_t *options);
+static int	lprint_zpl_rendjob(lprint_job_t *job, lprint_options_t *options);
+static int	lprint_zpl_rendpage(lprint_job_t *job, lprint_options_t *options, unsigned page);
+static int	lprint_zpl_rstartjob(lprint_job_t *job, lprint_options_t *options);
+static int	lprint_zpl_rstartpage(lprint_job_t *job, lprint_options_t *options, unsigned page);
+static int	lprint_zpl_rwrite(lprint_job_t *job, lprint_options_t *options, unsigned y, const unsigned char *line);
 static int	lprint_zpl_status(lprint_printer_t *printer);
 
 
@@ -129,11 +131,13 @@ lprintInitZPL(
 {
   pthread_rwlock_wrlock(&driver->rwlock);
 
-  driver->printfunc  = lprint_zpl_print;
-  driver->rendfunc   = lprint_zpl_rend;
-  driver->rstartfunc = lprint_zpl_rstart;
-  driver->rwritefunc = lprint_zpl_rwrite;
-  driver->statusfunc = lprint_zpl_status;
+  driver->print      = lprint_zpl_print;
+  driver->rendjob    = lprint_zpl_rendjob;
+  driver->rendpage   = lprint_zpl_rendpage;
+  driver->rstartjob  = lprint_zpl_rstartjob;
+  driver->rstartpage = lprint_zpl_rstartpage;
+  driver->rwrite     = lprint_zpl_rwrite;
+  driver->status     = lprint_zpl_status;
   driver->format     = "application/vnd.zebra-zpl";
 
   driver->num_resolution  = 1;
@@ -161,11 +165,9 @@ lprintInitZPL(
 
 static int				// O - 1 on success, 0 on failure
 lprint_zpl_print(
-    lprint_printer_t *printer,		// I - Printer
     lprint_job_t     *job,		// I - Job
     lprint_options_t *options)		// I - Job options
 {
-  (void)printer;
   (void)job;
   (void)options;
 
@@ -174,21 +176,33 @@ lprint_zpl_print(
 
 
 //
-// 'lprint_zpl_rend()' - End a page/job.
+// 'lprint_zpl_rendjob()' - End a job.
 //
 
 static int				// O - 1 on success, 0 on failure
-lprint_zpl_rend(
-    lprint_printer_t *printer,		// I - Printer
+lprint_zpl_rendjob(
     lprint_job_t     *job,		// I - Job
-    lprint_options_t *options,		// I - Job options
-    void             *user_data,	// I - User data
-    unsigned         page)		// I - Page number
+    lprint_options_t *options)		// I - Job options
 {
-  (void)printer;
   (void)job;
   (void)options;
-  (void)user_data;
+
+  return (1);
+}
+
+
+//
+// 'lprint_zpl_rendpage()' - End a page.
+//
+
+static int				// O - 1 on success, 0 on failure
+lprint_zpl_rendpage(
+    lprint_job_t     *job,		// I - Job
+    lprint_options_t *options,		// I - Job options
+    unsigned         page)		// I - Page number
+{
+  (void)job;
+  (void)options;
   (void)page;
 
   return (1);
@@ -196,21 +210,33 @@ lprint_zpl_rend(
 
 
 //
-// 'lprint_zpl_rstart()' - Start a page/job.
+// 'lprint_zpl_rstartjob()' - Start a job.
 //
 
 static int				// O - 1 on success, 0 on failure
-lprint_zpl_rstart(
-    lprint_printer_t *printer,		// I - Printer
+lprint_zpl_rstartjob(
     lprint_job_t     *job,		// I - Job
-    lprint_options_t *options,		// I - Job options
-    void             *user_data,	// I - User data
-    unsigned         page)		// I - Page number
+    lprint_options_t *options)		// I - Job options
 {
-  (void)printer;
   (void)job;
   (void)options;
-  (void)user_data;
+
+  return (1);
+}
+
+
+//
+// 'lprint_zpl_rstartpage()' - Start a page.
+//
+
+static int				// O - 1 on success, 0 on failure
+lprint_zpl_rstartpage(
+    lprint_job_t     *job,		// I - Job
+    lprint_options_t *options,		// I - Job options
+    unsigned         page)		// I - Page number
+{
+  (void)job;
+  (void)options;
   (void)page;
 
   return (1);
@@ -223,17 +249,13 @@ lprint_zpl_rstart(
 
 static int				// O - 1 on success, 0 on failure
 lprint_zpl_rwrite(
-    lprint_printer_t    *printer,	// I - Printer
     lprint_job_t        *job,		// I - Job
     lprint_options_t    *options,	// I - Job options
-    void                *user_data,	// I - User data
     unsigned            y,		// I - Line number
     const unsigned char *line)		// I - Line
 {
-  (void)printer;
   (void)job;
   (void)options;
-  (void)user_data;
   (void)y;
   (void)line;
 

@@ -68,13 +68,17 @@ typedef struct lprint_options_s		// Computed job options
 					// printer-resolution
 } lprint_options_t;
 
-typedef int (*lprint_printfunc_t)(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options);
+typedef int (*lprint_printfunc_t)(lprint_job_t *job, lprint_options_t *options);
 					// Print a job
-typedef int (*lprint_rendfunc_t)(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options, void *user_data, unsigned page);
+typedef int (*lprint_rendjobfunc_t)(lprint_job_t *job, lprint_options_t *options);
 					// End a raster job
-typedef int (*lprint_rstartfunc_t)(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options, void *user_data, unsigned page);
+typedef int (*lprint_rendpagefunc_t)(lprint_job_t *job, lprint_options_t *options, unsigned page);
+					// End a raster job
+typedef int (*lprint_rstartjobfunc_t)(lprint_job_t *job, lprint_options_t *options);
 					// Start a raster job
-typedef int (*lprint_rwritefunc_t)(lprint_printer_t *printer, lprint_job_t *job, lprint_options_t *options, void *user_data, unsigned y, const unsigned char *line);
+typedef int (*lprint_rstartpagefunc_t)(lprint_job_t *job, lprint_options_t *options, unsigned page);
+					// Start a raster page
+typedef int (*lprint_rwritefunc_t)(lprint_job_t *job, lprint_options_t *options, unsigned y, const unsigned char *line);
 					// Write a line of raster graphics
 typedef int (*lprint_statusfunc_t)(lprint_printer_t *printer);
 					// Update printer status
@@ -116,11 +120,14 @@ typedef struct lprint_driver_s		// Driver data
   char			*name;		// Name of driver
   ipp_t			*attrs;		// Capability attributes
   lprint_device_t	*device;	// Connection to device
-  lprint_printfunc_t	printfunc;	// Print (file) function
-  lprint_rendfunc_t	rendfunc;	// End raster job function
-  lprint_rstartfunc_t	rstartfunc;	// Start raster job function
-  lprint_rwritefunc_t	rwritefunc;	// Write raster line function
-  lprint_statusfunc_t	statusfunc;	// Status function
+  void			*job_data;	// Driver job data
+  lprint_printfunc_t	print;		// Print (file) function
+  lprint_rendjobfunc_t	rendjob;	// End raster job function
+  lprint_rendpagefunc_t	rendpage;	// End raster page function
+  lprint_rstartjobfunc_t rstartjob;	// Start raster job function
+  lprint_rstartpagefunc_t rstartpage;	// Start raster page function
+  lprint_rwritefunc_t	rwrite;		// Write raster line function
+  lprint_statusfunc_t	status;		// Status function
   const char		*format;	// Printer-specific format
   int			num_resolution,	// Number of printer resolutions
 			x_resolution[LPRINT_MAX_RESOLUTION],
