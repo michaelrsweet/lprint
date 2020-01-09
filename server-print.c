@@ -377,6 +377,7 @@ prepare_options(
 static void
 process_png(lprint_job_t *job)		// I - Job
 {
+  int			i;		// Looping var
   lprint_driver_t	*driver = job->printer->driver;
 					// Driver
   const unsigned char	*dither;	// Dither line
@@ -404,6 +405,8 @@ process_png(lprint_job_t *job)		// I - Job
 
   // Prepare options...
   prepare_options(job, &options, 1);
+  options.header.cupsInteger[CUPS_RASTER_PWG_TotalPageCount] = options.copies;
+  job->impressions = options.copies;
 
   // Load the PNG...
   memset(&png, 0, sizeof(png));
@@ -456,92 +459,101 @@ process_png(lprint_job_t *job)		// I - Job
   lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "xsize=%u, xstart=%u, xend=%u, xmod=%d, xstep=%d", xsize, xstart, xend, xmod, xstep);
   lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "ysize=%u, ystart=%u, yend=%u", ysize, ystart, yend);
 
-  // Start the job/page...
-  line = malloc(options.header.cupsBytesPerLine);
-
+  // Start the job...
   if (!(driver->rstartjob)(job, &options))
   {
     lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to start raster job.");
     goto abort_job;
   }
-  if (!(driver->rstartpage)(job, &options, 1))
-  {
-    lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to start raster page.");
-    goto abort_job;
-  }
 
-  // Leading blank space...
-  memset(line, 0, options.header.cupsBytesPerLine);
-  for (y = 0; y < ystart; y ++)
+  line = malloc(options.header.cupsBytesPerLine);
+
+  // Print every copy...
+  for (i = 0; i < options.copies; i ++)
   {
-    if (!(driver->rwrite)(job, &options, y, line))
+    if (!(driver->rstartpage)(job, &options, 1))
     {
-      lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to write raster line %u.", y);
+      lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to start raster page.");
       goto abort_job;
     }
-  }
 
-  // Now dither the image...
-  for (; y < yend; y ++)
-  {
-    pixptr = pixels + ((y - ystart) * png.height / ysize) * png.width;
-    dither = options.dither[y & 15];
-
-    for (x = xstart, lineptr = line + x / 8, bit = 128 >> (x & 7), byte = 0, xerr = 0; x < xend; x ++)
+    // Leading blank space...
+    memset(line, 0, options.header.cupsBytesPerLine);
+    for (y = 0; y < ystart; y ++)
     {
-      // Dither the current pixel...
-      if (*pixptr <= dither[x & 15])
-        byte |= bit;
-
-      // Advance to the next pixel...
-      pixptr += xstep;
-      xerr += xmod;
-      if (xerr >= xsize)
+      if (!(driver->rwrite)(job, &options, y, line))
       {
-        // Accumulated error has overflowed, advance another pixel...
-        xerr -= xsize;
-        pixptr ++;
+	lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to write raster line %u.", y);
+	goto abort_job;
+      }
+    }
+
+    // Now dither the image...
+    for (; y < yend; y ++)
+    {
+      pixptr = pixels + ((y - ystart) * png.height / ysize) * png.width;
+      dither = options.dither[y & 15];
+
+      for (x = xstart, lineptr = line + x / 8, bit = 128 >> (x & 7), byte = 0, xerr = 0; x < xend; x ++)
+      {
+	// Dither the current pixel...
+	if (*pixptr <= dither[x & 15])
+	  byte |= bit;
+
+	// Advance to the next pixel...
+	pixptr += xstep;
+	xerr += xmod;
+	if (xerr >= xsize)
+	{
+	  // Accumulated error has overflowed, advance another pixel...
+	  xerr -= xsize;
+	  pixptr ++;
+	}
+
+	// and the next bit
+	if (bit == 1)
+	{
+	  // Current byte is "full", save it...
+	  *lineptr++ = byte;
+	  byte = 0;
+	  bit  = 128;
+	}
+	else
+	  bit /= 2;
       }
 
-      // and the next bit
-      if (bit == 1)
+      if (bit < 128)
+	*lineptr = byte;
+
+      if (!(driver->rwrite)(job, &options, y, line))
       {
-        // Current byte is "full", save it...
-        *lineptr++ = byte;
-        byte = 0;
-        bit  = 128;
+	lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to write raster line %u.", y);
+	goto abort_job;
       }
-      else
-        bit /= 2;
     }
 
-    if (bit < 128)
-      *lineptr = byte;
-
-    if (!(driver->rwrite)(job, &options, y, line))
+    // Trailing blank space...
+    memset(line, 0, options.header.cupsBytesPerLine);
+    for (; y < yend; y ++)
     {
-      lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to write raster line %u.", y);
+      if (!(driver->rwrite)(job, &options, y, line))
+      {
+	lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to write raster line %u.", y);
+	goto abort_job;
+      }
+    }
+
+    // End the page...
+    if (!(driver->rendpage)(job, &options, 1))
+    {
+      lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to end raster page.");
       goto abort_job;
     }
+
+    job->impcompleted ++;
   }
 
-  // Trailing blank space...
-  memset(line, 0, options.header.cupsBytesPerLine);
-  for (; y < yend; y ++)
-  {
-    if (!(driver->rwrite)(job, &options, y, line))
-    {
-      lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to write raster line %u.", y);
-      goto abort_job;
-    }
-  }
-
-  // End the job/page...
-  if (!(driver->rendpage)(job, &options, 1))
-  {
-    lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to end raster page.");
-    goto abort_job;
-  }
+  // End the job...
   if (!(driver->rendjob)(job, &options))
   {
     lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to end raster job.");
