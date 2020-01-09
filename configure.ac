@@ -177,9 +177,9 @@ dnl libpng...
 AC_ARG_ENABLE(libpng, [  --enable-libpng         use libpng for PNG printing])
 
 if test x$enable_libpng != xno; then
-	AC_SEARCH_LIBS(png_set_tRNS_to_alpha, png, [AC_DEFINE(HAVE_LIBPNG)])
+	AC_SEARCH_LIBS(png_image_begin_read_from_file, png, [AC_DEFINE(HAVE_LIBPNG)])
 
-	if test x$ac_png_set_tRNS_to_alpha = xno -a x$enable_libpng = xyes; then
+	if test x$ac_png_image_begin_read_from_file = xno -a x$enable_libpng = xyes; then
 		AC_MSG_ERROR([libpng-dev 1.6 or later required for --enable-libpng.])
 	fi
 fi

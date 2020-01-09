@@ -3785,9 +3785,9 @@ fi
 
 
 if test x$enable_libpng != xno; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing png_set_tRNS_to_alpha" >&5
-$as_echo_n "checking for library containing png_set_tRNS_to_alpha... " >&6; }
-if ${ac_cv_search_png_set_tRNS_to_alpha+:} false; then :
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing png_image_begin_read_from_file" >&5
+$as_echo_n "checking for library containing png_image_begin_read_from_file... " >&6; }
+if ${ac_cv_search_png_image_begin_read_from_file+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_func_search_save_LIBS=$LIBS
@@ -3800,11 +3800,11 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 #ifdef __cplusplus
 extern "C"
 #endif
-char png_set_tRNS_to_alpha ();
+char png_image_begin_read_from_file ();
 int
 main ()
 {
-return png_set_tRNS_to_alpha ();
+return png_image_begin_read_from_file ();
   ;
   return 0;
 }
@@ -3817,25 +3817,25 @@ for ac_lib in '' png; do
     LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
   fi
   if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_search_png_set_tRNS_to_alpha=$ac_res
+  ac_cv_search_png_image_begin_read_from_file=$ac_res
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext
-  if ${ac_cv_search_png_set_tRNS_to_alpha+:} false; then :
+  if ${ac_cv_search_png_image_begin_read_from_file+:} false; then :
   break
 fi
 done
-if ${ac_cv_search_png_set_tRNS_to_alpha+:} false; then :
+if ${ac_cv_search_png_image_begin_read_from_file+:} false; then :
 
 else
-  ac_cv_search_png_set_tRNS_to_alpha=no
+  ac_cv_search_png_image_begin_read_from_file=no
 fi
 rm conftest.$ac_ext
 LIBS=$ac_func_search_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_png_set_tRNS_to_alpha" >&5
-$as_echo "$ac_cv_search_png_set_tRNS_to_alpha" >&6; }
-ac_res=$ac_cv_search_png_set_tRNS_to_alpha
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_png_image_begin_read_from_file" >&5
+$as_echo "$ac_cv_search_png_image_begin_read_from_file" >&6; }
+ac_res=$ac_cv_search_png_image_begin_read_from_file
 if test "$ac_res" != no; then :
   test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
   $as_echo "#define HAVE_LIBPNG 1" >>confdefs.h
@@ -3843,7 +3843,7 @@ if test "$ac_res" != no; then :
 fi
 
 
-	if test x$ac_png_set_tRNS_to_alpha = xno -a x$enable_libpng = xyes; then
+	if test x$ac_png_image_begin_read_from_file = xno -a x$enable_libpng = xyes; then
 		as_fn_error $? "libpng-dev 1.6 or later required for --enable-libpng." "$LINENO" 5
 	fi
 fi

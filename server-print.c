@@ -13,6 +13,9 @@
 
 #include "lprint.h"
 #include "dither.h"
+#ifdef HAVE_LIBPNG
+#  include <png.h>
+#endif // HAVE_LIBPNG
 
 
 //
@@ -347,10 +350,175 @@ prepare_options(
 static void
 process_png(lprint_job_t *job)		// I - Job
 {
+  lprint_driver_t	*driver = job->printer->driver;
+					// Driver
+  const unsigned char	*dither;	// Dither line
   lprint_options_t	options;	// Job options
+  png_image		png;		// PNG image data
+  png_color		bg;		// Background color
+  unsigned char		*line,		// Output line
+			*lineptr,	// Pointer in line
+			byte,		// Byte in line
+			*pixels,	// Pixels in image
+			*pixptr,	// Pointer into image
+			bit;		// Current bit
+  unsigned		x,		// X position
+			xerr,		// X error accumulator
+			xmod,		// X modulus
+			xsize,		// Scaled width
+			xstep,		// X step
+			xstart,		// X start position
+			xend,		// X end position
+			y,		// Y position
+			ysize,		// Scaled height
+			ystart,		// Y start position
+			yend;		// Y end position
 
 
+  // Prepare options...
   prepare_options(job, &options, 1);
+
+  // Load the PNG...
+  memset(&png, 0, sizeof(png));
+  png.version = PNG_IMAGE_VERSION;
+
+  bg.red = bg.green = bg.blue = 255;
+
+  png_image_begin_read_from_file(&png, job->filename);
+
+  png.format = PNG_FORMAT_GRAY;
+  pixels     = malloc(PNG_IMAGE_SIZE(png));
+
+  png_image_finish_read(&png, &bg, pixels, 1, NULL);
+
+  if (png.warning_or_error & PNG_IMAGE_ERROR)
+  {
+    lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to open PNG file '%s' - %s", job->filename, png.message);
+    goto abort_job;
+  }
+
+  // Figure out the scaling and rotation of the image...
+  xsize = options.header.cupsWidth;
+  ysize = xsize * png.height / png.width;
+  if (ysize > options.header.cupsHeight)
+  {
+    ysize = options.header.cupsHeight;
+    xsize = ysize * png.width / png.height;
+  }
+
+  xstart = (options.header.cupsWidth - xsize) / 2;
+  xend   = xstart + xsize;
+  ystart = (options.header.cupsHeight - ysize) / 2;
+  yend   = ystart + ysize;
+
+  xmod   = png.width % xsize;
+  xstep  = png.width / xsize;
+
+  // Start the job/page...
+  line = malloc(options.header.cupsBytesPerLine);
+
+  if (!(driver->rstartjob)(job, &options))
+  {
+    lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to start raster job.");
+    goto abort_job;
+  }
+  if (!(driver->rstartpage)(job, &options, 1))
+  {
+    lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to start raster page.");
+    goto abort_job;
+  }
+
+  // Leading blank space...
+  memset(line, 0, options.header.cupsBytesPerLine);
+  for (y = 0; y < ystart; y ++)
+  {
+    if (!(driver->rwrite)(job, &options, y, line))
+    {
+      lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to write raster line %u.", y);
+      goto abort_job;
+    }
+  }
+
+  // Now dither the image...
+  for (; y < yend; y ++)
+  {
+    pixptr = pixels + ((y - ystart) * png.height / ysize) * png.width;
+    dither = options.dither[y & 15];
+
+    for (x = xstart, lineptr = line + x / 8, bit = 128 >> (x & 7), byte = 0, xerr = 0; x < xend; x ++)
+    {
+      // Dither the current pixel...
+      if (*pixptr <= dither[x & 15])
+        byte |= bit;
+
+      // Advance to the next pixel...
+      pixptr += xstep;
+      xerr += xmod;
+      if (xerr >= xsize)
+      {
+        // Accumulated error has overflowed, advance another pixel...
+        xerr -= xsize;
+        pixptr ++;
+      }
+
+      // and the next bit
+      if (bit == 1)
+      {
+        // Current byte is "full", save it...
+        *lineptr++ = byte;
+        byte = 0;
+        bit  = 128;
+      }
+      else
+        bit /= 2;
+    }
+
+    if (bit < 128)
+      *lineptr = byte;
+
+    if (!(driver->rwrite)(job, &options, y, line))
+    {
+      lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to write raster line %u.", y);
+      goto abort_job;
+    }
+  }
+
+  // Trailing blank space...
+  memset(line, 0, options.header.cupsBytesPerLine);
+  for (; y < yend; y ++)
+  {
+    if (!(driver->rwrite)(job, &options, y, line))
+    {
+      lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to write raster line %u.", y);
+      goto abort_job;
+    }
+  }
+
+  // End the job/page...
+  if (!(driver->rendpage)(job, &options, 1))
+  {
+    lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to end raster page.");
+    goto abort_job;
+  }
+  if (!(driver->rendjob)(job, &options))
+  {
+    lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to end raster job.");
+    goto abort_job;
+  }
+
+  // Free the image data when we're done...
+  png_image_free(&png);
+  free(pixels);
+  return;
+
+  // If we get there then something bad happened...
+  abort_job:
+
+  job->state = IPP_JSTATE_ABORTED;
+
+  // Free the image data when we're done...
+  png_image_free(&png);
+  free(pixels);
 }
 #endif // HAVE_LIBPNG
 

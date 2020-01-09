@@ -442,6 +442,7 @@
 				HEADER_SEARCH_PATHS = (
 					.,
 					/usr/local/include,
+					/usr/local/include/libpng16,
 					"/usr/local/include/libusb-1.0",
 				);
 				INSTALL_PATH = /usr/local/bin;
@@ -502,6 +503,7 @@
 				HEADER_SEARCH_PATHS = (
 					.,
 					/usr/local/include,
+					/usr/local/include/libpng16,
 					"/usr/local/include/libusb-1.0",
 				);
 				INSTALL_PATH = /usr/local/bin;
