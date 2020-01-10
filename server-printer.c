@@ -122,8 +122,8 @@ lprintCreatePrinter(
     "multiple-document-handling",
     "orientation-requested",
     "print-color-mode",
-    "print-darkness",
     "print-content-optimize",
+    "print-darkness",
     "print-quality",
     "print-speed",
     "printer-resolution"
@@ -145,6 +145,33 @@ lprintCreatePrinter(
   {					// multiple-document-handling-supported values
     "separate-documents-uncollated-copies",
     "separate-documents-collated-copies"
+  };
+  static const int orientation_requested[] =
+  {
+    IPP_ORIENT_PORTRAIT,
+    IPP_ORIENT_LANDSCAPE,
+    IPP_ORIENT_REVERSE_LANDSCAPE,
+    IPP_ORIENT_REVERSE_PORTRAIT,
+    IPP_ORIENT_NONE
+  };
+  static const char * const print_color_mode[] =
+  {					// print-color-mode-supported
+    "bi-level",
+    "monochrome"
+  };
+  static const char * const print_content_optimize[] =
+  {					// print-content-optimize-supported
+    "auto",
+    "graphic",
+    "photo",
+    "text-and-graphic",
+    "text"
+  };
+  static const int print_quality[] =	// print-quality-supported
+  {
+    IPP_QUALITY_DRAFT,
+    IPP_QUALITY_NORMAL,
+    IPP_QUALITY_HIGH
   };
   static const char * const printer_settable_attributes[] =
   {					// printer-settable-attributes values
@@ -263,6 +290,12 @@ lprintCreatePrinter(
   // compression-supported
   ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "compression-supported", (int)(sizeof(compression) / sizeof(compression[0])), NULL, compression);
 
+  // copies-default
+  ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "copies-default", 1);
+
+  // copies-supported
+  ippAddRange(printer->attrs, IPP_TAG_PRINTER, "copies-supported", 1, 999);
+
   // document-format-default
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_MIMETYPE), "document-format-default", NULL, "application/octet-stream");
 
@@ -326,8 +359,32 @@ lprintCreatePrinter(
   // operations-supported
   ippAddIntegers(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_ENUM, "operations-supported", (int)(sizeof(operations) / sizeof(operations[0])), operations);
 
+  // orientation-requested-default
+  ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_ENUM, "orientation-requested-default", IPP_ORIENT_NONE);
+
+  // orientation-requested-supported
+  ippAddIntegers(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_ENUM, "orientation-requested-supported", (int)(sizeof(orientation_requested) / sizeof(orientation_requested[0])), orientation_requested);
+
   // pdl-override-supported
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "pdl-override-supported", NULL, "attempted");
+
+  // print-color-mode-default
+  ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "print-color-mode-default", NULL, "monochrome");
+
+  // print-color-mode-supported
+  ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "print-color-mode-supported", (int)(sizeof(print_color_mode) / sizeof(print_color_mode[0])), NULL, print_color_mode);
+
+  // print-content-optimize-default
+  ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "print-content-optimize-default", NULL, "auto");
+
+  // print-content-optimize-supported
+  ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "print-content-optimize-supported", (int)(sizeof(print_content_optimize) / sizeof(print_content_optimize[0])), NULL, print_content_optimize);
+
+  // print-quality-default
+  ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_ENUM, "print-quality-default", IPP_QUALITY_NORMAL);
+
+  // print-quality-supported
+  ippAddIntegers(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_ENUM, "print-quality-supported", (int)(sizeof(print_quality) / sizeof(print_quality[0])), print_quality);
 
   // printer-get-attributes-supported
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "printer-get-attributes-supported", NULL, "document-format");
