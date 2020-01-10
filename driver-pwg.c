@@ -133,7 +133,7 @@ lprint_pwg_print(
   job->impressions = 1;
 
   infd  = open(job->filename, O_RDONLY);
-  outfd = lprintCreateJobFile(job, outname, sizeof(outname), job->system->directory, "out");
+  outfd = lprintCreateJobFile(job, outname, sizeof(outname), job->system->directory, "out.pwg");
 
   while ((bytes = read(infd, buffer, sizeof(buffer))) > 0)
     write(outfd, buffer, (size_t)bytes);

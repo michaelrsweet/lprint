@@ -145,9 +145,10 @@ typedef struct lprint_driver_s		// Driver data
 			media_ready[LPRINT_MAX_SOURCE][64];
 					// Ready media sizes
   int			num_source;	// Number of media sources (rolls)
-  const char		*source[LPRINT_MAX_SOURCE],
+  const char		*source[LPRINT_MAX_SOURCE];
 					// Media sources
-			*source_default;// Default media source
+  char			source_default[64];
+					// Default media source
   int			top_offset_default,
 					// Default media-top-offset
 			top_offset_supported[2];
@@ -157,9 +158,10 @@ typedef struct lprint_driver_s		// Driver data
 			tracking_supported;
 					// media-tracking-supported
   int			num_type;	// Number of media types
-  const char		*type[LPRINT_MAX_TYPE],
+  const char		*type[LPRINT_MAX_TYPE];
 					// Media types
-			*type_default;	// Default media type
+  char			type_default[64];
+					// Default media type
   lprint_label_mode_t	mode_configured,// label-mode-configured
 			mode_supported;	// label-mode-supported
   int			tear_offset_configured,

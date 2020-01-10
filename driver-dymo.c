@@ -15,6 +15,18 @@
 
 
 //
+// Local types...
+//
+
+typedef struct lprint_dymo_s		// DYMO driver data
+{
+  unsigned	ystart,			// First line
+		yend;			// Last line
+  int		feed;			// Accumulated feed
+} lprint_dymo_t;
+
+
+//
 // Local globals...
 //
 
@@ -49,14 +61,7 @@ static const char * const lprint_dymo_media[] =
   "oe_2-part-internet-postage-label_2.25x7.5in",
   "oe_shipping-label_2.3125x4in",
   "oe_internet-postage-label_2.3125x7in",
-  "oe_internet-postage-confirmation-label_2.3125x10.5in",
-  "oe_name-badge-label_2.4375x4.3125in",
-  "oe_hc-address-label_3.5x1.125in",
-  "oe_hc-shipping-label_4x2.3.125in",
-  "oe_xl-shipping-label_4x6in",
-
-  "roll_max_2.3125x3600in",
-  "roll_min_0.25x0.25in"
+  "oe_internet-postage-confirmation-label_2.3125x10.5in"
 };
 
 
@@ -96,14 +101,42 @@ lprintInitDYMO(
   driver->x_resolution[0] = 203;
   driver->y_resolution[0] = 203;
 
+  driver->left_right = 70;
+  driver->bottom_top = 525;
+
   driver->num_media = (int)(sizeof(lprint_dymo_media) / sizeof(lprint_dymo_media[0]));
   memcpy(driver->media, lprint_dymo_media, sizeof(lprint_dymo_media));
 
-  driver->num_source = 1;
-  driver->source[0]  = "main-roll";
+  strlcpy(driver->max_media, "roll_max_2.3125x3600in", sizeof(driver->max_media));
+  strlcpy(driver->min_media, "roll_min_0.25x0.25in", sizeof(driver->min_media));
+  strlcpy(driver->media_default, "oe_address-label_1.25x3.5in", sizeof(driver->media_default));
+
+  if (strstr(driver->name, "-duo") || strstr(driver->name, "-twin"))
+  {
+    driver->num_source = 2;
+    driver->source[0]  = "roll-1";
+    driver->source[1]  = "roll-2";
+
+    strlcpy(driver->media_ready[0], "oe_multipurpose-label_2x2.3125in", sizeof(driver->media_ready[0]));
+    strlcpy(driver->media_ready[1], "oe_address-label_1.25x3.5in", sizeof(driver->media_ready[1]));
+  }
+  else
+  {
+    driver->num_source = 1;
+    driver->source[0]  = "main-roll";
+    strlcpy(driver->media_ready[0], "oe_address-label_1.25x3.5in", sizeof(driver->media_ready[0]));
+  }
+  strlcpy(driver->source_default, driver->source[0], sizeof(driver->source_default));
+
+  driver->tracking_default   = LPRINT_MEDIA_TRACKING_MARK;
+  driver->tracking_supported = LPRINT_MEDIA_TRACKING_MARK;
 
   driver->num_type = 1;
   driver->type[0]  = "labels";
+  strlcpy(driver->type_default, driver->type[0], sizeof(driver->type_default));
+
+  driver->darkness_configured = 50;
+  driver->darkness_supported  = 4;
 
   driver->num_supply = 0;
 
@@ -120,8 +153,29 @@ lprint_dymo_print(
     lprint_job_t     *job,		// I - Job
     lprint_options_t *options)		// I - Job options
 {
-  (void)job;
-  (void)options;
+  lprint_device_t *device = job->printer->driver->device;
+					// Output device
+  int		infd;			// Input file
+  ssize_t	bytes;			// Bytes read/written
+  char		buffer[65536];		// Read/write buffer
+
+
+  job->impressions = 1;
+
+  infd  = open(job->filename, O_RDONLY);
+
+  while ((bytes = read(infd, buffer, sizeof(buffer))) > 0)
+  {
+    if (lprintWriteDevice(device, buffer, (size_t)bytes) < 0)
+    {
+      lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to send %d bytes to printer.", (int)bytes);
+      close(infd);
+      return (0);
+    }
+  }
+  close(infd);
+
+  job->impcompleted = 1;
 
   return (1);
 }
@@ -136,8 +190,14 @@ lprint_dymo_rendjob(
     lprint_job_t     *job,		// I - Job
     lprint_options_t *options)		// I - Job options
 {
-  (void)job;
+  lprint_driver_t	*driver = job->printer->driver;
+					// Driver data
+
+
   (void)options;
+
+  free(driver->job_data);
+  driver->job_data = NULL;
 
   return (1);
 }
@@ -153,9 +213,14 @@ lprint_dymo_rendpage(
     lprint_options_t *options,		// I - Job options
     unsigned         page)		// I - Page number
 {
-  (void)job;
+  lprint_device_t	*device = job->printer->driver->device;
+					// Output device
+
+
   (void)options;
   (void)page;
+
+  lprintPrintfDevice(device, "\033E");
 
   return (1);
 }
@@ -170,8 +235,27 @@ lprint_dymo_rstartjob(
     lprint_job_t     *job,		// I - Job
     lprint_options_t *options)		// I - Job options
 {
-  (void)job;
+  lprint_device_t	*device = job->printer->driver->device;
+					// Output device
+  lprint_dymo_t		*dymo = (lprint_dymo_t *)calloc(1, sizeof(lprint_dymo_t));
+					// DYMO driver data
+
+
   (void)options;
+
+  job->printer->driver->job_data = dymo;
+
+  lprintPrintfDevice(device, "\033\033\033\033\033\033\033\033\033\033"
+                             "\033\033\033\033\033\033\033\033\033\033"
+                             "\033\033\033\033\033\033\033\033\033\033"
+                             "\033\033\033\033\033\033\033\033\033\033"
+                             "\033\033\033\033\033\033\033\033\033\033"
+                             "\033\033\033\033\033\033\033\033\033\033"
+                             "\033\033\033\033\033\033\033\033\033\033"
+                             "\033\033\033\033\033\033\033\033\033\033"
+                             "\033\033\033\033\033\033\033\033\033\033"
+                             "\033\033\033\033\033\033\033\033\033\033"
+                             "\033@");
 
   return (1);
 }
@@ -187,9 +271,35 @@ lprint_dymo_rstartpage(
     lprint_options_t *options,		// I - Job options
     unsigned         page)		// I - Page number
 {
-  (void)job;
-  (void)options;
+  lprint_device_t	*device = job->printer->driver->device;
+					// Output device
+  lprint_dymo_t		*dymo = (lprint_dymo_t *)job->printer->driver->job_data;
+					// DYMO driver data
+  int			darkness = job->printer->driver->darkness_configured + options->print_darkness;
+
+
   (void)page;
+
+  if (options->header.cupsWidth > 470)
+  {
+    lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Raster data too large for printer.");
+    return (0);
+  }
+
+  lprintPrintfDevice(device, "\033L%c%c", options->header.cupsHeight >> 8, options->header.cupsHeight);
+  lprintPrintfDevice(device, "\033D%c", options->header.cupsBytesPerLine - 2);
+  lprintPrintfDevice(device, "\033q%d", !strcmp(options->media_source, "roll-2") ? 2 : 1);
+
+  if (darkness < 0)
+    darkness = 0;
+  else if (darkness > 100)
+    darkness = 100;
+
+  lprintPrintfDevice(device, "\033%c", darkness / 25 + 'c');
+
+  dymo->feed   = 0;
+  dymo->ystart = 42;
+  dymo->yend   = options->header.cupsHeight - 84;
 
   return (1);
 }
@@ -206,10 +316,41 @@ lprint_dymo_rwrite(
     unsigned            y,		// I - Line number
     const unsigned char *line)		// I - Line
 {
-  (void)job;
-  (void)options;
-  (void)y;
-  (void)line;
+  lprint_device_t	*device = job->printer->driver->device;
+					// Output device
+  lprint_dymo_t		*dymo = (lprint_dymo_t *)job->printer->driver->job_data;
+					// DYMO driver data
+  unsigned char		buffer[100];	// Write buffer
+
+
+  if (y < dymo->ystart || y >= dymo->yend)
+    return (1);
+
+  if (line[1] || memcmp(line + 1, line + 2, options->header.cupsBytesPerLine - 3))
+  {
+    // Not a blank line, feed for any prior blank lines...
+    if (dymo->feed)
+    {
+      while (dymo->feed > 255)
+      {
+	lprintPrintfDevice(device, "\033f\001%c", 255);
+	dymo->feed -= 255;
+      }
+
+      lprintPrintfDevice(device, "\033f\001%c", dymo->feed);
+      dymo->feed = 0;
+    }
+
+    // Then write the non-blank line...
+    buffer[0] = 0x16;
+    memcpy(buffer, line + 1, options->header.cupsBytesPerLine - 2);
+    lprintWriteDevice(device, buffer, options->header.cupsBytesPerLine - 1);
+  }
+  else
+  {
+    // Blank line, accumulate the feed...
+    dymo->feed ++;
+  }
 
   return (1);
 }
