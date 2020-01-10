@@ -206,7 +206,7 @@ lprint_pwg_rstartjob(
 
   job->printer->driver->job_data = pwg;
 
-  pwg->fd  = lprintCreateJobFile(job, outname, sizeof(outname), job->system->directory, "out");
+  pwg->fd  = lprintCreateJobFile(job, outname, sizeof(outname), job->system->directory, "out.pwg");
   pwg->ras = cupsRasterOpen(pwg->fd, CUPS_RASTER_WRITE_PWG);
 
   lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "Writing PWG output to '%s'.", outname);

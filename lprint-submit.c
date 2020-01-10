@@ -126,7 +126,7 @@ lprintDoSubmit(
 
     response = cupsDoFileRequest(http, request, resource, filename);
 
-    if ((job_id = ippFindAttribute(response, "job-id", IPP_TAG_INTEGER)) != NULL)
+    if ((job_id = ippFindAttribute(response, "job-id", IPP_TAG_INTEGER)) == NULL)
     {
       fprintf(stderr, "lprint: Unable to print '%s' - %s\n", filename, cupsLastErrorString());
       ippDelete(response);

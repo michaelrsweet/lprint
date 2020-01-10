@@ -534,7 +534,7 @@ process_png(lprint_job_t *job)		// I - Job
 
     // Trailing blank space...
     memset(line, 0, options.header.cupsBytesPerLine);
-    for (; y < yend; y ++)
+    for (; y < options.header.cupsHeight; y ++)
     {
       if (!(driver->rwrite)(job, &options, y, line))
       {
