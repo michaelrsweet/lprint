@@ -439,6 +439,8 @@ process_png(lprint_job_t *job)		// I - Job
     goto abort_job;
   }
 
+  // TODO: support PNG rotation
+
   // Figure out the scaling and rotation of the image...
   xsize = options.header.cupsWidth;
   ysize = xsize * png.height / png.width;
