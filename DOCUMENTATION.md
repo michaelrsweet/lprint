@@ -151,10 +151,10 @@ printer.  Use the "drivers" sub-command to list the available drivers:
 
     lprint drivers
 
-For a ZPL printer you can just use "zpl" since that driver can query the
-printer's capabilities automatically:
+For example, the common 4-inch Zebra printer uses the "zebra_zpl-4inch-203dpi"
+driver:
 
-    lprint add -d myprinter -v socket://192.168.0.42 -m zpl
+    lprint add -d myprinter -v socket://192.168.0.42 -m zebra_zpl-4inch-203dpi
 
 
 Printing Options
