@@ -57,7 +57,10 @@ static const char * const lprint_drivers[] =
   "dymo_lw-wireless",
   "pwg_2inch",
   "pwg_4inch",
-  "zebra_zpl"
+  "zebra_zpl-2inch-203dpi",
+  "zebra_zpl-2inch-300dpi",
+  "zebra_zpl-4inch-203dpi",
+  "zebra_zpl-4inch-300dpi"
 };
 
 static const char * const lprint_models[] =
@@ -89,7 +92,10 @@ static const char * const lprint_models[] =
   "Dymo LabelWriter Wireless",
   "PWG Raster 2 inch Test Printer",
   "PWG Raster 4 inch Test Printer",
-  "Zebra ZPL Label Printer"
+  "Zebra ZPL 2 inch/203dpi Printer",
+  "Zebra ZPL 2 inch/300dpi Printer",
+  "Zebra ZPL 4 inch/203dpi Printer",
+  "Zebra ZPL 4 inch/300dpi Printer"
 };
 
 

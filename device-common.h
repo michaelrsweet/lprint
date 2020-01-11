@@ -53,6 +53,7 @@ extern void		lprintCloseDevice(lprint_device_t *device);
 extern void		lprintListDevices(lprint_device_cb_t cb, const void *user_data);
 extern lprint_device_t	*lprintOpenDevice(const char *device_uri);
 extern ssize_t		lprintPrintfDevice(lprint_device_t *device, const char *format, ...) LPRINT_FORMAT(2, 3);
+extern ssize_t		lprintPutsDevice(lprint_device_t *device, const char *s);
 extern ssize_t		lprintReadDevice(lprint_device_t *device, void *buffer, size_t bytes);
 extern ssize_t		lprintWriteDevice(lprint_device_t *device, const void *buffer, size_t bytes);
 

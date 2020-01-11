@@ -2,6 +2,8 @@
 // Dymo driver for LPrint, a Label Printer Utility
 //
 // Copyright © 2019-2020 by Michael R Sweet.
+// Copyright © 2007-2019 by Apple Inc.
+// Copyright © 2001-2007 by Easy Software Products.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -101,7 +103,7 @@ lprintInitDYMO(
   driver->x_resolution[0] = 203;
   driver->y_resolution[0] = 203;
 
-  driver->left_right = 70;
+  driver->left_right = 100;
   driver->bottom_top = 525;
 
   driver->num_media = (int)(sizeof(lprint_dymo_media) / sizeof(lprint_dymo_media[0]));
@@ -114,8 +116,8 @@ lprintInitDYMO(
   if (strstr(driver->name, "-duo") || strstr(driver->name, "-twin"))
   {
     driver->num_source = 2;
-    driver->source[0]  = "roll-1";
-    driver->source[1]  = "roll-2";
+    driver->source[0]  = "main-roll";
+    driver->source[1]  = "alternate-roll";
 
     strlcpy(driver->media_ready[0], "oe_multipurpose-label_2x2.3125in", sizeof(driver->media_ready[0]));
     strlcpy(driver->media_ready[1], "oe_address-label_1.25x3.5in", sizeof(driver->media_ready[1]));
@@ -160,6 +162,20 @@ lprint_dymo_print(
   char		buffer[65536];		// Read/write buffer
 
 
+  // Reset the printer...
+  lprintPutsDevice(device, "\033\033\033\033\033\033\033\033\033\033"
+			   "\033\033\033\033\033\033\033\033\033\033"
+			   "\033\033\033\033\033\033\033\033\033\033"
+			   "\033\033\033\033\033\033\033\033\033\033"
+			   "\033\033\033\033\033\033\033\033\033\033"
+			   "\033\033\033\033\033\033\033\033\033\033"
+			   "\033\033\033\033\033\033\033\033\033\033"
+			   "\033\033\033\033\033\033\033\033\033\033"
+			   "\033\033\033\033\033\033\033\033\033\033"
+			   "\033\033\033\033\033\033\033\033\033\033"
+			   "\033@");
+
+  // Copy the raw file...
   job->impressions = 1;
 
   infd  = open(job->filename, O_RDONLY);
@@ -220,7 +236,7 @@ lprint_dymo_rendpage(
   (void)options;
   (void)page;
 
-  lprintPrintfDevice(device, "\033E");
+  lprintPutsDevice(device, "\033E");
 
   return (1);
 }
@@ -245,17 +261,17 @@ lprint_dymo_rstartjob(
 
   job->printer->driver->job_data = dymo;
 
-  lprintPrintfDevice(device, "\033\033\033\033\033\033\033\033\033\033"
-                             "\033\033\033\033\033\033\033\033\033\033"
-                             "\033\033\033\033\033\033\033\033\033\033"
-                             "\033\033\033\033\033\033\033\033\033\033"
-                             "\033\033\033\033\033\033\033\033\033\033"
-                             "\033\033\033\033\033\033\033\033\033\033"
-                             "\033\033\033\033\033\033\033\033\033\033"
-                             "\033\033\033\033\033\033\033\033\033\033"
-                             "\033\033\033\033\033\033\033\033\033\033"
-                             "\033\033\033\033\033\033\033\033\033\033"
-                             "\033@");
+  lprintPutsDevice(device, "\033\033\033\033\033\033\033\033\033\033"
+			   "\033\033\033\033\033\033\033\033\033\033"
+			   "\033\033\033\033\033\033\033\033\033\033"
+			   "\033\033\033\033\033\033\033\033\033\033"
+			   "\033\033\033\033\033\033\033\033\033\033"
+			   "\033\033\033\033\033\033\033\033\033\033"
+			   "\033\033\033\033\033\033\033\033\033\033"
+			   "\033\033\033\033\033\033\033\033\033\033"
+			   "\033\033\033\033\033\033\033\033\033\033"
+			   "\033\033\033\033\033\033\033\033\033\033"
+			   "\033@");
 
   return (1);
 }
@@ -288,7 +304,7 @@ lprint_dymo_rstartpage(
 
   lprintPrintfDevice(device, "\033L%c%c", options->header.cupsHeight >> 8, options->header.cupsHeight);
   lprintPrintfDevice(device, "\033D%c", options->header.cupsBytesPerLine - 2);
-  lprintPrintfDevice(device, "\033q%d", !strcmp(options->media_source, "roll-2") ? 2 : 1);
+  lprintPrintfDevice(device, "\033q%d", !strcmp(options->media_source, "alternate-roll") ? 2 : 1);
 
   if (darkness < 0)
     darkness = 0;

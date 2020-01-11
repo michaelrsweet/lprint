@@ -100,6 +100,9 @@ lprintInitPWG(
     memcpy(driver->media, lprint_pwg_4inch_media, sizeof(lprint_pwg_4inch_media));
   }
 
+  driver->left_right = 312;		// 1/16" left and right
+  driver->bottom_top = 625;		// 1/8" top and bottom
+
   driver->num_source = 2;
   driver->source[0]  = "main-roll";
   driver->source[1]  = "alternate-roll";

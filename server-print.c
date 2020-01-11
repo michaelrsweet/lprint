@@ -384,6 +384,8 @@ process_png(lprint_job_t *job)		// I - Job
   lprint_options_t	options;	// Job options
   png_image		png;		// PNG image data
   png_color		bg;		// Background color
+  unsigned		iwidth,		// Imageable width
+			iheight;	// Imageable length/height
   unsigned char		*line = NULL,	// Output line
 			*lineptr,	// Pointer in line
 			byte,		// Byte in line
@@ -407,6 +409,11 @@ process_png(lprint_job_t *job)		// I - Job
   prepare_options(job, &options, 1);
   options.header.cupsInteger[CUPS_RASTER_PWG_TotalPageCount] = options.copies;
   job->impressions = options.copies;
+
+  iwidth  = options.header.cupsWidth - 2 * job->printer->driver->left_right * options.printer_resolution[0] / 2540;
+  iheight = options.header.cupsHeight - 2 * job->printer->driver->bottom_top * options.printer_resolution[1] / 2540;
+
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "iwidth=%u, iheight=%u", iwidth, iheight);
 
   // Load the PNG...
   memset(&png, 0, sizeof(png));
@@ -442,11 +449,11 @@ process_png(lprint_job_t *job)		// I - Job
   // TODO: support PNG rotation
 
   // Figure out the scaling and rotation of the image...
-  xsize = options.header.cupsWidth;
+  xsize = iwidth;
   ysize = xsize * png.height / png.width;
-  if (ysize > options.header.cupsHeight)
+  if (ysize > iheight)
   {
-    ysize = options.header.cupsHeight;
+    ysize = iheight;
     xsize = ysize * png.width / png.height;
   }
 

@@ -169,6 +169,19 @@ lprintPrintfDevice(
 
 
 //
+// 'lprintPutsDevice()' - Write a literal string.
+//
+
+ssize_t					// O - Number of characters or -1 on error
+lprintPutsDevice(
+    lprint_device_t *device,		// I - Device
+    const char      *s)			// I - Literal string
+{
+  return (lprintWriteDevice(device, s, strlen(s)));
+}
+
+
+//
 // 'lprintReadDevice()' - Read from a device.
 //
 
