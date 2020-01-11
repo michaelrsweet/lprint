@@ -33,6 +33,22 @@ if test "x$host_os_version" = x; then
 fi
 
 
+dnl Compiler options...
+CFLAGS="${CFLAGS:=}"
+CXXFLAGS="${CXXFLAGS:=}"
+LDFLAGS="${LDFLAGS:=}"
+LIBS="${LIBS:=}"
+
+AC_ARG_ENABLE(debug, [  --enable-debug          turn on debugging, default=no])
+if test x$enable_debug = xyes; then
+	CFLAGS="-g $CFLAGS"
+	LDFLAGS="-g $LDFLAGS"
+else
+	CFLAGS="-g -Os $CFLAGS"
+	LDFLAGS="-g -Os $LDFLAGS"
+fi
+
+
 dnl Standard programs...
 AC_PROG_CC(clang cc gcc)
 AC_PROG_RANLIB
@@ -67,19 +83,6 @@ fi
 
 dnl Check for pkg-config, which is used for some other tests later on...
 AC_PATH_TOOL(PKGCONFIG, pkg-config)
-
-
-dnl Compiler options...
-CFLAGS="${CFLAGS:=}"
-CXXFLAGS="${CXXFLAGS:=}"
-LDFLAGS="${LDFLAGS:=}"
-LIBS="${LIBS:=}"
-
-AC_ARG_ENABLE(debug, [  --enable-debug          turn on debugging, default=no])
-if eval "test x$enable_debug = xyes"; then
-	CFLAGS="-g $(CFLAGS)"
-	LDFLAGS="-g $(LDFLAGS)"
-fi
 
 
 dnl CUPS library...

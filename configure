@@ -2178,6 +2178,25 @@ if test "x$host_os_version" = x; then
 fi
 
 
+CFLAGS="${CFLAGS:=}"
+CXXFLAGS="${CXXFLAGS:=}"
+LDFLAGS="${LDFLAGS:=}"
+LIBS="${LIBS:=}"
+
+# Check whether --enable-debug was given.
+if test "${enable_debug+set}" = set; then :
+  enableval=$enable_debug;
+fi
+
+if test x$enable_debug = xyes; then
+	CFLAGS="-g $CFLAGS"
+	LDFLAGS="-g $LDFLAGS"
+else
+	CFLAGS="-g -Os $CFLAGS"
+	LDFLAGS="-g -Os $LDFLAGS"
+fi
+
+
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -3207,22 +3226,6 @@ else
   PKGCONFIG="$ac_cv_path_PKGCONFIG"
 fi
 
-
-
-CFLAGS="${CFLAGS:=}"
-CXXFLAGS="${CXXFLAGS:=}"
-LDFLAGS="${LDFLAGS:=}"
-LIBS="${LIBS:=}"
-
-# Check whether --enable-debug was given.
-if test "${enable_debug+set}" = set; then :
-  enableval=$enable_debug;
-fi
-
-if eval "test x$enable_debug = xyes"; then
-	CFLAGS="-g $(CFLAGS)"
-	LDFLAGS="-g $(LDFLAGS)"
-fi
 
 
 # Check whether --enable-static_cups was given.
