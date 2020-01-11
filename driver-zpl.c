@@ -50,6 +50,9 @@ static const char * const lprint_zpl_2inch_media[] =
   "oe_2x3-label_2x3in",
   "oe_2x4-label_2x4in",
   "oe_2x5.5-label_2x5.5in",
+
+  "roll_max_2x39.6in",
+  "roll_min_0.75x0.25in"
 };
 static const char * const lprint_zpl_4inch_media[] =
 {					// Supported 4 inch media sizes
@@ -107,6 +110,9 @@ static const char * const lprint_zpl_4inch_media[] =
   "oe_4x6-label_4x6in",
   "oe_4x6.5-label_4x6.5in",
   "oe_4x13-label_4x13in",
+
+  "roll_max_4x39.6in",
+  "roll_min_0.75x0.25in"
 
 /*
   "oe_6x1-label_6x1in",
@@ -185,9 +191,7 @@ lprintInitZPL(
     driver->num_media = (int)(sizeof(lprint_zpl_2inch_media) / sizeof(lprint_zpl_2inch_media[0]));
     memcpy(driver->media, lprint_zpl_2inch_media, sizeof(lprint_zpl_2inch_media));
 
-    strlcpy(driver->max_media, "roll_max_2x39.6in", sizeof(driver->max_media));
-    strlcpy(driver->min_media, "roll_min_0.75x0.25in", sizeof(driver->min_media));
-    strlcpy(driver->media_default, "oe_2x3-label_2x3in", sizeof(driver->media_default));
+    strlcpy(driver->media_default.size_name, "oe_2x3-label_2x3in", sizeof(driver->media_default.size_name));
   }
   else
   {
@@ -195,28 +199,30 @@ lprintInitZPL(
     driver->num_media = (int)(sizeof(lprint_zpl_4inch_media) / sizeof(lprint_zpl_4inch_media[0]));
     memcpy(driver->media, lprint_zpl_4inch_media, sizeof(lprint_zpl_4inch_media));
 
-    strlcpy(driver->max_media, "roll_max_4x39.6in", sizeof(driver->max_media));
-    strlcpy(driver->min_media, "roll_min_0.75x0.25in", sizeof(driver->min_media));
-    strlcpy(driver->media_default, "oe_4x6-label_4x6in", sizeof(driver->media_default));
+    strlcpy(driver->media_default.size_name, "oe_4x6-label_4x6in", sizeof(driver->media_default.size_name));
   }
 
   driver->num_source = 1;
   driver->source[0]  = "main-roll";
 
-  strlcpy(driver->media_ready[0], driver->media_default, sizeof(driver->media_ready[0]));
-  strlcpy(driver->source_default, "main-roll", sizeof(driver->source_default));
-
-  driver->top_offset_default      = 0;
   driver->top_offset_supported[0] = -1500;
   driver->top_offset_supported[1] = 1500;
-
-  driver->tracking_default   = LPRINT_MEDIA_TRACKING_MARK;
-  driver->tracking_supported = LPRINT_MEDIA_TRACKING_MARK | LPRINT_MEDIA_TRACKING_WEB | LPRINT_MEDIA_TRACKING_CONTINUOUS;
+  driver->tracking_supported      = LPRINT_MEDIA_TRACKING_MARK | LPRINT_MEDIA_TRACKING_WEB | LPRINT_MEDIA_TRACKING_CONTINUOUS;
 
   driver->num_type = 2;
   driver->type[0]  = "labels";
   driver->type[1]  = "continuous";
-  strlcpy(driver->type_default, "labels", sizeof(driver->type_default));
+
+  driver->media_default.bottom_margin = driver->bottom_top;
+  driver->media_default.left_margin   = driver->left_right;
+  driver->media_default.right_margin  = driver->left_right;
+  strlcpy(driver->media_default.source, "main-roll", sizeof(driver->media_default.source));
+  driver->media_default.top_margin = driver->bottom_top;
+  driver->media_default.top_offset = 0;
+  driver->media_default.tracking   = LPRINT_MEDIA_TRACKING_MARK;
+  strlcpy(driver->media_default.type, "labels", sizeof(driver->media_default.type));
+
+  driver->media_ready[0] = driver->media_default;
 
   driver->mode_configured = LPRINT_LABEL_MODE_TEAR_OFF;
   driver->mode_configured = LPRINT_LABEL_MODE_APPLICATOR | LPRINT_LABEL_MODE_CUTTER | LPRINT_LABEL_MODE_CUTTER_DELAYED | LPRINT_LABEL_MODE_KIOSK | LPRINT_LABEL_MODE_PEEL_OFF | LPRINT_LABEL_MODE_PEEL_OFF_PREPEEL | LPRINT_LABEL_MODE_REWIND | LPRINT_LABEL_MODE_RFID | LPRINT_LABEL_MODE_TEAR_OFF;
@@ -367,13 +373,13 @@ lprint_zpl_rendpage(
 
   (void)page;
 
-  lprintPrintfDevice(device, "^XA\n^POI\n^PW%u\n^LH0,0\n^LT%d\n", options->header.cupsWidth, options->media_top_offset * options->printer_resolution[1] / 2540);
+  lprintPrintfDevice(device, "^XA\n^POI\n^PW%u\n^LH0,0\n^LT%d\n", options->header.cupsWidth, options->media.top_offset * options->printer_resolution[1] / 2540);
 
-  if (options->media_tracking)
+  if (options->media.tracking)
   {
-    if (!strcmp(options->media_tracking, "continuous"))
+    if (options->media.tracking == LPRINT_MEDIA_TRACKING_CONTINUOUS)
       lprintPrintfDevice(device, "^LL%d\n^MNN\n", options->header.cupsHeight);
-    else if (!strcmp(options->media_tracking, "web"))
+    else if (options->media.tracking == LPRINT_MEDIA_TRACKING_WEB)
       lprintPutsDevice(device, "^MNY\n");
     else
       lprintPutsDevice(device, "^MNM\n");

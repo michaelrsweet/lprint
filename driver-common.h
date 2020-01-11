@@ -41,20 +41,50 @@ typedef struct lprint_job_s lprint_job_t;
 typedef unsigned char lprint_dither_t[16];
 					// Dither array
 
+enum lprint_label_mode_e		// Label printing modes
+{
+  LPRINT_LABEL_MODE_APPLICATOR = 0x0001,
+  LPRINT_LABEL_MODE_CUTTER = 0x0002,
+  LPRINT_LABEL_MODE_CUTTER_DELAYED = 0x0004,
+  LPRINT_LABEL_MODE_KIOSK = 0x0008,
+  LPRINT_LABEL_MODE_PEEL_OFF = 0x0010,
+  LPRINT_LABEL_MODE_PEEL_OFF_PREPEEL = 0x0020,
+  LPRINT_LABEL_MODE_REWIND = 0x0040,
+  LPRINT_LABEL_MODE_RFID = 0x0080,
+  LPRINT_LABEL_MODE_TEAR_OFF = 0x0100
+};
+typedef unsigned short lprint_label_mode_t;
+
+enum lprint_media_tracking_e		// Media tracking modes
+{
+  LPRINT_MEDIA_TRACKING_CONTINUOUS = 0x0001,
+  LPRINT_MEDIA_TRACKING_MARK = 0x0002,
+  LPRINT_MEDIA_TRACKING_WEB = 0x0004
+};
+typedef unsigned short lprint_media_tracking_t;
+
+typedef struct lprint_media_col_s	// Media details
+{
+  int			bottom_margin,	// Bottom margin in hundredths of millimeters
+			left_margin,	// Left margin in hundredths of millimeters
+			right_margin,	// Right margin in hundredths of millimeters
+			size_width,	// Width in hundredths of millimeters
+			size_length;	// Height in hundredths of millimeters
+  char			size_name[64],	// PWG media size name
+			source[64];	// PWG media source name
+  int			top_margin,	// Top margin in hundredths of millimeters
+			top_offset;	// Top offset in hundredths of millimeters
+  lprint_media_tracking_t tracking;	// Media tracking
+  char			type[64];	// PWG media type name
+} lprint_media_col_t;
+
 typedef struct lprint_options_s		// Computed job options
 {
   cups_page_header2_t	header;		// Raster header
   unsigned		num_pages;	// Number of pages in job
   const lprint_dither_t	*dither;	// Dither array
   int			copies;	 	// copies
-  pwg_media_t		*media_size;	// media dimensions
-  const char		*media_size_name,
-					// media name
-			*media_source;	// media-source
-  int			media_top_offset;
-					// media-top-offset
-  const char		*media_tracking,// media-tracking
-			*media_type;	// media-type
+  lprint_media_col_t	media;		// media/media-col
   ipp_orient_t		orientation_requested;
 					// orientation-requested
   const char		*print_color_mode,
@@ -82,28 +112,6 @@ typedef int (*lprint_rwritefunc_t)(lprint_job_t *job, lprint_options_t *options,
 					// Write a line of raster graphics
 typedef int (*lprint_statusfunc_t)(lprint_printer_t *printer);
 					// Update printer status
-
-enum lprint_label_mode_e		// Label printing modes
-{
-  LPRINT_LABEL_MODE_APPLICATOR = 0x0001,
-  LPRINT_LABEL_MODE_CUTTER = 0x0002,
-  LPRINT_LABEL_MODE_CUTTER_DELAYED = 0x0004,
-  LPRINT_LABEL_MODE_KIOSK = 0x0008,
-  LPRINT_LABEL_MODE_PEEL_OFF = 0x0010,
-  LPRINT_LABEL_MODE_PEEL_OFF_PREPEEL = 0x0020,
-  LPRINT_LABEL_MODE_REWIND = 0x0040,
-  LPRINT_LABEL_MODE_RFID = 0x0080,
-  LPRINT_LABEL_MODE_TEAR_OFF = 0x0100
-};
-typedef unsigned short lprint_label_mode_t;
-
-enum lprint_media_tracking_e		// Media tracking modes
-{
-  LPRINT_MEDIA_TRACKING_CONTINUOUS = 0x0001,
-  LPRINT_MEDIA_TRACKING_MARK = 0x0002,
-  LPRINT_MEDIA_TRACKING_WEB = 0x0004
-};
-typedef unsigned short lprint_media_tracking_t;
 
 typedef struct lprint_supply_s		// Supply data
 {
@@ -133,35 +141,24 @@ typedef struct lprint_driver_s		// Driver data
 			x_resolution[LPRINT_MAX_RESOLUTION],
 			y_resolution[LPRINT_MAX_RESOLUTION];
 					// Printer resolutions
-  int			left_right,	// Left and right margins (1/2540ths)
-			bottom_top;	// Bottom and top margins (1/2540ths)
+  int			left_right,	// Left and right margins in hundredths of millimeters
+			bottom_top;	// Bottom and top margins in hundredths of millimeters
   int			num_media;	// Number of supported media
   const char		*media[LPRINT_MAX_MEDIA];
 					// Supported media
-  char			max_media[64],	// Maximum media size
-			min_media[64],	// Minimum media size
-			media_default[64],
-					// Default media
-			media_ready[LPRINT_MAX_SOURCE][64];
-					// Ready media sizes
+  lprint_media_col_t	media_default,	// Default media
+			media_ready[LPRINT_MAX_SOURCE];
+					// Ready media
   int			num_source;	// Number of media sources (rolls)
   const char		*source[LPRINT_MAX_SOURCE];
 					// Media sources
-  char			source_default[64];
-					// Default media source
-  int			top_offset_default,
-					// Default media-top-offset
-			top_offset_supported[2];
+  int			top_offset_supported[2];
 					// media-top-offset-supported (0,0 for none)
-  lprint_media_tracking_t tracking_default,
-					// Default media-tracking
-			tracking_supported;
+  lprint_media_tracking_t tracking_supported;
 					// media-tracking-supported
   int			num_type;	// Number of media types
   const char		*type[LPRINT_MAX_TYPE];
 					// Media types
-  char			type_default[64];
-					// Default media type
   lprint_label_mode_t	mode_configured,// label-mode-configured
 			mode_supported;	// label-mode-supported
   int			tear_offset_configured,
@@ -185,7 +182,7 @@ typedef struct lprint_driver_s		// Driver data
 //
 
 extern lprint_driver_t	*lprintCreateDriver(const char *driver_name);
-extern ipp_t		*lprintCreateMediaCol(const char *size_name, const char *source, const char *type, int left_right, int bottom_top);
+extern ipp_t		*lprintCreateMediaCol(lprint_media_col_t *media, int db);
 extern void		lprintDeleteDriver(lprint_driver_t *driver);
 extern const char * const *lprintGetDrivers(int *num_drivers);
 extern const char	*lprintGetMakeAndModel(const char *driver_name);

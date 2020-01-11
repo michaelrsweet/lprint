@@ -63,7 +63,10 @@ static const char * const lprint_dymo_media[] =
   "oe_2-part-internet-postage-label_2.25x7.5in",
   "oe_shipping-label_2.3125x4in",
   "oe_internet-postage-label_2.3125x7in",
-  "oe_internet-postage-confirmation-label_2.3125x10.5in"
+  "oe_internet-postage-confirmation-label_2.3125x10.5in",
+
+  "roll_max_2.3125x3600in",
+  "roll_min_0.25x0.25in"
 };
 
 
@@ -88,6 +91,9 @@ void
 lprintInitDYMO(
     lprint_driver_t *driver)		// I - Driver
 {
+  int	i;				// Looping var
+
+
   pthread_rwlock_wrlock(&driver->rwlock);
 
   driver->print      = lprint_dymo_print;
@@ -109,33 +115,52 @@ lprintInitDYMO(
   driver->num_media = (int)(sizeof(lprint_dymo_media) / sizeof(lprint_dymo_media[0]));
   memcpy(driver->media, lprint_dymo_media, sizeof(lprint_dymo_media));
 
-  strlcpy(driver->max_media, "roll_max_2.3125x3600in", sizeof(driver->max_media));
-  strlcpy(driver->min_media, "roll_min_0.25x0.25in", sizeof(driver->min_media));
-  strlcpy(driver->media_default, "oe_address-label_1.25x3.5in", sizeof(driver->media_default));
-
   if (strstr(driver->name, "-duo") || strstr(driver->name, "-twin"))
   {
     driver->num_source = 2;
     driver->source[0]  = "main-roll";
     driver->source[1]  = "alternate-roll";
 
-    strlcpy(driver->media_ready[0], "oe_multipurpose-label_2x2.3125in", sizeof(driver->media_ready[0]));
-    strlcpy(driver->media_ready[1], "oe_address-label_1.25x3.5in", sizeof(driver->media_ready[1]));
+    strlcpy(driver->media_ready[0].size_name, "oe_multipurpose-label_2x2.3125in", sizeof(driver->media_ready[0].size_name));
+    strlcpy(driver->media_ready[1].size_name, "oe_address-label_1.25x3.5in", sizeof(driver->media_ready[1].size_name));
   }
   else
   {
     driver->num_source = 1;
     driver->source[0]  = "main-roll";
-    strlcpy(driver->media_ready[0], "oe_address-label_1.25x3.5in", sizeof(driver->media_ready[0]));
+    strlcpy(driver->media_ready[0].size_name, "oe_address-label_1.25x3.5in", sizeof(driver->media_ready[0].size_name));
   }
-  strlcpy(driver->source_default, driver->source[0], sizeof(driver->source_default));
 
-  driver->tracking_default   = LPRINT_MEDIA_TRACKING_MARK;
   driver->tracking_supported = LPRINT_MEDIA_TRACKING_MARK;
 
   driver->num_type = 1;
   driver->type[0]  = "labels";
-  strlcpy(driver->type_default, driver->type[0], sizeof(driver->type_default));
+
+  driver->media_default.bottom_margin = 525;
+  driver->media_default.left_margin   = 100;
+  driver->media_default.right_margin  = 100;
+  driver->media_default.size_width    = 3175;
+  driver->media_default.size_length   = 8890;
+  driver->media_default.top_margin    = 525;
+  driver->media_default.tracking      = LPRINT_MEDIA_TRACKING_MARK;
+  strlcpy(driver->media_default.size_name, "oe_address-label_1.25x3.5in", sizeof(driver->media_default.size_name));
+  strlcpy(driver->media_default.source, driver->source[0], sizeof(driver->media_default.source));
+  strlcpy(driver->media_default.type, driver->type[0], sizeof(driver->media_default.type));
+
+  for (i = 0; i < driver->num_source; i ++)
+  {
+    pwg_media_t *pwg = pwgMediaForPWG(driver->media_ready[i].size_name);
+
+    driver->media_ready[i].bottom_margin = 525;
+    driver->media_ready[i].left_margin   = 100;
+    driver->media_ready[i].right_margin  = 100;
+    driver->media_ready[i].size_width    = pwg->width;
+    driver->media_ready[i].size_length   = pwg->length;
+    driver->media_ready[i].top_margin    = 525;
+    driver->media_ready[i].tracking      = LPRINT_MEDIA_TRACKING_MARK;
+    strlcpy(driver->media_ready[i].source, driver->source[i], sizeof(driver->media_ready[i].source));
+    strlcpy(driver->media_ready[i].type, driver->type[0], sizeof(driver->media_ready[i].type));
+  }
 
   driver->darkness_configured = 50;
   driver->darkness_supported  = 4;
@@ -304,7 +329,7 @@ lprint_dymo_rstartpage(
 
   lprintPrintfDevice(device, "\033L%c%c", options->header.cupsHeight >> 8, options->header.cupsHeight);
   lprintPrintfDevice(device, "\033D%c", options->header.cupsBytesPerLine - 2);
-  lprintPrintfDevice(device, "\033q%d", !strcmp(options->media_source, "alternate-roll") ? 2 : 1);
+  lprintPrintfDevice(device, "\033q%d", !strcmp(options->media.source, "alternate-roll") ? 2 : 1);
 
   if (darkness < 0)
     darkness = 0;

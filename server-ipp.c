@@ -541,9 +541,9 @@ copy_printer_attributes(
   lprintCopyAttributes(client->response, printer->driver->attrs, ra, IPP_TAG_ZERO, IPP_TAG_CUPS_CONST);
   copy_printer_state(client->response, printer, ra);
 
-  if ((!ra || cupsArrayFind(ra, "media-col-default")) && printer->driver->media_default[0])
+  if ((!ra || cupsArrayFind(ra, "media-col-default")) && printer->driver->media_default.size_name[0])
   {
-    ipp_t *col = lprintCreateMediaCol(printer->driver->media_default, NULL, NULL, printer->driver->left_right, printer->driver->bottom_top);
+    ipp_t *col = lprintCreateMediaCol(&printer->driver->media_default, 0);
 					// Collection value
 
     ippAddCollection(client->response, IPP_TAG_PRINTER, "media-col", col);
@@ -559,7 +559,7 @@ copy_printer_attributes(
 
     for (i = 0, count = 0; i < printer->driver->num_source; i ++)
     {
-      if (printer->driver->media_ready[i][0])
+      if (printer->driver->media_ready[i].size_name[0])
         count ++;
     }
 
@@ -569,9 +569,9 @@ copy_printer_attributes(
 
       for (i = 0, j = 0; i < printer->driver->num_source && j < count; i ++)
       {
-	if (printer->driver->media_ready[i][0])
+	if (printer->driver->media_ready[i].size_name[0])
 	{
-	  col = lprintCreateMediaCol(printer->driver->media_ready[i], printer->driver->source[i], NULL, printer->driver->left_right, printer->driver->bottom_top);
+	  col = lprintCreateMediaCol(printer->driver->media_ready + i, 0);
           ippSetCollection(client->response, &attr, j ++, col);
           ippDelete(col);
 	}
@@ -579,8 +579,8 @@ copy_printer_attributes(
     }
   }
 
-  if ((!ra || cupsArrayFind(ra, "media-default")) && printer->driver->media_default[0])
-    ippAddString(client->response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-default", NULL, printer->driver->media_default);
+  if ((!ra || cupsArrayFind(ra, "media-default")) && printer->driver->media_default.size_name[0])
+    ippAddString(client->response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-default", NULL, printer->driver->media_default.size_name);
 
   if (!ra || cupsArrayFind(ra, "media-ready"))
   {
@@ -590,7 +590,7 @@ copy_printer_attributes(
 
     for (i = 0, count = 0; i < printer->driver->num_source; i ++)
     {
-      if (printer->driver->media_ready[i][0])
+      if (printer->driver->media_ready[i].size_name[0])
         count ++;
     }
 
@@ -600,8 +600,8 @@ copy_printer_attributes(
 
       for (i = 0, j = 0; i < printer->driver->num_source && j < count; i ++)
       {
-	if (printer->driver->media_ready[i][0])
-	  ippSetString(client->response, &attr, j ++, printer->driver->media_ready[i]);
+	if (printer->driver->media_ready[i].size_name[0])
+	  ippSetString(client->response, &attr, j ++, printer->driver->media_ready[i].size_name);
       }
     }
   }
@@ -1982,9 +1982,10 @@ set_printer_attributes(
 
     name = ippGetName(rattr);
 
+    // TODO: add media-col-default/media-col-ready set support
     if (!strcmp(name, "media-default"))
     {
-      strlcpy(printer->driver->media_default, ippGetString(rattr, 0, NULL), sizeof(printer->driver->media_default));
+      strlcpy(printer->driver->media_default.size_name, ippGetString(rattr, 0, NULL), sizeof(printer->driver->media_default.size_name));
     }
     else if (!strcmp(name, "media-ready"))
     {
@@ -1995,11 +1996,11 @@ set_printer_attributes(
         const char *media = ippGetString(rattr, i, NULL);
 					// Media value
 
-        strlcpy(printer->driver->media_ready[i], media, sizeof(printer->driver->media_ready[i]));
+        strlcpy(printer->driver->media_ready[i].size_name, media, sizeof(printer->driver->media_ready[i].size_name));
       }
 
       for (; i < LPRINT_MAX_SOURCE; i ++)
-        printer->driver->media_ready[i][0] = '\0';
+        printer->driver->media_ready[i].size_name[0] = '\0';
     }
     else if (!strcmp(name, "printer-geo-location"))
     {

@@ -190,10 +190,8 @@ prepare_options(
   // Clear all options...
   memset(options, 0, sizeof(lprint_options_t));
 
-  options->num_pages        = num_pages;
-  options->media_top_offset = driver->top_offset_default;
-  options->media_tracking   = lprintMediaTrackingString(driver->tracking_default);
-  options->media_type       = driver->type_default;
+  options->num_pages = num_pages;
+  options->media     = driver->media_default;
 
   pthread_rwlock_rdlock(&job->printer->rwlock);
   pthread_rwlock_rdlock(&job->printer->driver->rwlock);
@@ -211,60 +209,75 @@ prepare_options(
     ipp_attribute_t	*size_name = ippFindAttribute(col, "media-size-name", IPP_TAG_ZERO),
 			*x_dimension = ippFindAttribute(col, "media-size/x-dimension", IPP_TAG_INTEGER),
 			*y_dimension = ippFindAttribute(col, "media-size/y-dimension", IPP_TAG_INTEGER),
+			*bottom_margin = ippFindAttribute(col, "media-bottom-margin", IPP_TAG_INTEGER),
+			*left_margin = ippFindAttribute(col, "media-left-margin", IPP_TAG_INTEGER),
+			*right_margin = ippFindAttribute(col, "media-right-margin", IPP_TAG_INTEGER),
 			*source = ippFindAttribute(col, "media-source", IPP_TAG_ZERO),
+			*top_margin = ippFindAttribute(col, "media-top-margin", IPP_TAG_INTEGER),
 			*top_offset = ippFindAttribute(col, "media-top-offset", IPP_TAG_INTEGER),
 			*tracking = ippFindAttribute(col, "media-tracking", IPP_TAG_ZERO),
 			*type = ippFindAttribute(col, "media-type", IPP_TAG_ZERO);
 
     if (size_name)
     {
-      options->media_size_name = ippGetString(size_name, 0, NULL);
-      options->media_size      = pwgMediaForPWG(options->media_size_name);
+      const char	*pwg_name = ippGetString(size_name, 0, NULL);
+      pwg_media_t	*pwg_media = pwgMediaForPWG(pwg_name);
+
+      strlcpy(options->media.size_name, pwg_name, sizeof(options->media.size_name));
+      options->media.size_width  = pwg_media->width;
+      options->media.size_length = pwg_media->length;
     }
     else if (x_dimension && y_dimension)
     {
-      options->media_size      = pwgMediaForSize(ippGetInteger(x_dimension, 0), ippGetInteger(y_dimension, 0));
-      options->media_size_name = options->media_size->pwg;
-    }
-    else
-    {
-      options->media_size_name = job->printer->driver->media_default;
-      options->media_size      = pwgMediaForPWG(options->media_size_name);
+      pwg_media_t	*pwg_media = pwgMediaForSize(ippGetInteger(x_dimension, 0), ippGetInteger(y_dimension, 0));
+
+      strlcpy(options->media.size_name, pwg_media->pwg, sizeof(options->media.size_name));
+      options->media.size_width  = pwg_media->width;
+      options->media.size_length = pwg_media->length;
     }
 
+    if (bottom_margin)
+      options->media.bottom_margin = ippGetInteger(top_offset, 0);
+    if (left_margin)
+      options->media.left_margin = ippGetInteger(top_offset, 0);
+    if (right_margin)
+      options->media.right_margin = ippGetInteger(top_offset, 0);
     if (source)
-      options->media_source = ippGetString(source, 0, NULL);
+      strlcpy(options->media.source, ippGetString(source, 0, NULL), sizeof(options->media.source));
+    if (top_margin)
+      options->media.top_margin = ippGetInteger(top_offset, 0);
     if (top_offset)
-      options->media_top_offset = ippGetInteger(top_offset, 0);
+      options->media.top_offset = ippGetInteger(top_offset, 0);
     if (tracking)
-      options->media_tracking = ippGetString(tracking, 0, NULL);
+      options->media.tracking = lprintMediaTrackingValue(ippGetString(tracking, 0, NULL));
     if (type)
-      options->media_type = ippGetString(type, 0, NULL);
+      strlcpy(options->media.type, ippGetString(type, 0, NULL), sizeof(options->media.type));
   }
   else if ((attr = find_attr(job, "media", IPP_TAG_ZERO)) != NULL)
   {
-    options->media_size_name = ippGetString(attr, 0, NULL);
-    options->media_size      = pwgMediaForPWG(options->media_size_name);
-  }
-  else
-  {
-    options->media_size_name = job->printer->driver->media_default;
-    options->media_size      = pwgMediaForPWG(options->media_size_name);
+    const char	*pwg_name = ippGetString(attr, 0, NULL);
+    pwg_media_t	*pwg_media = pwgMediaForPWG(pwg_name);
+
+    strlcpy(options->media.size_name, pwg_name, sizeof(options->media.size_name));
+    options->media.size_width  = pwg_media->width;
+    options->media.size_length = pwg_media->length;
+
+    options->media.source[0] = '\0';
   }
 
-  if (!options->media_source)
+  if (!options->media.source[0])
   {
     for (i = 0; i < driver->num_source; i ++)
     {
-      if (!strcmp(options->media_size_name, driver->media_ready[i]))
+      if (!strcmp(options->media.size_name, driver->media_ready[i].size_name))
       {
-        options->media_source = driver->source[i];
+        strlcpy(options->media.source, driver->source[i], sizeof(options->media.source));
         break;
       }
     }
 
-    if (!options->media_source)
-      options->media_source = driver->source_default;
+    if (!options->media.source[0])
+      strlcpy(options->media.source, driver->media_default.source, sizeof(options->media.source));
   }
 
   // orientation-requested
@@ -335,7 +348,7 @@ prepare_options(
   }
 
   // Figure out the PWG raster header...
-  cupsRasterInitPWGHeader(&options->header, options->media_size, "black_1", options->printer_resolution[0], options->printer_resolution[1], "one-sided", "normal");
+  cupsRasterInitPWGHeader(&options->header, pwgMediaForPWG(options->media.size_name), "black_1", options->printer_resolution[0], options->printer_resolution[1], "one-sided", "normal");
 
   // Log options...
   lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "header.cupsWidth=%u", options->header.cupsWidth);
@@ -350,19 +363,23 @@ prepare_options(
 
   lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "num_pages=%u", options->num_pages);
   lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "copies=%d", options->copies);
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media_size=%dx%d", options->media_size->width, options->media_size->length);
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media_size_name='%s'", options->media_size_name);
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media_source='%s'", options->media_source);
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media_top_offset=%d", options->media_top_offset);
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media_tracking='%s'", options->media_tracking);
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media_type='%s'", options->media_type);
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "orientation_requested=%d", (int)options->orientation_requested);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media.bottom_margin=%d", options->media.bottom_margin);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media.left_margin=%d", options->media.left_margin);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media.right_margin=%d", options->media.right_margin);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media.size=%dx%d", options->media.size_width, options->media.size_length);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media.size_name='%s'", options->media.size_name);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media.source='%s'", options->media.source);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media.top_margin=%d", options->media.top_margin);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media.top_offset=%d", options->media.top_offset);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media.tracking='%s'", lprintMediaTrackingString(options->media.tracking));
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "media.type='%s'", options->media.type);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "orientation_requested=%s", ippEnumString("orientation-requested", (int)options->orientation_requested));
   lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "print_color_mode='%s'", options->print_color_mode);
   lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "print_content_optimize='%s'", options->print_content_optimize);
   lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "print_darkness=%d", options->print_darkness);
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "print_quality=%d", (int)options->print_quality);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "print_quality=%s", ippEnumString("print-quality", (int)options->print_quality));
   lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "print_speed=%d", options->print_speed);
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "printer_resolution=%dx%d", options->printer_resolution[0], options->printer_resolution[1]);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "printer_resolution=%dx%ddpi", options->printer_resolution[0], options->printer_resolution[1]);
 
   pthread_rwlock_unlock(&job->printer->driver->rwlock);
   pthread_rwlock_unlock(&job->printer->rwlock);
@@ -384,7 +401,9 @@ process_png(lprint_job_t *job)		// I - Job
   lprint_options_t	options;	// Job options
   png_image		png;		// PNG image data
   png_color		bg;		// Background color
-  unsigned		iwidth,		// Imageable width
+  unsigned		ileft,		// Imageable left margin
+			itop,		// Imageable top margin
+			iwidth,		// Imageable width
 			iheight;	// Imageable length/height
   unsigned char		*line = NULL,	// Output line
 			*lineptr,	// Pointer in line
@@ -415,10 +434,12 @@ process_png(lprint_job_t *job)		// I - Job
   options.header.cupsInteger[CUPS_RASTER_PWG_TotalPageCount] = options.copies;
   job->impressions = options.copies;
 
-  iwidth  = options.header.cupsWidth - 2 * job->printer->driver->left_right * options.printer_resolution[0] / 2540;
-  iheight = options.header.cupsHeight - 2 * job->printer->driver->bottom_top * options.printer_resolution[1] / 2540;
+  ileft   = options.media.left_margin * options.printer_resolution[0] / 2540;
+  itop    = options.media.top_margin * options.printer_resolution[1] / 2540;
+  iwidth  = options.header.cupsWidth - (options.media.left_margin + options.media.right_margin) * options.printer_resolution[0] / 2540;
+  iheight = options.header.cupsHeight - (options.media.bottom_margin + options.media.top_margin) * options.printer_resolution[1] / 2540;
 
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "iwidth=%u, iheight=%u", iwidth, iheight);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "ileft=%u, itop=%u, iwidth=%u, iheight=%u", ileft, itop, iwidth, iheight);
 
   // Load the PNG...
   memset(&png, 0, sizeof(png));
@@ -530,9 +551,9 @@ process_png(lprint_job_t *job)		// I - Job
         break;
   }
 
-  xstart = (options.header.cupsWidth - xsize) / 2;
+  xstart = ileft + (iwidth - xsize) / 2;
   xend   = xstart + xsize;
-  ystart = (options.header.cupsHeight - ysize) / 2;
+  ystart = itop + (iheight - ysize) / 2;
   yend   = ystart + ysize;
 
   xmod   = png_width % xsize;

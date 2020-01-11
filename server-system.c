@@ -28,7 +28,9 @@ static int		shutdown_system = 0;
 
 static int		create_listener(const char *name, int port, int family);
 static char		*get_config_file(char *buffer, size_t bufsize);
+static void		get_media_col(const char *value, lprint_media_col_t *media);
 static int		load_config(lprint_system_t *system);
+static void		put_media_col(cups_file_t *fp, const char *name, lprint_media_col_t *media);
 static int		save_config(lprint_system_t *system);
 static void		sigterm_handler(int sig);
 
@@ -379,6 +381,25 @@ get_config_file(char   *buffer,		// I - Filename buffer
 
 
 //
+// 'get_media_col()' - Get a media col value.
+//
+
+static void
+get_media_col(
+    const char         *value,		// I - Value string
+    lprint_media_col_t *media)		// I - Media collection
+{
+  unsigned tracking = 0;		// Tracking value
+
+
+  sscanf(value, "%d,%d,%d,%d,%d,%63[^,],%63[^,],%d,%d,%u,%63s\n", &media->bottom_margin, &media->left_margin, &media->right_margin, &media->size_width, &media->size_length, media->size_name, media->source, &media->top_margin, &media->top_offset, &tracking, media->type);
+  media->tracking = tracking;
+}
+
+
+
+
+//
 // 'load_config()' - Load the configuration file.
 //
 
@@ -506,23 +527,16 @@ load_config(lprint_system_t *system)	// I - System
 	  {
 	    printer->driver->tear_offset_configured = atoi(value);
 	  }
-	  else if (!strcmp(line, "media-default"))
+	  else if (!strcmp(line, "media-col-default"))
 	  {
-	    strlcpy(printer->driver->media_default, value, sizeof(printer->driver->media_default));
+	    get_media_col(value, &printer->driver->media_default);
 	  }
-	  else if (!strcmp(line, "media-ready"))
+	  else if (!strncmp(line, "media-col-ready-", 16))
 	  {
-	    int		i;		// Looping var
-	    char	*current,	// Current value
-			*next;		// Pointer to next value
+	    int	src = atoi(line + 16);	// Source index
 
-            for (i = 0, current = value; current && i < LPRINT_MAX_SOURCE; i ++, current = next)
-            {
-              if ((next = strchr(current, ',')) != NULL)
-                *next++ = '\0';
-
-	      strlcpy(printer->driver->media_ready[i], current, sizeof(printer->driver->media_ready[i]));
-	    }
+            if (src >= 0 && src < printer->driver->num_source)
+              get_media_col(value, printer->driver->media_ready + src);
 	  }
 	  else if (!strcmp(line, "print-color-mode-default") || !strcmp(line, "print-content-optimize-default"))
 	  {
@@ -587,6 +601,20 @@ load_config(lprint_system_t *system)	// I - System
 
 
 //
+// 'put_media_col()' - Put a media col value.
+//
+
+static void
+put_media_col(
+    cups_file_t        *fp,		// I - File to write to
+    const char         *name,		// I - Name of attribute
+    lprint_media_col_t *media)		// I - Media collection
+{
+  cupsFilePrintf(fp, "%s %d,%d,%d,%d,%d,%s,%s,%d,%d,%u,%s\n", name, media->bottom_margin, media->left_margin, media->right_margin, media->size_width, media->size_length, media->size_name, media->source, media->top_margin, media->top_offset, media->tracking, media->type);
+}
+
+
+//
 // 'save_config()' - Save the configuration file.
 //
 
@@ -643,8 +671,15 @@ save_config(lprint_system_t *system)	// I - System
       cupsFilePutConf(fp, "label-mode-configured", lprintLabelModeString(printer->driver->mode_configured));
     if (printer->driver->tear_offset_supported[0] != printer->driver->tear_offset_supported[1])
       cupsFilePrintf(fp, "label-tear-offset-configured %d\n", printer->driver->tear_offset_configured);
-    cupsFilePutConf(fp, "media-default", printer->driver->media_default);
-    // TODO: add media-ready
+    put_media_col(fp, "media-col-default", &printer->driver->media_default);
+    for (i = 0; i < printer->driver->num_source; i ++)
+    {
+      if (printer->driver->media_ready[i].size_name[0])
+      {
+        snprintf(value, sizeof(value), "media-col-ready-%d", i);
+        put_media_col(fp, value, printer->driver->media_ready + i);
+      }
+    }
     if (printer->driver->darkness_supported)
       cupsFilePrintf(fp, "printer-darkness-configured %d\n", printer->driver->darkness_configured);
     if (printer->geo_location)
