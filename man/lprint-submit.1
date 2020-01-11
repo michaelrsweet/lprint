@@ -6,7 +6,7 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint-submit 1 "LPrint" "January 5, 2020" "Michael R Sweet"
+.TH lprint-submit 1 "LPrint" "January 11, 2020" "Michael R Sweet"
 .SH NAME
 lprint-submit \- submit a file for printing.
 .SH SYNOPSIS
@@ -94,19 +94,30 @@ Specifies the type of roll media being used - "continuous" for continuous labels
 Print images in portrait orientation.
 .TP 5
 .B \-o orientation-requested=landscape
-Print images in landscape orientation.
+Print images in landscape (90 degrees counter-clockwise) orientation.
+.TP 5
+.B \-o orientation-requested=reverse-portrait
+Print images in reverse-portrait (upside down) orientation.
+.TP 5
+.B \-o orientation-requested=reverse-landscape
+Print images in reverse-landscape (90 degrees clockwise) orientation.
+.TP 5
+.B \-o orientation-requested=none
+Print images in automatic (portrait or landscape) orientation.
 .TP 5
 .B \-o print-color-mode=bi-level
 Only print black or white when printing images.
 .TP 5
 .B \-o print-color-mode=monochrome
 Halftone shades of gray when printing images.
+.B \-o print-content-optimize=auto
+Optimize printing automatically based on the type and content of the file.
 .B \-o print-content-optimize=graphic
-Optimize printing for text only.
+Optimize printing for graphics only.
 .B \-o print-content-optimize=photo
 Optimize printing for photos.
 .B \-o print-content-optimize=text
-Optimize printing for graphics only.
+Optimize printing for text only.
 .B \-o print-content-optimize=text-and-graphic
 Optimize printing for text and graphics.
 .TP 5
