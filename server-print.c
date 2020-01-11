@@ -268,10 +268,10 @@ prepare_options(
   }
 
   // orientation-requested
-  if ((attr = find_attr(job, "orientation-requsted", IPP_TAG_ENUM)) != NULL)
+  if ((attr = find_attr(job, "orientation-requested", IPP_TAG_ENUM)) != NULL)
     options->orientation_requested = (ipp_orient_t)ippGetInteger(attr, 0);
   else
-    options->orientation_requested = IPP_ORIENT_PORTRAIT;
+    options->orientation_requested = IPP_ORIENT_NONE;
 
   // print-color-mode
   if ((attr = find_attr(job, "print-color-mode", IPP_TAG_KEYWORD)) != NULL)
@@ -389,10 +389,13 @@ process_png(lprint_job_t *job)		// I - Job
   unsigned char		*line = NULL,	// Output line
 			*lineptr,	// Pointer in line
 			byte,		// Byte in line
-			*pixels,	// Pixels in image
+			*pixels = NULL,	// Pixels in image
+			*pixbase,	// Pointer to first pixel
 			*pixptr,	// Pointer into image
 			bit;		// Current bit
-  unsigned		x,		// X position
+  unsigned		png_width,	// Rotated PNG width
+			png_height,	// Rotated PNG height
+			x,		// X position
 			xsize,		// Scaled width
 			xstep,		// X step
 			xstart,		// X start position
@@ -401,8 +404,10 @@ process_png(lprint_job_t *job)		// I - Job
 			ysize,		// Scaled height
 			ystart,		// Y start position
 			yend;		// Y end position
-  int			xerr,		// X error accumulator
-			xmod;		// X modulus
+  int			xdir,
+			xerr,		// X error accumulator
+			xmod,		// X modulus
+			ydir;
 
 
   // Prepare options...
@@ -423,22 +428,18 @@ process_png(lprint_job_t *job)		// I - Job
 
   png_image_begin_read_from_file(&png, job->filename);
 
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "png.version=%u", png.version);
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "png.width=%u", png.width);
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "png.height=%u", png.height);
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "png.format=%u", png.format);
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "png.flags=%u", png.flags);
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "png.colormap_entries=%u", png.colormap_entries);
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "BEGIN png.warning_or_error=%u", png.warning_or_error);
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "BEGIN png.message='%s'", png.message);
+  if (png.warning_or_error & PNG_IMAGE_ERROR)
+  {
+    lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to open PNG file '%s' - %s", job->filename, png.message);
+    goto abort_job;
+  }
+
+  lprintLogJob(job, LPRINT_LOGLEVEL_INFO, "PNG image is %ux%u", png.width, png.height);
 
   png.format = PNG_FORMAT_GRAY;
   pixels     = malloc(PNG_IMAGE_SIZE(png));
 
   png_image_finish_read(&png, &bg, pixels, 0, NULL);
-
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "FINISH png.warning_or_error=%u", png.warning_or_error);
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "FINISH png.message='%s'", png.message);
 
   if (png.warning_or_error & PNG_IMAGE_ERROR)
   {
@@ -446,15 +447,87 @@ process_png(lprint_job_t *job)		// I - Job
     goto abort_job;
   }
 
-  // TODO: support PNG rotation
-
   // Figure out the scaling and rotation of the image...
-  xsize = iwidth;
-  ysize = xsize * png.height / png.width;
-  if (ysize > iheight)
+  if (options.orientation_requested == IPP_ORIENT_NONE)
   {
-    ysize = iheight;
-    xsize = ysize * png.width / png.height;
+    if (png.width > png.height && options.header.cupsWidth < options.header.cupsHeight)
+    {
+      options.orientation_requested = IPP_ORIENT_LANDSCAPE;
+      lprintLogJob(job, LPRINT_LOGLEVEL_INFO, "Auto-orientation: landscape");
+    }
+    else
+    {
+      options.orientation_requested = IPP_ORIENT_PORTRAIT;
+      lprintLogJob(job, LPRINT_LOGLEVEL_INFO, "Auto-orientation: portrait");
+    }
+  }
+
+  switch (options.orientation_requested)
+  {
+    default :
+    case IPP_ORIENT_PORTRAIT :
+        pixbase    = pixels;
+        png_width  = png.width;
+        png_height = png.height;
+        xdir       = 1;
+        ydir       = png.width;
+
+	xsize = iwidth;
+	ysize = xsize * png.height / png.width;
+	if (ysize > iheight)
+	{
+	  ysize = iheight;
+	  xsize = ysize * png.width / png.height;
+	}
+	break;
+
+    case IPP_ORIENT_REVERSE_PORTRAIT :
+        pixbase    = pixels + png.width * png.height - 1;
+        png_width  = png.width;
+        png_height = png.height;
+        xdir       = -1;
+        ydir       = -png.width;
+
+	xsize = iwidth;
+	ysize = xsize * png.height / png.width;
+	if (ysize > iheight)
+	{
+	  ysize = iheight;
+	  xsize = ysize * png.width / png.height;
+	}
+	break;
+
+    case IPP_ORIENT_LANDSCAPE : // 90 counter-clockwise
+        pixbase    = pixels + png.width - 1;
+        png_width  = png.height;
+        png_height = png.width;
+        xdir       = png.width;
+        ydir       = -1;
+
+	xsize = iwidth;
+	ysize = xsize * png.width / png.height;
+	if (ysize > iheight)
+	{
+	  ysize = iheight;
+	  xsize = ysize * png.height / png.width;
+	}
+	break;
+
+    case IPP_ORIENT_REVERSE_LANDSCAPE : // 90 clockwise
+        pixbase    = pixels + (png.height - 1) * png.width;
+        png_width  = png.height;
+        png_height = png.width;
+        xdir       = -png.width;
+        ydir       = 1;
+
+	xsize = iwidth;
+	ysize = xsize * png.width / png.height;
+	if (ysize > iheight)
+	{
+	  ysize = iheight;
+	  xsize = ysize * png.height / png.width;
+	}
+        break;
   }
 
   xstart = (options.header.cupsWidth - xsize) / 2;
@@ -462,11 +535,11 @@ process_png(lprint_job_t *job)		// I - Job
   ystart = (options.header.cupsHeight - ysize) / 2;
   yend   = ystart + ysize;
 
-  xmod   = png.width % xsize;
-  xstep  = png.width / xsize;
+  xmod   = png_width % xsize;
+  xstep  = (png_width / xsize) * xdir;
 
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "xsize=%u, xstart=%u, xend=%u, xmod=%d, xstep=%d", xsize, xstart, xend, xmod, xstep);
-  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "ysize=%u, ystart=%u, yend=%u", ysize, ystart, yend);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "xsize=%u, xstart=%u, xend=%u, xdir=%d, xmod=%d, xstep=%d", xsize, xstart, xend, xdir, xmod, xstep);
+  lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "ysize=%u, ystart=%u, yend=%u, ydir=%d", ysize, ystart, yend, ydir);
 
   // Start the job...
   if (!(driver->rstartjob)(job, &options))
@@ -500,12 +573,12 @@ process_png(lprint_job_t *job)		// I - Job
     // Now dither the image...
     for (; y < yend; y ++)
     {
-      pixptr = pixels + ((y - ystart) * png.height / ysize) * png.width;
+      pixptr = pixbase + ydir * (int)((y - ystart) * png_height / ysize);
       dither = options.dither[y & 15];
 
       for (x = xstart, lineptr = line + x / 8, bit = 128 >> (x & 7), byte = 0, xerr = 0; x < xend; x ++)
       {
-	// Dither the current pixel...
+        // Dither the current pixel...
 	if (*pixptr <= dither[x & 15])
 	  byte |= bit;
 
@@ -516,7 +589,7 @@ process_png(lprint_job_t *job)		// I - Job
 	{
 	  // Accumulated error has overflowed, advance another pixel...
 	  xerr -= xsize;
-	  pixptr ++;
+	  pixptr += xdir;
 	}
 
 	// and the next bit
