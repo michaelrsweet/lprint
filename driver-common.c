@@ -126,7 +126,7 @@ lprintCreateDriver(
 	  lprintInitDYMO(driver);
 	else if (!strncmp(driver_name, "pwg_", 4))
 	  lprintInitPWG(driver);
-	else if (!strncmp(driver_name, "zpl_", 4))
+	else
 	  lprintInitZPL(driver);
 
 	// media-xxx

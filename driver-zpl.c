@@ -172,7 +172,7 @@ lprintInitZPL(
   driver->status     = lprint_zpl_status;
   driver->format     = "application/vnd.zebra-zpl";
 
-  driver->num_resolution  = 1;
+  driver->num_resolution = 1;
 
   if (strstr(driver->name, "-203dpi"))
   {

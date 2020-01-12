@@ -135,13 +135,17 @@ struct lprint_printer_s			// Printer data
 {
   pthread_rwlock_t	rwlock;		// Reader/writer lock
   lprint_system_t	*system;	// Containing system
-  lprint_srv_t		ipp_ref,	// Bonjour IPP service
-			ipps_ref,	// Bonjour IPPS service
-			http_ref,	// Bonjour HTTP service
-			printer_ref;	// Bonjour LPD service
+#  ifdef HAVE_DNSSD
+  lprint_srv_t		ipp_ref,	// DNS-SD IPP service
+			ipps_ref,	// DNS-SD IPPS service
+			http_ref,	// DNS-SD HTTP service
+			printer_ref;	// DNS-SD LPD service
+#  elif defined(HAVE_AVAHI)
+  lprint_srv_t		dnssd_ref;	// DNS-SD services
+#  endif // HAVE_DNSSD
   int			printer_id;	// printer-id
   char			*printer_name,	// printer-name
-			*dnssd_name,	// printer-dnssd-name
+			*dns_sd_name,	// printer-dns-sd-name
 			*location,	// Human-readable location
 			*geo_location,	// Geographic location (geo: URI)
 			*organization,	// Organization

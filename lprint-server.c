@@ -71,7 +71,6 @@ lprintDoServer(
     port = 0;
 
   // Create the system object and run it...
-  // TODO: Add regtypes option support
   if ((system = lprintCreateSystem(hostname, port, hostname ? "_print,_universal" : NULL, logfile, loglevel)) == NULL)
     return (1);
 

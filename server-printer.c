@@ -173,6 +173,11 @@ lprintCreatePrinter(
     IPP_QUALITY_NORMAL,
     IPP_QUALITY_HIGH
   };
+  static const char * const printer_kind[] =
+  {					// printer-kind values
+    "labels",
+    "receipt"
+  };
   static const char * const printer_settable_attributes[] =
   {					// printer-settable-attributes values
     "copies-default",
@@ -261,7 +266,7 @@ lprintCreatePrinter(
 
   printer->system         = system;
   printer->printer_name   = strdup(printer_name);
-  printer->dnssd_name     = strdup(printer_name);
+  printer->dns_sd_name    = strdup(printer_name);
   printer->resource       = strdup(resource);
   printer->resourcelen    = strlen(resource);
   printer->device_uri     = strdup(device_uri);
@@ -397,6 +402,9 @@ lprintCreatePrinter(
 
   // printer-info
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-info", NULL, printer_name);
+
+  // printer-kind
+  ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_CONST_TAG(IPP_TAG_KEYWORD), "printer-kind", (int)(sizeof(printer_kind) / sizeof(printer_kind[0])), NULL, printer_kind);
 
   // printer-more-info
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-more-info", NULL, adminurl);
@@ -619,7 +627,7 @@ free_printer(lprint_printer_t *printer)	// I - Printer
 
   // Free memory...
   free(printer->printer_name);
-  free(printer->dnssd_name);
+  free(printer->dns_sd_name);
   free(printer->location);
   free(printer->geo_location);
   free(printer->organization);
