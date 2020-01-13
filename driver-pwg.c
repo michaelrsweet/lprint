@@ -44,7 +44,8 @@ static const char * const lprint_pwg_4inch_media[] =
   "oe_address-label_1.25x3.5in",
   "oe_lg-address-label_1.4x3.5in",
   "oe_multipurpose-label_2x2.3125in",
-  "oe_xl-shipping-label_4x6in",
+  "na_index-3x5_3x5in",
+  "na_index-4x6_4x6in",
 
   "roll_max_4x3600in",
   "roll_min_0.25x0.25in"

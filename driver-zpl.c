@@ -94,7 +94,7 @@ static const char * const lprint_zpl_4inch_media[] =
   "oe_3x1.25-label_3x1.25in",
   "oe_3x2-label_3x2in",
   "oe_3x3-label_3x3in",
-  "oe_3x5-label_3x5in",
+  "na_index-3x5_3x5in",
 
   "oe_3.25x2-label_3.25x2in",
   "oe_3.25x5-label_3.25x5in",
@@ -109,7 +109,7 @@ static const char * const lprint_zpl_4inch_media[] =
   "oe_4x3-label_4x3in",
   "oe_4x4-label_4x4in",
   "oe_4x5-label_4x5in",
-  "oe_4x6-label_4x6in",
+  "na_index-4x6_4x6in",
   "oe_4x6.5-label_4x6.5in",
   "oe_4x13-label_4x13in",
 
@@ -189,7 +189,7 @@ lprintInitZPL(
     driver->y_resolution[0] = 300;
   }
 
-  if (!strncmp(driver->name, "zebra_zpl-2inch-", 16))
+  if (!strncmp(driver->name, "zpl_2inch-", 16))
   {
     // 2 inch printer...
     driver->num_media = (int)(sizeof(lprint_zpl_2inch_media) / sizeof(lprint_zpl_2inch_media[0]));
@@ -213,9 +213,10 @@ lprintInitZPL(
   driver->top_offset_supported[1] = 1500;
   driver->tracking_supported      = LPRINT_MEDIA_TRACKING_MARK | LPRINT_MEDIA_TRACKING_WEB | LPRINT_MEDIA_TRACKING_CONTINUOUS;
 
-  driver->num_type = 2;
+  driver->num_type = 3;
   driver->type[0]  = "labels";
-  driver->type[1]  = "continuous";
+  driver->type[1]  = "labels-continuous";
+  driver->type[2]  = "continuous";
 
   driver->media_default.bottom_margin = driver->bottom_top;
   driver->media_default.left_margin   = driver->left_right;
@@ -371,6 +372,8 @@ lprint_zpl_rendpage(
     lprint_options_t *options,		// I - Job options
     unsigned         page)		// I - Page number
 {
+  lprint_driver_t *driver = job->printer->driver;
+					// Driver
   lprint_device_t *device = job->printer->driver->device;
 					// Output device
   lprint_zpl_t	*zpl = job->printer->driver->job_data;
@@ -381,7 +384,12 @@ lprint_zpl_rendpage(
 
   lprintPrintfDevice(device, "^XA\n^POI\n^PW%u\n^LH0,0\n^LT%d\n", options->header.cupsWidth, options->media.top_offset * options->printer_resolution[1] / 2540);
 
-#if 0 // TODO: Add support for setting media-tracking
+  if (options->media.type[0] && strcmp(options->media.type, "labels"))
+  {
+    // Continuous media, so always set tracking to continuous...
+    options->media.tracking = LPRINT_MEDIA_TRACKING_CONTINUOUS;
+  }
+
   if (options->media.tracking)
   {
     if (options->media.tracking == LPRINT_MEDIA_TRACKING_CONTINUOUS)
@@ -391,17 +399,11 @@ lprint_zpl_rendpage(
     else
       lprintPutsDevice(device, "^MNM\n");
   }
-#endif // 0
 
-#if 0 // TODO: Add support for thermal transfer vs. direct thermal?
-  if (options->media_type)
-  {
-    if (!strcmp(options->media_type, "labels-thermal"))
-      lprintPutsDevice(device, "^MTT\n");
-    else if (!strcmp(options->media_type, "labels-direct-thermal"))
-      lprintPutsDevice(device, "^MTD\n");
-  }
-#endif // 0
+  if (strstr(driver->name, "-tt"))
+    lprintPutsDevice(device, "^MTT\n");	// Thermal transfer
+  else
+    lprintPutsDevice(device, "^MTD\n");	// Direct thermal
 
   lprintPrintfDevice(device, "^PQ%d, 0, 0, N\n", options->copies);
   lprintPutsDevice(device, "^FO0,0^XGR:LPRINT.GRF,1,1^FS\n^XZ\n");
@@ -437,16 +439,16 @@ lprint_zpl_rstartjob(
   switch (driver->mode_configured)
   {
     case LPRINT_LABEL_MODE_APPLICATOR :
-        lprintPutsDevice(device, "^MMA,N\n");
+        lprintPutsDevice(device, "^MMA,Y\n");
         break;
     case LPRINT_LABEL_MODE_CUTTER :
-        lprintPutsDevice(device, "^MMC,N\n");
+        lprintPutsDevice(device, "^MMC,Y\n");
         break;
     case LPRINT_LABEL_MODE_CUTTER_DELAYED :
-        lprintPutsDevice(device, "^MMD,N\n");
+        lprintPutsDevice(device, "^MMD,Y\n");
         break;
     case LPRINT_LABEL_MODE_KIOSK :
-        lprintPutsDevice(device, "^MMK,N\n");
+        lprintPutsDevice(device, "^MMK,Y\n");
         break;
     case LPRINT_LABEL_MODE_PEEL_OFF :
         lprintPutsDevice(device, "^MMP,N\n");
@@ -455,14 +457,14 @@ lprint_zpl_rstartjob(
         lprintPutsDevice(device, "^MMP,Y\n");
         break;
     case LPRINT_LABEL_MODE_REWIND :
-        lprintPutsDevice(device, "^MMR,N\n");
+        lprintPutsDevice(device, "^MMR,Y\n");
         break;
     case LPRINT_LABEL_MODE_RFID :
-        lprintPutsDevice(device, "^MMF,N\n");
+        lprintPutsDevice(device, "^MMF,Y\n");
         break;
     case LPRINT_LABEL_MODE_TEAR_OFF :
     default :
-        lprintPutsDevice(device, "^MMT,N\n");
+        lprintPutsDevice(device, "^MMT,Y\n");
         break;
   }
 

@@ -151,10 +151,10 @@ printer.  Use the "drivers" sub-command to list the available drivers:
 
     lprint drivers
 
-For example, the common 4-inch Zebra printer uses the "zebra_zpl-4inch-203dpi"
+For example, the common 4-inch Zebra printer uses the "zpl_4inch-203dpi-dt"
 driver:
 
-    lprint add -d myprinter -v socket://192.168.0.42 -m zebra_zpl-4inch-203dpi
+    lprint add -d myprinter -v socket://192.168.0.42 -m zpl_4inch-203dpi-dt
 
 
 Printing Options
@@ -163,24 +163,62 @@ Printing Options
 The following options are supported by the "submit" sub-command:
 
 - "-n NNN": Specifies the number of copies to produce.
-- "-o media=SIZE-NAME": Specifies the media size name.
-- "-o media-source=ROLL-NAME": Specifies the roll to use.
+- "-o media=SIZE-NAME": Specifies the media size name using the PWG media size
+  self-describing name (see below).
+- "-o media-source=ROLL-NAME": Specifies the roll to use such as 'main-roll' or
+  'alternate-roll'.
 - "-o media-top-offset=NNNin" or "-o media-top-offset=NNNmm": Specifies a
   printing offset from the top of the label.
+- "-o media-type=TYPE-NAME": Specifies a media type name such as 'labels',
+  'labels-continuous', or 'continuous'.
+- "-o orientation-requested=none": Prints in portrait or landscape orientation
+  automatically.
 - "-o orientation-requested=portrait": Prints in portrait orientation.
-- "-o orientation-requested=landscape": Prints in landscape orientation.
-- "-o orientation-requested=reverse-portrait": Prints in reverse portrait orientation.
-- "-o orientation-requested=reverse-landscape": Prints in reverse landscape orientation.
+- "-o orientation-requested=landscape": Prints in landscape (90 degrees counter-
+  clockwise) orientation.
+- "-o orientation-requested=reverse-portrait": Prints in reverse portrait
+  (upside down) orientation.
+- "-o orientation-requested=reverse-landscape": Prints in reverse landscape
+  (90 degrees clockwise) orientation.
 - "-o print-color-mode=bi-level": Prints black-and-white output with no shading.
-- "-o print-color-mode=monochrome": Prints grayscale output with shading as needed.
-- "-o print-darkness=NNN": Specifies a relative darkness from -100 (lightest) to 100 (darkest).
+- "-o print-color-mode=monochrome": Prints grayscale output with shading as
+  needed.
+- "-o print-content-optimize=auto": Automatically optimize printing based on
+  content.
+- "-o print-content-optimize=graphic": Automatically optimize printing for
+  graphics like lines and barcodes.
+- "-o print-content-optimize=photo": Automatically optimize printing for
+  photos or other shaded images.
+- "-o print-content-optimize=text": Automatically optimize printing for text.
+- "-o print-content-optimize=text-and-graphic": Automatically optimize printing
+  for text and graphics.
+- "-o print-darkness=NNN": Specifies a relative darkness from -100 (lightest)
+  to 100 (darkest).
 - "-o print-quality=draft": Print using the lowest quality and fastest speed.
 - "-o print-quality=normal": Print using good quality and speed.
-- "-o print-quality=draft": Print using the best quality and slowest speed.
-- "-o print-speed=NNNin" or "-o print-speed=NNNmm": Specifies the print speed in inches or millimeters per second.
-- "-o printer-resolution=NNNdpi": Specifies the print resolution in dots per inch.
+- "-o print-quality=high": Print using the best quality and slowest speed.
+- "-o print-speed=NNNin" or "-o print-speed=NNNmm": Specifies the print speed
+  in inches or millimeters per second.
+- "-o printer-resolution=NNNdpi": Specifies the print resolution in dots per
+  inch.
 - "-t TITLE": Specifies the title of the job that appears in the list produced
   by the "jobs" sub-command.
+
+Media sizes use the PWG self-describing name format which looks like this:
+
+    CLASS_NAME_WIDTHxLENGTHin
+    CLASS_NAME_WIDTHxLENGTHmm
+
+"CLASS" is "na" for North American media sizes, "oe" for other cut label sizes
+in inches, "om" for other cut label sizes in millimeters, or "roll" for
+continuous roll sizes in inches or millimeters.  "NAME" is a string of letters,
+numbers, dots ("."), and dashes ("-") describing the size.  "WIDTH" and
+"LENGTH" are the width and length of the label or receipt you want to print.
+The trailing "in" or "mm" specifies the units in inches or millimeters,
+respectively.  For example, a 4x6" shipping label uses the size name
+`na_4x6-index_4x6in` while a 1.25x3.5" address label uses
+`oe_address-label_1.25x3.5in` and a 50x200mm receipt uses
+`roll_receipt_50x200mm`.
 
 You can get a list of supported values for these options using the "options"
 sub-command:

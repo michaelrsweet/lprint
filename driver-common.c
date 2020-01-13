@@ -57,10 +57,14 @@ static const char * const lprint_drivers[] =
   "dymo_lw-wireless",
   "pwg_2inch",
   "pwg_4inch",
-  "zpl_2inch-203dpi",
-  "zpl_2inch-300dpi",
-  "zpl_4inch-203dpi",
-  "zpl_4inch-300dpi"
+  "zpl_2inch-203dpi-dt",
+  "zpl_2inch-203dpi-tt",
+  "zpl_2inch-300dpi-dt",
+  "zpl_2inch-300dpi-tt",
+  "zpl_4inch-203dpi-dt",
+  "zpl_4inch-203dpi-tt",
+  "zpl_4inch-300dpi-dt",
+  "zpl_4inch-300dpi-tt"
 };
 
 static const char * const lprint_models[] =
@@ -90,12 +94,16 @@ static const char * const lprint_models[] =
   "Dymo LabelWriter DUO Tape 128",
   "Dymo LabelWriter SE450",
   "Dymo LabelWriter Wireless",
-  "PWG Raster 2 inch Test Printer",
-  "PWG Raster 4 inch Test Printer",
-  "Zebra ZPL 2 inch/203dpi Printer",
-  "Zebra ZPL 2 inch/300dpi Printer",
-  "Zebra ZPL 4 inch/203dpi Printer",
-  "Zebra ZPL 4 inch/300dpi Printer"
+  "PWG Raster 2-inch Test Printer",
+  "PWG Raster 4-inch Test Printer",
+  "Zebra ZPL 2-inch/203dpi/Direct-Thermal",
+  "Zebra ZPL 2-inch/203dpi/Thermal-Transfer",
+  "Zebra ZPL 2-inch/300dpi/Direct-Thermal",
+  "Zebra ZPL 2-inch/300dpi/Thermal-Transfer",
+  "Zebra ZPL 4-inch/203dpi/Direct-Thermal",
+  "Zebra ZPL 4-inch/203dpi/Thermal-Transfer",
+  "Zebra ZPL 4-inch/300dpi/Direct-Thermal",
+  "Zebra ZPL 4-inch/300dpi/Thermal-Transfer"
 };
 
 
