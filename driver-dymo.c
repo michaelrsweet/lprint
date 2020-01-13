@@ -131,7 +131,7 @@ lprintInitDYMO(
     strlcpy(driver->media_ready[0].size_name, "oe_address-label_1.25x3.5in", sizeof(driver->media_ready[0].size_name));
   }
 
-  driver->tracking_supported = LPRINT_MEDIA_TRACKING_MARK;
+  driver->tracking_supported = LPRINT_MEDIA_TRACKING_WEB;
 
   driver->num_type = 1;
   driver->type[0]  = "labels";
@@ -142,7 +142,7 @@ lprintInitDYMO(
   driver->media_default.size_width    = 3175;
   driver->media_default.size_length   = 8890;
   driver->media_default.top_margin    = 525;
-  driver->media_default.tracking      = LPRINT_MEDIA_TRACKING_MARK;
+  driver->media_default.tracking      = LPRINT_MEDIA_TRACKING_WEB;
   strlcpy(driver->media_default.size_name, "oe_address-label_1.25x3.5in", sizeof(driver->media_default.size_name));
   strlcpy(driver->media_default.source, driver->source[0], sizeof(driver->media_default.source));
   strlcpy(driver->media_default.type, driver->type[0], sizeof(driver->media_default.type));
