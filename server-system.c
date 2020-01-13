@@ -13,6 +13,7 @@
 //
 
 #include "lprint.h"
+#include <ctype.h>
 
 
 //
@@ -517,7 +518,7 @@ load_config(lprint_system_t *system)	// I - System
 	  }
 	  else if (!strcmp(line, "print-quality-default") || !strcmp(line, "orientation-requested-default"))
 	  {
-	    ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_ENUM, line, atoi(value));
+	    ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_ENUM, line, ippEnumValue(line, value));
 	  }
 	  else if (!strcmp(line, "label-mode-configured"))
 	  {
@@ -579,7 +580,7 @@ load_config(lprint_system_t *system)	// I - System
 	      yres = xres;
 	    }
 
-	    ippAddResolution(printer->attrs, IPP_TAG_PRINTER, "printer-resolution-default", xres, yres, !strcmp(units, "dpi") ? IPP_RES_PER_INCH : IPP_RES_PER_CM);
+	    ippAddResolution(printer->attrs, IPP_TAG_PRINTER, "printer-resolution-default", !strcmp(units, "dpi") ? IPP_RES_PER_INCH : IPP_RES_PER_CM, xres, yres);
 	  }
 	  else
 	  {
