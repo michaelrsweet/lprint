@@ -255,7 +255,7 @@ lprintGetMakeAndModel(
     }
   }
 
-  return ("Unknown");
+  return (NULL);
 }
 
 
