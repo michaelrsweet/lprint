@@ -16,7 +16,8 @@ connected via network or USB.  Features include:
   disconnected/bad cable issues.
 
 For more information, see the file "DOCUMENTATION.md", the man pages in the
-"man" directory, and/or the LPrint Home Page at <https://www.msweet.org/lprint>.
+"man" directory, and/or the LPrint project page at
+<https://www.msweet.org/lprint>.
 
 > Note: Please use the Github issue tracker to report issues or request
 > features/improvements in LPrint:
