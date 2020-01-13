@@ -375,6 +375,7 @@ lprint_zpl_rendpage(
 
   lprintPrintfDevice(device, "^XA\n^POI\n^PW%u\n^LH0,0\n^LT%d\n", options->header.cupsWidth, options->media.top_offset * options->printer_resolution[1] / 2540);
 
+#if 0 // TODO: Add support for setting media-tracking
   if (options->media.tracking)
   {
     if (options->media.tracking == LPRINT_MEDIA_TRACKING_CONTINUOUS)
@@ -384,8 +385,9 @@ lprint_zpl_rendpage(
     else
       lprintPutsDevice(device, "^MNM\n");
   }
+#endif // 0
 
-#if 0
+#if 0 // TODO: Add support for thermal transfer vs. direct thermal?
   if (options->media_type)
   {
     if (!strcmp(options->media_type, "labels-thermal"))
