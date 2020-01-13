@@ -28,9 +28,9 @@
 //
 
 #  ifdef DEBUG
-#    define LPRINT_DEBUG(format,...) fprintf(stderr, format, __VA_ARGS__)
+#    define LPRINT_DEBUG(...) fprintf(stderr, __VA_ARGS__)
 #  else
-#    define LPRINT_DEBUG(format,...)
+#    define LPRINT_DEBUG(...)
 #  endif // DEBUG
 
 
