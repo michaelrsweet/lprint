@@ -1108,7 +1108,15 @@ ipp_create_printer(
     return;
   }
   else
+  {
     device_uri = ippGetString(attr, 0, NULL);
+
+    if (strncmp(device_uri, "file:///", 8) && strncmp(device_uri, "socket://", 9) && strncmp(device_uri, "usb://", 6))
+    {
+      respond_unsupported(client, attr);
+      return;
+    }
+  }
 
   if ((attr = ippFindAttribute(client->request, "lprint-driver", IPP_TAG_ZERO)) == NULL)
   {
@@ -1121,7 +1129,15 @@ ipp_create_printer(
     return;
   }
   else
+  {
     driver_name = ippGetString(attr, 0, NULL);
+
+    if (!lprintGetMakeAndModel(driver_name))
+    {
+      respond_unsupported(client, attr);
+      return;
+    }
+  }
 
   location     = ippGetString(ippFindAttribute(client->request, "printer-location", IPP_TAG_TEXT), 0, NULL);
   geo_location = ippGetString(ippFindAttribute(client->request, "printer-geo-location", IPP_TAG_TEXT), 0, NULL);
