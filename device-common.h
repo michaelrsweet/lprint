@@ -1,7 +1,7 @@
 //
 // Device communication functions for LPrint, a Label Printer Utility
 //
-// Copyright © 2019 by Michael R Sweet.
+// Copyright © 2019-2020 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -27,6 +27,7 @@
 typedef struct lprint_device_s		// Device connection data
 {
   int			fd;		// File descriptor connection to device
+  int			debug_fd;	// Debugging copy of data sent
 #ifdef HAVE_LIBUSB
   struct libusb_device	*device;	// Device info
   struct libusb_device_handle *handle;	// Open handle to device

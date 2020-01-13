@@ -1,7 +1,7 @@
 //
 // Common device support code for LPrint, a Label Printer Utility
 //
-// Copyright © 2019 by Michael R Sweet.
+// Copyright © 2019-2020 by Michael R Sweet.
 // Copyright © 2007-2019 by Apple Inc.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
@@ -12,7 +12,6 @@
 // Include necessary headers...
 //
 
-//#define DEBUG
 #include "lprint.h"
 #include <stdarg.h>
 
@@ -37,6 +36,9 @@ lprintCloseDevice(
 {
   if (device)
   {
+    if (device->debug_fd >= 0)
+      close(device->debug_fd);
+
     if (device->fd >= 0)
       close(device->fd);
 #ifdef HAVE_LIBUSB
@@ -104,6 +106,8 @@ lprintOpenDevice(
 
   if ((device = calloc(1, sizeof(lprint_device_t))) != NULL)
   {
+    const char *lprint_device_debug = getenv("LPRINT_DEVICE_DEBUG");
+
     if (!strcmp(scheme, "file"))
     {
       // Character device file...
@@ -130,10 +134,17 @@ lprintOpenDevice(
     else if (!strcmp(scheme, "usb"))
     {
       // USB printer class device
+      device->fd = -1;
+
       if (!lprint_find_usb(lprint_open_cb, device_uri, device))
         goto error;
     }
 #endif // HAVE_LIBUSB
+
+    if (lprint_device_debug)
+      device->debug_fd = open(lprint_device_debug, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    else
+      device->debug_fd = -1;
   }
 
   return (device);
@@ -231,7 +242,11 @@ lprintWriteDevice(
 {
   if (!device)
     return (-1);
-  else if (device->fd >= 0)
+
+  if (device->debug_fd >= 0)
+    write(device->debug_fd, buffer, bytes);
+
+  if (device->fd >= 0)
   {
     const char	*ptr = (const char *)buffer;
 					// Pointer into buffer
@@ -371,7 +386,7 @@ lprint_find_usb(
     device->read_endp  = -1;
     device->protocol   = 0;
 
-    for (conf = 0; conf < devdesc.bNumConfigurations && !device->handle; conf ++)
+    for (conf = 0; conf < devdesc.bNumConfigurations; conf ++)
     {
       if (libusb_get_config_descriptor(udevice, conf, &confptr) < 0)
       {
@@ -577,6 +592,8 @@ lprint_find_usb(
 
               if ((*cb)(device_uri, user_data))
               {
+                LPRINT_DEBUG("lprint_find_usb:     Found a match.\n");
+
 		libusb_ref_device(device->device);
 
 		if (device->read_endp != -1)
@@ -585,7 +602,7 @@ lprint_find_usb(
 		if (device->write_endp != -1)
 		  device->write_endp = confptr->interface[device->iface].altsetting[device->altset].endpoint[device->write_endp].bEndpointAddress;
 
-                break;
+                goto match_found;
               }
 
 	      libusb_close(device->handle);
@@ -598,6 +615,10 @@ lprint_find_usb(
       libusb_free_config_descriptor(confptr);
     } // conf loop
   }
+
+  match_found:
+
+  LPRINT_DEBUG("lprint_find_usb: device->handle=%p\n", device->handle);
 
   // Clean up ....
   if (num_udevs >= 0)
@@ -615,6 +636,11 @@ static int				// O - 1 on match, 0 otherwise
 lprint_open_cb(const char *device_uri,	// I - This device's URI
 	       const void *user_data)	// I - URI we are looking for
 {
-  return (!strcmp(device_uri, (const char *)user_data));
+  int match = !strcmp(device_uri, (const char *)user_data);
+					// Does this match?
+
+  LPRINT_DEBUG("lprint_open_cb(device_uri=\"%s\", user_data=\"%s\") returning %d.\n", device_uri, (char *)user_data, match);
+
+  return (match);
 }
 #endif // HAVE_LIBUSB
