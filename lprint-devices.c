@@ -1,5 +1,5 @@
 //
-// Devices sub-command for LPrint, a Label Printer Utility
+// Devices sub-command for LPrint, a Label Printer Application
 //
 // Copyright © 2019 by Michael R Sweet.
 //

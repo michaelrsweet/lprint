@@ -1,5 +1,5 @@
 //
-// Common definitions file for LPrint, a Label Printer Utility
+// Common definitions file for LPrint, a Label Printer Application
 //
 // Copyright © 2019-2020 by Michael R Sweet.
 //

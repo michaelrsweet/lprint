@@ -1,7 +1,7 @@
 LPrint Documentation
 ====================
 
-LPrint v1.0b1 - January NN, 2020
+LPrint v1.0b1 - January 13, 2020
 Copyright 2019-2020 by Michael R Sweet
 
 LPrint is licensed under the Apache License Version 2.0 with an exception to
@@ -25,8 +25,8 @@ Table of Contents
 Overview
 --------
 
-LPrint is a label printer utility for macOS® and Linux®.  I wrote it in
-response to criticism that coming changes to CUPS would leave users of label
+LPrint is a label printer application for macOS® and Linux®.  I wrote it in
+response to criticism that coming changes in CUPS will leave users of label
 printers in the cold - see CUPS Github issue #5271.
 
 Basically, LPrint is a print spooler optimized for label printing.  It accepts

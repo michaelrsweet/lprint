@@ -1,5 +1,5 @@
 dnl
-dnl LPrint configuration script
+dnl Configuration script for LPrint, a Label Printer Application
 dnl
 dnl Copyright © 2019-2020 by Michael R Sweet
 dnl

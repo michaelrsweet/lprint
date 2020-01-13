@@ -1,5 +1,5 @@
 //
-// Options sub-command for LPrint, a Label Printer Utility
+// Options sub-command for LPrint, a Label Printer Application
 //
 // Copyright © 2020 by Michael R Sweet.
 //

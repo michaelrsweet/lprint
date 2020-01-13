@@ -1,5 +1,5 @@
 //
-// Modify printer sub-command for LPrint, a Label Printer Utility
+// Modify printer sub-command for LPrint, a Label Printer Application
 //
 // Copyright © 2019-2020 by Michael R Sweet.
 //

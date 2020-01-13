@@ -1,5 +1,5 @@
 //
-// UNIMPLEMENTED PCL driver for LPrint, a Label Printer Utility
+// UNIMPLEMENTED PCL driver for LPrint, a Label Printer Application
 //
 // Copyright © 2019 by Michael R Sweet.
 //
