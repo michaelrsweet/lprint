@@ -184,6 +184,8 @@ lprintCreatePrinter(
     "document-format-default",
     "label-mode-configured",
     "label-tear-off-configured",
+    "media-col-default",
+    "media-col-ready",
     "media-default",
     "media-ready",
     "multiple-document-handling-default",

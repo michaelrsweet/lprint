@@ -1932,6 +1932,8 @@ set_printer_attributes(
     { "document-format-default",	IPP_TAG_MIMETYPE,	1 },
     { "label-mode-configured",		IPP_TAG_KEYWORD,	1 },
     { "label-tear-off-configured",	IPP_TAG_INTEGER,	1 },
+    { "media-col-default",		IPP_TAG_BEGIN_COLLECTION, 1 },
+    { "media-col-ready",		IPP_TAG_BEGIN_COLLECTION, LPRINT_MAX_SOURCE },
     { "media-default",			IPP_TAG_KEYWORD,	1 },
     { "media-ready",			IPP_TAG_KEYWORD,	LPRINT_MAX_SOURCE },
     { "multiple-document-handling-default", IPP_TAG_KEYWORD,	1 },
@@ -1998,8 +2000,21 @@ set_printer_attributes(
 
     name = ippGetName(rattr);
 
-    // TODO: add media-col-default/media-col-ready set support
-    if (!strcmp(name, "media-default"))
+    if (!strcmp(name, "media-col-default"))
+    {
+      lprintImportMediaCol(ippGetCollection(rattr, 0), &printer->driver->media_default);
+    }
+    else if (!strcmp(name, "media-col-ready"))
+    {
+      count = ippGetCount(rattr);
+
+      for (i = 0; i < count; i ++)
+        lprintImportMediaCol(ippGetCollection(rattr, i), printer->driver->media_ready + i);
+
+      for (; i < LPRINT_MAX_SOURCE; i ++)
+        memset(printer->driver->media_ready + i, 0, sizeof(lprint_media_col_t));
+    }
+    else if (!strcmp(name, "media-default"))
     {
       strlcpy(printer->driver->media_default.size_name, ippGetString(rattr, 0, NULL), sizeof(printer->driver->media_default.size_name));
     }

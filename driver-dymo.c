@@ -157,7 +157,7 @@ lprintInitDYMO(
     driver->media_ready[i].size_width    = pwg->width;
     driver->media_ready[i].size_length   = pwg->length;
     driver->media_ready[i].top_margin    = driver->bottom_top;
-    driver->media_ready[i].tracking      = LPRINT_MEDIA_TRACKING_MARK;
+    driver->media_ready[i].tracking      = LPRINT_MEDIA_TRACKING_WEB;
     strlcpy(driver->media_ready[i].source, driver->source[i], sizeof(driver->media_ready[i].source));
     strlcpy(driver->media_ready[i].type, driver->type[0], sizeof(driver->media_ready[i].type));
   }

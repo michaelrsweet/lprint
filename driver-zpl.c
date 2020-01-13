@@ -214,9 +214,9 @@ lprintInitZPL(
   driver->tracking_supported      = LPRINT_MEDIA_TRACKING_MARK | LPRINT_MEDIA_TRACKING_WEB | LPRINT_MEDIA_TRACKING_CONTINUOUS;
 
   driver->num_type = 3;
-  driver->type[0]  = "labels";
-  driver->type[1]  = "labels-continuous";
-  driver->type[2]  = "continuous";
+  driver->type[0]  = "continuous";
+  driver->type[1]  = "labels";
+  driver->type[2]  = "labels-continuous";
 
   driver->media_default.bottom_margin = driver->bottom_top;
   driver->media_default.left_margin   = driver->left_right;

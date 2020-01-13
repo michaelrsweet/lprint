@@ -186,6 +186,8 @@ extern ipp_t		*lprintCreateMediaCol(lprint_media_col_t *media, int db);
 extern void		lprintDeleteDriver(lprint_driver_t *driver);
 extern const char * const *lprintGetDrivers(int *num_drivers);
 extern const char	*lprintGetMakeAndModel(const char *driver_name);
+extern void		lprintImportMediaCol(ipp_t *col, lprint_media_col_t *media);
+
 extern void		lprintInitDYMO(lprint_driver_t *driver);
 extern void		lprintInitPWG(lprint_driver_t *driver);
 extern void		lprintInitZPL(lprint_driver_t *driver);

@@ -268,6 +268,65 @@ lprintGetMakeAndModel(
 
 
 //
+// 'lprintImportMediaCol()' - Import a media-col-xxx value.
+//
+
+void
+lprintImportMediaCol(
+    ipp_t              *col,		// I - Collection
+    lprint_media_col_t *media)		// O - Media values
+{
+  ipp_attribute_t	*size_name = ippFindAttribute(col, "media-size-name", IPP_TAG_ZERO),
+			*x_dimension = ippFindAttribute(col, "media-size/x-dimension", IPP_TAG_INTEGER),
+			*y_dimension = ippFindAttribute(col, "media-size/y-dimension", IPP_TAG_INTEGER),
+			*bottom_margin = ippFindAttribute(col, "media-bottom-margin", IPP_TAG_INTEGER),
+			*left_margin = ippFindAttribute(col, "media-left-margin", IPP_TAG_INTEGER),
+			*right_margin = ippFindAttribute(col, "media-right-margin", IPP_TAG_INTEGER),
+			*source = ippFindAttribute(col, "media-source", IPP_TAG_ZERO),
+			*top_margin = ippFindAttribute(col, "media-top-margin", IPP_TAG_INTEGER),
+			*top_offset = ippFindAttribute(col, "media-top-offset", IPP_TAG_INTEGER),
+			*tracking = ippFindAttribute(col, "media-tracking", IPP_TAG_ZERO),
+			*type = ippFindAttribute(col, "media-type", IPP_TAG_ZERO);
+
+
+  if (size_name)
+  {
+    const char	*pwg_name = ippGetString(size_name, 0, NULL);
+    pwg_media_t	*pwg_media = pwgMediaForPWG(pwg_name);
+
+    strlcpy(media->size_name, pwg_name, sizeof(media->size_name));
+    media->size_width  = pwg_media->width;
+    media->size_length = pwg_media->length;
+  }
+  else if (x_dimension && y_dimension)
+  {
+    pwg_media_t	*pwg_media = pwgMediaForSize(ippGetInteger(x_dimension, 0), ippGetInteger(y_dimension, 0));
+
+    strlcpy(media->size_name, pwg_media->pwg, sizeof(media->size_name));
+    media->size_width  = pwg_media->width;
+    media->size_length = pwg_media->length;
+  }
+
+  if (bottom_margin)
+    media->bottom_margin = ippGetInteger(top_offset, 0);
+  if (left_margin)
+    media->left_margin = ippGetInteger(top_offset, 0);
+  if (right_margin)
+    media->right_margin = ippGetInteger(top_offset, 0);
+  if (source)
+    strlcpy(media->source, ippGetString(source, 0, NULL), sizeof(media->source));
+  if (top_margin)
+    media->top_margin = ippGetInteger(top_offset, 0);
+  if (top_offset)
+    media->top_offset = ippGetInteger(top_offset, 0);
+  if (tracking)
+    media->tracking = lprintMediaTrackingValue(ippGetString(tracking, 0, NULL));
+  if (type)
+    strlcpy(media->type, ippGetString(type, 0, NULL), sizeof(media->type));
+}
+
+
+//
 // 'lprintLabelModeString()' - Return the string associated with a label mode bit value.
 //
 

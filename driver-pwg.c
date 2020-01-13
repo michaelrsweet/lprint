@@ -73,6 +73,9 @@ void
 lprintInitPWG(
     lprint_driver_t *driver)		// I - Driver
 {
+  int	i;				// Looping var
+
+
   pthread_rwlock_wrlock(&driver->rwlock);
 
   driver->print      = lprint_pwg_print;
@@ -90,27 +93,64 @@ lprintInitPWG(
   driver->x_resolution[1] = 300;
   driver->y_resolution[1] = 300;
 
+  driver->left_right = 312;		// 1/16" left and right
+  driver->bottom_top = 625;		// 1/8" top and bottom
+
   if (!strcmp(driver->name, "pwg_2inch"))
   {
     driver->num_media = (int)(sizeof(lprint_pwg_2inch_media) / sizeof(lprint_pwg_2inch_media[0]));
     memcpy(driver->media, lprint_pwg_2inch_media, sizeof(lprint_pwg_2inch_media));
+
+    driver->num_source = 1;
+    driver->source[0]  = "main-roll";
+
+    strlcpy(driver->media_ready[0].size_name, "oe_address-label_1.25x3.5in", sizeof(driver->media_ready[0].size_name));
   }
   else
   {
     driver->num_media = (int)(sizeof(lprint_pwg_4inch_media) / sizeof(lprint_pwg_4inch_media[0]));
     memcpy(driver->media, lprint_pwg_4inch_media, sizeof(lprint_pwg_4inch_media));
+
+    driver->num_source = 2;
+    driver->source[0]  = "main-roll";
+    driver->source[1]  = "alternate-roll";
+
+    strlcpy(driver->media_ready[0].size_name, "oe_address-label_1.25x3.5in", sizeof(driver->media_ready[0].size_name));
+    strlcpy(driver->media_ready[1].size_name, "na_index-4x6_4x6in", sizeof(driver->media_ready[1].size_name));
   }
 
-  driver->left_right = 312;		// 1/16" left and right
-  driver->bottom_top = 625;		// 1/8" top and bottom
+  driver->media_default.bottom_margin = driver->bottom_top;
+  driver->media_default.left_margin   = driver->left_right;
+  driver->media_default.right_margin  = driver->left_right;
+  driver->media_default.size_width    = 3175;
+  driver->media_default.size_length   = 8890;
+  driver->media_default.top_margin    = driver->bottom_top;
+  driver->media_default.tracking      = LPRINT_MEDIA_TRACKING_MARK;
+  strlcpy(driver->media_default.size_name, "oe_address-label_1.25x3.5in", sizeof(driver->media_default.size_name));
+  strlcpy(driver->media_default.source, "main-roll", sizeof(driver->media_default.source));
+  strlcpy(driver->media_default.type, "labels", sizeof(driver->media_default.type));
 
-  driver->num_source = 2;
-  driver->source[0]  = "main-roll";
-  driver->source[1]  = "alternate-roll";
+  for (i = 0; i < driver->num_source; i ++)
+  {
+    pwg_media_t *pwg = pwgMediaForPWG(driver->media_ready[i].size_name);
 
-  driver->num_type = 2;
+    driver->media_ready[i].bottom_margin = driver->bottom_top;
+    driver->media_ready[i].left_margin   = driver->left_right;
+    driver->media_ready[i].right_margin  = driver->left_right;
+    driver->media_ready[i].size_width    = pwg->width;
+    driver->media_ready[i].size_length   = pwg->length;
+    driver->media_ready[i].top_margin    = driver->bottom_top;
+    driver->media_ready[i].tracking      = LPRINT_MEDIA_TRACKING_MARK;
+    strlcpy(driver->media_ready[i].source, driver->source[i], sizeof(driver->media_ready[i].source));
+    strlcpy(driver->media_ready[i].type, "labels", sizeof(driver->media_ready[i].type));
+  }
+
+  driver->tracking_supported = LPRINT_MEDIA_TRACKING_MARK | LPRINT_MEDIA_TRACKING_CONTINUOUS;
+
+  driver->num_type = 3;
   driver->type[0]  = "continuous";
   driver->type[1]  = "labels";
+  driver->type[2]  = "labels-continuous";
 
   driver->num_supply = 0;
 
