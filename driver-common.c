@@ -57,10 +57,10 @@ static const char * const lprint_drivers[] =
   "dymo_lw-wireless",
   "pwg_2inch",
   "pwg_4inch",
-  "zebra_zpl-2inch-203dpi",
-  "zebra_zpl-2inch-300dpi",
-  "zebra_zpl-4inch-203dpi",
-  "zebra_zpl-4inch-300dpi"
+  "zpl_2inch-203dpi",
+  "zpl_2inch-300dpi",
+  "zpl_4inch-203dpi",
+  "zpl_4inch-300dpi"
 };
 
 static const char * const lprint_models[] =
