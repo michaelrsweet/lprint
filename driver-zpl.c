@@ -16,6 +16,8 @@
 #include "lprint.h"
 
 
+#define ZPL_COMPRESSION 1
+
 //
 // Local types...
 //
@@ -143,7 +145,9 @@ static const char * const lprint_zpl_4inch_media[] =
 // Local functions...
 //
 
+#if ZPL_COMPRESSION
 static int	lprint_zpl_compress(lprint_device_t *device, unsigned char ch, unsigned count);
+#endif // ZPL_COMPRESSION
 static int	lprint_zpl_print(lprint_job_t *job, lprint_options_t *options);
 static int	lprint_zpl_rendjob(lprint_job_t *job, lprint_options_t *options);
 static int	lprint_zpl_rendpage(lprint_job_t *job, lprint_options_t *options, unsigned page);
@@ -244,6 +248,7 @@ lprintInitZPL(
 }
 
 
+#if ZPL_COMPRESSION
 //
 // 'lprint_zpl_compress()' - Output a RLE run...
 //
@@ -293,6 +298,7 @@ lprint_zpl_compress(
 
   return (lprintWriteDevice(device, buffer, bufptr - buffer) > 0);
 }
+#endif // ZPL_COMPRESSION
 
 
 //
@@ -529,8 +535,10 @@ lprint_zpl_rwrite(
   unsigned		i;		// Looping var
   const unsigned char	*ptr;		// Pointer into buffer
   unsigned char		*compptr;	// Pointer into compression buffer
+#if ZPL_COMPRESSION
   unsigned char		repeat_char;	// Repeated character
   unsigned		repeat_count;	// Number of repeated characters
+#endif // ZPL_COMPRESSION
   static const unsigned char *hex = (const unsigned char *)"0123456789ABCDEF";
 					// Hex digits
 
@@ -538,13 +546,10 @@ lprint_zpl_rwrite(
 
   // Determine whether this row is the same as the previous line.
   // If so, output a ':' and return...
-  if (zpl->last_buffer_set)
+  if (zpl->last_buffer_set && !memcmp(line, zpl->last_buffer, options->header.cupsBytesPerLine))
   {
-    if (!memcmp(line, zpl->last_buffer, options->header.cupsBytesPerLine))
-    {
-      lprintWriteDevice(device, ":", 1);
-      return (1);
-    }
+    lprintWriteDevice(device, ":", 1);
+    return (1);
   }
 
   // Convert the line to hex digits...
@@ -554,6 +559,8 @@ lprint_zpl_rwrite(
     *compptr++ = hex[*ptr & 15];
   }
 
+#if ZPL_COMPRESSION
+  // Send run-length compressed HEX data...
   *compptr = '\0';
 
   // Run-length compress the graphics...
@@ -585,6 +592,11 @@ lprint_zpl_rwrite(
   }
   else
     lprint_zpl_compress(device, repeat_char, repeat_count);
+
+#else
+  // Send uncompressed HEX data...
+  lprintWriteDevice(device, zpl->comp_buffer, compptr - zpl->comp_buffer);
+#endif // ZPL_COMPRESSION
 
   // Save this line for the next round...
   memcpy(zpl->last_buffer, line, options->header.cupsBytesPerLine);
