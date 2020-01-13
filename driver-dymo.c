@@ -106,8 +106,8 @@ lprintInitDYMO(
   driver->format     = "application/vnd.dymo-lw";
 
   driver->num_resolution  = 1;
-  driver->x_resolution[0] = 203;
-  driver->y_resolution[0] = 203;
+  driver->x_resolution[0] = 300;
+  driver->y_resolution[0] = 300;
 
   driver->left_right = 100;
   driver->bottom_top = 525;
@@ -136,12 +136,12 @@ lprintInitDYMO(
   driver->num_type = 1;
   driver->type[0]  = "labels";
 
-  driver->media_default.bottom_margin = 525;
-  driver->media_default.left_margin   = 100;
-  driver->media_default.right_margin  = 100;
+  driver->media_default.bottom_margin = driver->bottom_top;
+  driver->media_default.left_margin   = driver->left_right;
+  driver->media_default.right_margin  = driver->left_right;
   driver->media_default.size_width    = 3175;
   driver->media_default.size_length   = 8890;
-  driver->media_default.top_margin    = 525;
+  driver->media_default.top_margin    = driver->bottom_top;
   driver->media_default.tracking      = LPRINT_MEDIA_TRACKING_WEB;
   strlcpy(driver->media_default.size_name, "oe_address-label_1.25x3.5in", sizeof(driver->media_default.size_name));
   strlcpy(driver->media_default.source, driver->source[0], sizeof(driver->media_default.source));
@@ -151,12 +151,12 @@ lprintInitDYMO(
   {
     pwg_media_t *pwg = pwgMediaForPWG(driver->media_ready[i].size_name);
 
-    driver->media_ready[i].bottom_margin = 525;
-    driver->media_ready[i].left_margin   = 100;
-    driver->media_ready[i].right_margin  = 100;
+    driver->media_ready[i].bottom_margin = driver->bottom_top;
+    driver->media_ready[i].left_margin   = driver->left_right;
+    driver->media_ready[i].right_margin  = driver->left_right;
     driver->media_ready[i].size_width    = pwg->width;
     driver->media_ready[i].size_length   = pwg->length;
-    driver->media_ready[i].top_margin    = 525;
+    driver->media_ready[i].top_margin    = driver->bottom_top;
     driver->media_ready[i].tracking      = LPRINT_MEDIA_TRACKING_MARK;
     strlcpy(driver->media_ready[i].source, driver->source[i], sizeof(driver->media_ready[i].source));
     strlcpy(driver->media_ready[i].type, driver->type[0], sizeof(driver->media_ready[i].type));
@@ -312,23 +312,29 @@ lprint_dymo_rstartpage(
     lprint_options_t *options,		// I - Job options
     unsigned         page)		// I - Page number
 {
+  lprint_driver_t	*driver = job->printer->driver;
+					// Driver
   lprint_device_t	*device = job->printer->driver->device;
 					// Output device
   lprint_dymo_t		*dymo = (lprint_dymo_t *)job->printer->driver->job_data;
 					// DYMO driver data
   int			darkness = job->printer->driver->darkness_configured + options->print_darkness;
+  const char		*density = "cdeg";
+					// Density codes
 
 
   (void)page;
 
-  if (options->header.cupsWidth > 470)
+  if (options->header.cupsBytesPerLine > 256)
   {
     lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Raster data too large for printer.");
     return (0);
   }
 
+  lprintPrintfDevice(device, "\033Q%c%c", 0, 0);
+  lprintPrintfDevice(device, "\033B%c", 0);
   lprintPrintfDevice(device, "\033L%c%c", options->header.cupsHeight >> 8, options->header.cupsHeight);
-  lprintPrintfDevice(device, "\033D%c", options->header.cupsBytesPerLine - 2);
+  lprintPrintfDevice(device, "\033D%c", options->header.cupsBytesPerLine - 1);
   lprintPrintfDevice(device, "\033q%d", !strcmp(options->media.source, "alternate-roll") ? 2 : 1);
 
   if (darkness < 0)
@@ -336,11 +342,11 @@ lprint_dymo_rstartpage(
   else if (darkness > 100)
     darkness = 100;
 
-  lprintPrintfDevice(device, "\033%c", darkness / 25 + 'c');
+  lprintPrintfDevice(device, "\033%c", density[3 * darkness / 100]);
 
   dymo->feed   = 0;
-  dymo->ystart = 42;
-  dymo->yend   = options->header.cupsHeight - 84;
+  dymo->ystart = driver->bottom_top * options->printer_resolution[1] / 2540;
+  dymo->yend   = options->header.cupsHeight - dymo->ystart;
 
   return (1);
 }
@@ -361,13 +367,13 @@ lprint_dymo_rwrite(
 					// Output device
   lprint_dymo_t		*dymo = (lprint_dymo_t *)job->printer->driver->job_data;
 					// DYMO driver data
-  unsigned char		buffer[100];	// Write buffer
+  unsigned char		buffer[256];	// Write buffer
 
 
   if (y < dymo->ystart || y >= dymo->yend)
     return (1);
 
-  if (line[1] || memcmp(line + 1, line + 2, options->header.cupsBytesPerLine - 3))
+  if (line[0] || memcmp(line, line + 1, options->header.cupsBytesPerLine - 1))
   {
     // Not a blank line, feed for any prior blank lines...
     if (dymo->feed)
@@ -384,8 +390,8 @@ lprint_dymo_rwrite(
 
     // Then write the non-blank line...
     buffer[0] = 0x16;
-    memcpy(buffer, line + 1, options->header.cupsBytesPerLine - 2);
-    lprintWriteDevice(device, buffer, options->header.cupsBytesPerLine - 1);
+    memcpy(buffer + 1, line + 1, options->header.cupsBytesPerLine - 1);
+    lprintWriteDevice(device, buffer, options->header.cupsBytesPerLine);
   }
   else
   {
