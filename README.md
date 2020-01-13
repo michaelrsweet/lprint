@@ -1,5 +1,5 @@
-LPrint - Label Printer Application
-==================================
+LPrint - A Label Printer Application
+====================================
 
 LPrint implements printing for a variety of common label and receipt printers
 connected via network or USB.  Features include:
