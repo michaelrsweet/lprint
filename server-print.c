@@ -441,6 +441,12 @@ process_png(lprint_job_t *job)		// I - Job
 
   lprintLogJob(job, LPRINT_LOGLEVEL_DEBUG, "ileft=%u, itop=%u, iwidth=%u, iheight=%u", ileft, itop, iwidth, iheight);
 
+  if (iwidth == 0 || iheight == 0)
+  {
+    lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Invalid media size");
+    goto abort_job;
+  }
+
   // Load the PNG...
   memset(&png, 0, sizeof(png));
   png.version = PNG_IMAGE_VERSION;
