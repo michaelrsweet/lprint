@@ -16,7 +16,7 @@
 #include "lprint.h"
 
 
-#define ZPL_COMPRESSION 1
+#define ZPL_COMPRESSION 0
 
 //
 // Local types...
