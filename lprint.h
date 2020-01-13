@@ -15,8 +15,8 @@
 // Include necessary headers...
 //
 
-#  include "device-common.h"
-#  include "driver-common.h"
+#  include "device.h"
+#  include "driver.h"
 
 #  include <limits.h>
 #  include <poll.h>
