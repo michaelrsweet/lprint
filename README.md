@@ -68,3 +68,6 @@ LPrint is Copyright © 2019-2020 by Michael R Sweet.
 LPrint is licensed under the Apache License Version 2.0 with an exception to
 allow linking against GPL2/LGPL2 software (like older versions of CUPS).  See
 the files "LICENSE" and "NOTICE" for more information.
+
+LPrint is based loosely on the "ippeveprinter.c" and "rastertolabel.c" code
+from CUPS.
