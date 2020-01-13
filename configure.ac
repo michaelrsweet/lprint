@@ -179,12 +179,21 @@ fi
 dnl libpng...
 AC_ARG_ENABLE(libpng, [  --enable-libpng         use libpng for PNG printing])
 
-if test x$enable_libpng != xno; then
-	AC_SEARCH_LIBS(png_image_begin_read_from_file, png, [AC_DEFINE(HAVE_LIBPNG)])
-
-	if test x$ac_png_image_begin_read_from_file = xno -a x$enable_libpng = xyes; then
-		AC_MSG_ERROR([libpng-dev 1.6 or later required for --enable-libpng.])
+if test "x$PKGCONFIG" != x -a x$enable_libpng != xno; then
+	AC_MSG_CHECKING([for libpng-1.6.x])
+	if $PKGCONFIG --exists libpng16; then
+		AC_MSG_RESULT([yes]);
+		AC_DEFINE(HAVE_LIBPNG)
+		CFLAGS="$CFLAGS `$PKGCONFIG --cflags libpng16`"
+		LIBS="$LIBS `$PKGCONFIG --libs libpng16`"
+	else
+		AC_MSG_RESULT([no]);
+		if test x$enable_libpng = xyes; then
+			AC_MSG_ERROR([libpng-dev 1.6 or later required for --enable-libpng.])
+		fi
 	fi
+elif test x$enable_libpng = xyes; then
+	AC_MSG_ERROR([libpng-dev 1.6 or later required for --enable-libpng.])
 fi
 
 
@@ -192,9 +201,9 @@ dnl libusb...
 AC_ARG_ENABLE(libusb, [  --enable-libusb         use libusb for USB printing])
 
 if test "x$PKGCONFIG" != x -a x$enable_libusb != xno; then
-	AC_MSG_CHECKING(for libusb-1.0)
+	AC_MSG_CHECKING([for libusb-1.0])
 	if $PKGCONFIG --exists libusb-1.0; then
-		AC_MSG_RESULT(yes)
+		AC_MSG_RESULT([yes])
 		AC_DEFINE(HAVE_LIBUSB)
 		CFLAGS="$CFLAGS `$PKGCONFIG --cflags libusb-1.0`"
 		LIBS="$LIBS `$PKGCONFIG --libs libusb-1.0`"
@@ -202,7 +211,7 @@ if test "x$PKGCONFIG" != x -a x$enable_libusb != xno; then
 			LIBS="$LIBS -framework IOKit"
 		fi
 	else
-		AC_MSG_RESULT(no)
+		AC_MSG_RESULT([no])
 		if test x$enable_libusb = xyes; then
 			AC_MSG_ERROR([libusb-1.0-0-dev required for --enable-libusb.])
 		fi
@@ -212,19 +221,19 @@ elif test x$enable_libusb = xyes; then
 fi
 
 
-dnl PAM support...
-AC_ARG_ENABLE(pam, [  --disable-pam           disable PAM support])
-
-if test x$enable_pam != xno; then
-	AC_CHECK_LIB(dl,dlopen)
-	AC_CHECK_LIB(pam,pam_start)
-	AC_CHECK_HEADER(security/pam_appl.h, AC_DEFINE(HAVE_SECURITY_PAM_APPL_H))
-	AC_CHECK_HEADER(pam/pam_appl.h, AC_DEFINE(HAVE_PAM_PAM_APPL_H))
-
-	if test x$ac_pam_start = xno -a x$enable_pam = xyes; then
-		AC_MSG_ERROR([libpam-dev required for --enable-pam.])
-	fi
-fi
+#dnl PAM support...
+#AC_ARG_ENABLE(pam, [  --disable-pam           disable PAM support])
+#
+#if test x$enable_pam != xno; then
+#	AC_CHECK_LIB(dl,dlopen)
+#	AC_CHECK_LIB(pam,pam_start)
+#	AC_CHECK_HEADER(security/pam_appl.h, AC_DEFINE(HAVE_SECURITY_PAM_APPL_H))
+#	AC_CHECK_HEADER(pam/pam_appl.h, AC_DEFINE(HAVE_PAM_PAM_APPL_H))
+#
+#	if test x$ac_pam_start = xno -a x$enable_pam = xyes; then
+#		AC_MSG_ERROR([libpam-dev required for --enable-pam.])
+#	fi
+#fi
 
 
 dnl Generate the Makefile...

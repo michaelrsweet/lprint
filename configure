@@ -696,7 +696,6 @@ enable_static_cups
 with_dnssd
 enable_libpng
 enable_libusb
-enable_pam
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1324,7 +1323,6 @@ Optional Features:
   --enable-static-cups    use static CUPS libraries, default=no
   --enable-libpng         use libpng for PNG printing
   --enable-libusb         use libusb for USB printing
-  --disable-pam           disable PAM support
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -3787,68 +3785,25 @@ if test "${enable_libpng+set}" = set; then :
 fi
 
 
-if test x$enable_libpng != xno; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing png_image_begin_read_from_file" >&5
-$as_echo_n "checking for library containing png_image_begin_read_from_file... " >&6; }
-if ${ac_cv_search_png_image_begin_read_from_file+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_func_search_save_LIBS=$LIBS
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
+if test "x$PKGCONFIG" != x -a x$enable_libpng != xno; then
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libpng-1.6.x" >&5
+$as_echo_n "checking for libpng-1.6.x... " >&6; }
+	if $PKGCONFIG --exists libpng16; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; };
+		$as_echo "#define HAVE_LIBPNG 1" >>confdefs.h
 
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char png_image_begin_read_from_file ();
-int
-main ()
-{
-return png_image_begin_read_from_file ();
-  ;
-  return 0;
-}
-_ACEOF
-for ac_lib in '' png; do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_search_png_image_begin_read_from_file=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext
-  if ${ac_cv_search_png_image_begin_read_from_file+:} false; then :
-  break
-fi
-done
-if ${ac_cv_search_png_image_begin_read_from_file+:} false; then :
-
-else
-  ac_cv_search_png_image_begin_read_from_file=no
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_png_image_begin_read_from_file" >&5
-$as_echo "$ac_cv_search_png_image_begin_read_from_file" >&6; }
-ac_res=$ac_cv_search_png_image_begin_read_from_file
-if test "$ac_res" != no; then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-  $as_echo "#define HAVE_LIBPNG 1" >>confdefs.h
-
-fi
-
-
-	if test x$ac_png_image_begin_read_from_file = xno -a x$enable_libpng = xyes; then
-		as_fn_error $? "libpng-dev 1.6 or later required for --enable-libpng." "$LINENO" 5
+		CFLAGS="$CFLAGS `$PKGCONFIG --cflags libpng16`"
+		LIBS="$LIBS `$PKGCONFIG --libs libpng16`"
+	else
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; };
+		if test x$enable_libpng = xyes; then
+			as_fn_error $? "libpng-dev 1.6 or later required for --enable-libpng." "$LINENO" 5
+		fi
 	fi
+elif test x$enable_libpng = xyes; then
+	as_fn_error $? "libpng-dev 1.6 or later required for --enable-libpng." "$LINENO" 5
 fi
 
 
@@ -3883,122 +3838,19 @@ elif test x$enable_libusb = xyes; then
 fi
 
 
-# Check whether --enable-pam was given.
-if test "${enable_pam+set}" = set; then :
-  enableval=$enable_pam;
-fi
-
-
-if test x$enable_pam != xno; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for dlopen in -ldl" >&5
-$as_echo_n "checking for dlopen in -ldl... " >&6; }
-if ${ac_cv_lib_dl_dlopen+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-ldl  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char dlopen ();
-int
-main ()
-{
-return dlopen ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_dl_dlopen=yes
-else
-  ac_cv_lib_dl_dlopen=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_dl_dlopen" >&5
-$as_echo "$ac_cv_lib_dl_dlopen" >&6; }
-if test "x$ac_cv_lib_dl_dlopen" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBDL 1
-_ACEOF
-
-  LIBS="-ldl $LIBS"
-
-fi
-
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pam_start in -lpam" >&5
-$as_echo_n "checking for pam_start in -lpam... " >&6; }
-if ${ac_cv_lib_pam_pam_start+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lpam  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char pam_start ();
-int
-main ()
-{
-return pam_start ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_pam_pam_start=yes
-else
-  ac_cv_lib_pam_pam_start=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pam_pam_start" >&5
-$as_echo "$ac_cv_lib_pam_pam_start" >&6; }
-if test "x$ac_cv_lib_pam_pam_start" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBPAM 1
-_ACEOF
-
-  LIBS="-lpam $LIBS"
-
-fi
-
-	ac_fn_c_check_header_mongrel "$LINENO" "security/pam_appl.h" "ac_cv_header_security_pam_appl_h" "$ac_includes_default"
-if test "x$ac_cv_header_security_pam_appl_h" = xyes; then :
-  $as_echo "#define HAVE_SECURITY_PAM_APPL_H 1" >>confdefs.h
-
-fi
-
-
-	ac_fn_c_check_header_mongrel "$LINENO" "pam/pam_appl.h" "ac_cv_header_pam_pam_appl_h" "$ac_includes_default"
-if test "x$ac_cv_header_pam_pam_appl_h" = xyes; then :
-  $as_echo "#define HAVE_PAM_PAM_APPL_H 1" >>confdefs.h
-
-fi
-
-
-
-	if test x$ac_pam_start = xno -a x$enable_pam = xyes; then
-		as_fn_error $? "libpam-dev required for --enable-pam." "$LINENO" 5
-	fi
-fi
+#dnl PAM support...
+#AC_ARG_ENABLE(pam, [  --disable-pam           disable PAM support])
+#
+#if test x$enable_pam != xno; then
+#	AC_CHECK_LIB(dl,dlopen)
+#	AC_CHECK_LIB(pam,pam_start)
+#	AC_CHECK_HEADER(security/pam_appl.h, AC_DEFINE(HAVE_SECURITY_PAM_APPL_H))
+#	AC_CHECK_HEADER(pam/pam_appl.h, AC_DEFINE(HAVE_PAM_PAM_APPL_H))
+#
+#	if test x$ac_pam_start = xno -a x$enable_pam = xyes; then
+#		AC_MSG_ERROR([libpam-dev required for --enable-pam.])
+#	fi
+#fi
 
 
 ac_config_files="$ac_config_files Makefile"
