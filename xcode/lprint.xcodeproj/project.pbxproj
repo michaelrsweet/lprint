@@ -35,7 +35,6 @@
 		27FBEEF02396995C00BB195A /* libpam.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEEF2396995C00BB195A /* libpam.tbd */; };
 		27FBEEF22396996600BB195A /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF12396996600BB195A /* IOKit.framework */; };
 		27FBEEF42396998300BB195A /* libusb-1.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF32396998300BB195A /* libusb-1.0.a */; };
-		27FBEEF6239699A600BB195A /* libpng16.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF5239699A600BB195A /* libpng16.a */; };
 		27FBEEF823969AB700BB195A /* libdl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF723969AB700BB195A /* libdl.tbd */; };
 		27FBEEFA23969AC000BB195A /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF923969AC000BB195A /* SystemConfiguration.framework */; };
 		27FBEEFC23969ACC00BB195A /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEFB23969ACC00BB195A /* CoreFoundation.framework */; };
@@ -44,6 +43,8 @@
 		27FBEF09239747C300BB195A /* lprint-delete.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEF05239747C200BB195A /* lprint-delete.c */; };
 		27FBEF0A239747C300BB195A /* lprint-default.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEF06239747C200BB195A /* lprint-default.c */; };
 		27FBEF0B239747C300BB195A /* lprint-drivers.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEF07239747C200BB195A /* lprint-drivers.c */; };
+		27FE0EEB23CBFC6200FE1347 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FE0EEA23CBFC6200FE1347 /* libz.tbd */; };
+		27FE0EED23CBFDFD00FE1347 /* libpng16.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FE0EEC23CBFDFD00FE1347 /* libpng16.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -128,6 +129,8 @@
 		27FBEF05239747C200BB195A /* lprint-delete.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-delete.c"; path = "../lprint-delete.c"; sourceTree = "<group>"; };
 		27FBEF06239747C200BB195A /* lprint-default.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-default.c"; path = "../lprint-default.c"; sourceTree = "<group>"; };
 		27FBEF07239747C200BB195A /* lprint-drivers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-drivers.c"; path = "../lprint-drivers.c"; sourceTree = "<group>"; };
+		27FE0EEA23CBFC6200FE1347 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		27FE0EEC23CBFDFD00FE1347 /* libpng16.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpng16.a; path = ../../../../../usr/local/lib/libpng16.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -135,9 +138,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27FE0EED23CBFDFD00FE1347 /* libpng16.a in Frameworks */,
+				27FE0EEB23CBFC6200FE1347 /* libz.tbd in Frameworks */,
 				27FBEEF02396995C00BB195A /* libpam.tbd in Frameworks */,
 				27FBEEF823969AB700BB195A /* libdl.tbd in Frameworks */,
-				27FBEEF6239699A600BB195A /* libpng16.a in Frameworks */,
 				27FBEEFE23969AD900BB195A /* libpthread.tbd in Frameworks */,
 				27FBEEEE2396994E00BB195A /* libcups.tbd in Frameworks */,
 				27FBEEFC23969ACC00BB195A /* CoreFoundation.framework in Frameworks */,
@@ -274,6 +278,8 @@
 		27FBEEEC2396994E00BB195A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27FE0EEC23CBFDFD00FE1347 /* libpng16.a */,
+				27FE0EEA23CBFC6200FE1347 /* libz.tbd */,
 				27FBEEFD23969AD900BB195A /* libpthread.tbd */,
 				27FBEEFB23969ACC00BB195A /* CoreFoundation.framework */,
 				27FBEEF923969AC000BB195A /* SystemConfiguration.framework */,
@@ -522,10 +528,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = RU58A2256H;
 				ENABLE_HARDENED_RUNTIME = YES;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/libpng/1.6.34/lib,
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -537,10 +540,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = RU58A2256H;
 				ENABLE_HARDENED_RUNTIME = YES;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/libpng/1.6.34/lib,
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
