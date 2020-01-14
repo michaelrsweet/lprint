@@ -138,7 +138,7 @@ install:	all
 	done
 	$(INSTALL) -d -m 755 $(BUILDROOT)$(mandir)/man5
 	for file in $(MAN5); do \
-		$(INSTALL) -c -m 644 lprint.conf.5 $(BUILDROOT)$(mandir)/man5; \
+		$(INSTALL) -c -m 644 $$file $(BUILDROOT)$(mandir)/man5; \
 	done
 
 
