@@ -18,13 +18,15 @@ LPRINT_VERSION	=	@LPRINT_VERSION@
 # Programs and options...
 AR		=	@AR@
 ARFLAGS		=	@ARFLAGS@
+ASAN_OPTIONS	=	leak_check_at_exit=false
 CC		=	@CC@
-CFLAGS		=	-I.. @CFLAGS@
+CFLAGS		=	-I.. @CFLAGS@ $(OPTIM)
 CODESIGN_IDENTITY =	Developer ID
 INSTALL		=	@INSTALL@
-LDFLAGS		=	@LDFLAGS@
+LDFLAGS		=	@LDFLAGS@ $(OPTIM)
 LIBS		=	@LIBS@
 MKDIR           =       @MKDIR@ -p
+OPTIM		=	@OPTIM@
 RANLIB		=	@RANLIB@
 RM		=	@RM@ -f
 RMDIR		=	@RMDIR@

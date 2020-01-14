@@ -40,6 +40,7 @@ parts:
     main:
         after: [cups]
         plugin: autotools
+        configflags: [--enable-static-cups,--enable-libpng,--enable-libusb,--with-dnssd=avahi]
         source: .
         build-packages: [libavahi-client-dev, libgnutls28-dev, libpng-dev, zlib1g-dev]
         stage-packages: [libavahi-client3]

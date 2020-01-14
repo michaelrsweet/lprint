@@ -39,15 +39,6 @@ CXXFLAGS="${CXXFLAGS:=}"
 LDFLAGS="${LDFLAGS:=}"
 LIBS="${LIBS:=}"
 
-AC_ARG_ENABLE(debug, [  --enable-debug          turn on debugging, default=no])
-if test x$enable_debug = xyes; then
-	CFLAGS="-g $CFLAGS"
-	LDFLAGS="-g $LDFLAGS"
-else
-	CFLAGS="-g -Os $CFLAGS"
-	LDFLAGS="-g -Os $LDFLAGS"
-fi
-
 
 dnl Standard programs...
 AC_PROG_CC(clang cc gcc)
@@ -244,6 +235,55 @@ fi
 #		AC_MSG_ERROR([libpam-dev required for --enable-pam.])
 #	fi
 #fi
+
+
+dnl Extra compiler options...
+AC_ARG_ENABLE(debug, [  --enable-debug          turn on debugging, default=no])
+AC_ARG_ENABLE(sanitizer, [  --enable-sanitizer      build with AddressSanitizer])
+
+if test x$enable_debug = xyes; then
+	OPTIM="-g"
+else
+	OPTIM="-g -Os"
+fi
+AC_SUBST(OPTIM)
+
+if test -n "$GXX"; then
+	if test x$enable_sanitizer = xyes; then
+		# Use -fsanitize=address with debugging...
+		OPTIM="-g -fsanitize=address"
+	else
+		# Otherwise use the Fortify enhancements to catch any unbounded
+		# string operations...
+		CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2"
+		CXXFLAGS="$CXXFLAGS -D_FORTIFY_SOURCE=2"
+	fi
+
+	dnl Show all standard warnings + unused variables when compiling...
+	CFLAGS="-Wall -Wunused -Wno-unused-result -Wno-char-subscripts -Wno-format-y2k $CFLAGS"
+
+	dnl See if PIE options are supported...
+	AC_MSG_CHECKING(whether compiler supports -fPIE)
+	OLDCFLAGS="$CFLAGS"
+	case "$host_os_name" in
+		darwin*)
+			CFLAGS="$CFLAGS -fPIE -Wl,-pie"
+			AC_TRY_COMPILE(,,[
+				LDFLAGS="-fPIE -Wl,-pie $LDFLAGS"
+				AC_MSG_RESULT(yes)],
+				AC_MSG_RESULT(no))
+			;;
+
+		*)
+			CFLAGS="$CFLAGS -fPIE -pie"
+			AC_TRY_COMPILE(,,[
+				LDFLAGS="-fPIE -pie $LDFLAGS"
+				AC_MSG_RESULT(yes)],
+				AC_MSG_RESULT(no))
+			;;
+	esac
+	CFLAGS="$OLDCFLAGS"
+fi
 
 
 dnl Generate the Makefile...

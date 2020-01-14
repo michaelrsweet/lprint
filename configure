@@ -623,6 +623,7 @@ ac_includes_default="\
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+OPTIM
 EGREP
 GREP
 CPP
@@ -669,7 +670,6 @@ infodir
 docdir
 oldincludedir
 includedir
-runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -692,11 +692,12 @@ SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
-enable_debug
 enable_static_cups
 with_dnssd
 enable_libpng
 enable_libusb
+enable_debug
+enable_sanitizer
 '
       ac_precious_vars='build_alias
 host_alias
@@ -745,7 +746,6 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
-runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -998,15 +998,6 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
-  -runstatedir | --runstatedir | --runstatedi | --runstated \
-  | --runstate | --runstat | --runsta | --runst | --runs \
-  | --run | --ru | --r)
-    ac_prev=runstatedir ;;
-  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
-  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
-  | --run=* | --ru=* | --r=*)
-    runstatedir=$ac_optarg ;;
-
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1144,7 +1135,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir runstatedir
+		libdir localedir mandir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1297,7 +1288,6 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
-  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1331,10 +1321,11 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-debug          turn on debugging, default=no
   --enable-static-cups    use static CUPS libraries, default=no
   --enable-libpng         use libpng for PNG printing
   --enable-libusb         use libusb for USB printing
+  --enable-debug          turn on debugging, default=no
+  --enable-sanitizer      build with AddressSanitizer
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -2259,19 +2250,6 @@ CFLAGS="${CFLAGS:=}"
 CXXFLAGS="${CXXFLAGS:=}"
 LDFLAGS="${LDFLAGS:=}"
 LIBS="${LIBS:=}"
-
-# Check whether --enable-debug was given.
-if test "${enable_debug+set}" = set; then :
-  enableval=$enable_debug;
-fi
-
-if test x$enable_debug = xyes; then
-	CFLAGS="-g $CFLAGS"
-	LDFLAGS="-g $LDFLAGS"
-else
-	CFLAGS="-g -Os $CFLAGS"
-	LDFLAGS="-g -Os $LDFLAGS"
-fi
 
 
 ac_ext=c
@@ -3956,6 +3934,95 @@ fi
 #		AC_MSG_ERROR([libpam-dev required for --enable-pam.])
 #	fi
 #fi
+
+
+# Check whether --enable-debug was given.
+if test "${enable_debug+set}" = set; then :
+  enableval=$enable_debug;
+fi
+
+# Check whether --enable-sanitizer was given.
+if test "${enable_sanitizer+set}" = set; then :
+  enableval=$enable_sanitizer;
+fi
+
+
+if test x$enable_debug = xyes; then
+	OPTIM="-g"
+else
+	OPTIM="-g -Os"
+fi
+
+
+if test -n "$GXX"; then
+	if test x$enable_sanitizer = xyes; then
+		# Use -fsanitize=address with debugging...
+		OPTIM="-g -fsanitize=address"
+	else
+		# Otherwise use the Fortify enhancements to catch any unbounded
+		# string operations...
+		CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2"
+		CXXFLAGS="$CXXFLAGS -D_FORTIFY_SOURCE=2"
+	fi
+
+		CFLAGS="-Wall -Wunused -Wno-unused-result -Wno-char-subscripts -Wno-format-y2k $CFLAGS"
+
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -fPIE" >&5
+$as_echo_n "checking whether compiler supports -fPIE... " >&6; }
+	OLDCFLAGS="$CFLAGS"
+	case "$host_os_name" in
+		darwin*)
+			CFLAGS="$CFLAGS -fPIE -Wl,-pie"
+			cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+
+				LDFLAGS="-fPIE -Wl,-pie $LDFLAGS"
+				{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+			;;
+
+		*)
+			CFLAGS="$CFLAGS -fPIE -pie"
+			cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+
+				LDFLAGS="-fPIE -pie $LDFLAGS"
+				{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+			;;
+	esac
+	CFLAGS="$OLDCFLAGS"
+fi
 
 
 ac_config_files="$ac_config_files Makefile"
