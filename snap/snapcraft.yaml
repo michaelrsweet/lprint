@@ -28,19 +28,38 @@ apps:
         plugs: [avahi-observe, home, network, network-bind]
 
 parts:
-    cups:
+    libcups:
         plugin: autotools
         configflags: [--enable-static,--with-components=libcupslite]
         source: https://github.com/apple/cups/releases/download/v2.3.1/cups-2.3.1-source.tar.gz
         build-packages: [libavahi-client-dev, libgnutls28-dev, zlib1g-dev]
         prime:
-            - -bin/cups-config
+            - -bin/*
             - -include/cups/*
-            - -lib/libcups*
-    main:
-        after: [cups]
+            - -lib/*
+    libpng:
         plugin: autotools
-        configflags: [--enable-static-cups,--enable-libpng,--enable-libusb,--with-dnssd=avahi]
+#        configflags: [--disable-shared]
+        source: https://download.sourceforge.net/libpng/libpng-1.6.37.tar.gz
+        build-packages: [zlib1g-dev]
+        prime:
+            - -include/*
+            - -lib/*
+            - -lib/pkg-config/*
+#    libusb:
+#        plugin: autotools
+#        configflags: [--disable-shared]
+#        source: https://github.com/libusb/libusb/releases/download/v1.0.22/libusb-1.0.22.tar.bz2
+#        build-packages: [libudev-dev]
+#        prime:
+#            - -include/*
+#            - -lib/*
+#            - -lib/pkg-config/*
+    main:
+        after: [libcups, libpng]
+        plugin: autotools
+        configflags: [--enable-libpng,--enable-libusb,--with-dnssd=avahi]
         source: .
-        build-packages: [libavahi-client-dev, libgnutls28-dev, libpng-dev, zlib1g-dev]
+        build-packages: [libavahi-client-dev, libgnutls28-dev, libusb-1.0-0-dev, zlib1g-dev]
         stage-packages: [libavahi-client3]
+
