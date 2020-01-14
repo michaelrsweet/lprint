@@ -248,7 +248,7 @@ else
 fi
 AC_SUBST(OPTIM)
 
-if test -n "$GXX"; then
+if test -n "$GCC"; then
 	if test x$enable_sanitizer = xyes; then
 		# Use -fsanitize=address with debugging...
 		OPTIM="-g -fsanitize=address"
