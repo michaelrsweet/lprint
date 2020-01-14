@@ -20,9 +20,12 @@
 #else
 #  include <sys/statfs.h>
 #endif // __APPLE__
-#ifdef __linux
+#ifdef HAVE_SYS_RANDOM_H
 #  include <sys/random.h>
-#endif // __linux
+#endif // HAVE_SYS_RANDOM_H
+#ifdef HAVE_GNUTLS_RND
+#  include <gnutls/crypto.h>
+#endif // HAVE_GNUTLS_RND
 
 
 //
@@ -656,18 +659,25 @@ free_printer(lprint_printer_t *printer)	// I - Printer
 static unsigned				// O - Random number
 lprint_rand(void)
 {
-#if defined(__APPLE__) || defined(__OpenBSD__)
+#ifdef HAVE_ARC4RANDOM
   // arc4random uses real entropy automatically...
   return (arc4random());
 
 #else
-#  ifdef __linux
+#  ifdef HAVE_GETRANDOM
   // Linux has the getrandom function to get real entropy, but can fail...
   unsigned	buffer;			// Random number buffer
 
   if (getrandom(&buffer, sizeof(buffer), 0) == sizeof(buffer))
     return (buffer);
-#  endif // __linux
+
+#  elif defined(HAVE_GNUTLS_RND)
+  // GNU TLS has the gnutls_rnd function we can use as well, but can fail...
+  unsigned	buffer;			// Random number buffer
+
+  if (!gnutls_rnd(GNUTLS_RND_NONCE, &buffer, sizeof(buffer)))
+    return (buffer);
+#  endif // HAVE_GETRANDOM
 
   // Fall back to random() seeded with the current time - not ideal, but for
   // our non-cryptographic purposes this is OK...

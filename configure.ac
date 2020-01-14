@@ -104,6 +104,11 @@ else
 fi
 
 
+dnl Random number support...
+AC_CHECK_HEADER(sys/random.h)
+AC_CHECK_FUNCS(arc4random getrandom gnutls_rnd)
+
+
 dnl POSIX threads...
 AC_CHECK_HEADER(pthread.h)
 

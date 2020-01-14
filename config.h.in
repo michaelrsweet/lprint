@@ -1,7 +1,7 @@
 //
 // Configuration header file for LPrint, a Label Printer Utility
 //
-// Copyright © 2019 by Michael R Sweet.
+// Copyright © 2019-2020 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -24,7 +24,8 @@
 #undef HAVE_LIBUSB
 
 
-// PAM
-#undef HAVE_LIBPAM
-#undef HAVE_SECURITY_PAM_APPL_H
-#undef HAVE_PAM_PAM_APPL_H
+// Random number support
+#undef HAVE_SYS_RANDOM_H
+#undef HAVE_ARC4RANDOM
+#undef HAVE_GETRANDOM
+#undef HAVE_GNUTLS_RND
