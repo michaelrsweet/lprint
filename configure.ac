@@ -286,5 +286,9 @@ if test -n "$GCC"; then
 fi
 
 
+dnl Extra linker options...
+AC_ARG_WITH(ldflags, [  --with-ldflags=...      Specify additional LDFLAGS ],
+	LDFLAGS="$withval $LDFLAGS")
+
 dnl Generate the Makefile...
 AC_OUTPUT(Makefile)
