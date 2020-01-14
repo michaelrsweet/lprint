@@ -3965,7 +3965,7 @@ if test -n "$GCC"; then
 		CXXFLAGS="$CXXFLAGS -D_FORTIFY_SOURCE=2"
 	fi
 
-		CFLAGS="-Wall -Wunused -Wno-unused-result -Wno-char-subscripts -Wno-format-y2k $CFLAGS"
+		CFLAGS="-Wall -Wunused -Wno-unknown-warning-option -Wno-unused-result -Wno-char-subscripts -Wno-format-y2k -Wno-maybe-uninitialized -Wno-switch $CFLAGS"
 
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -fPIE" >&5
 $as_echo_n "checking whether compiler supports -fPIE... " >&6; }
