@@ -15,7 +15,7 @@ description: |
    - Each printer can print "raw", Apple/PWG Raster, and/or PNG files.
 
    For more information, see the file "DOCUMENTATION.md", the man pages in the
-   "man" directory, and/or the LPrint Home Page at
+   "man" directory, and/or the LPrint project page at
    "https://www.msweet.org/lprint".
 
 grade: stable
@@ -28,8 +28,17 @@ apps:
         plugs: [avahi-observe, home, network, network-bind]
 
 parts:
+    cups:
+        plugin: autotools
+        configflags: [--disable-shared,--enable-static,--with-components=libcupslite]
+        source: https://github.com/apple/cups/releases/download/v2.3.1/cups-2.3.1-source.tar.gz
+        build-packages: [libavahi-client-dev, libgnutls28-dev, zlib1g-dev]
+        prime:
+            - -bin/cups-config
+            - -include/cups/*
+            - -lib/libcups*
     main:
         plugin: autotools
         source: .
-        build-packages: [libavahi-client-dev, libcups2-dev, libcupsimage2-dev, libgnutls28-dev, libpng-dev, zlib1g-dev]
+        build-packages: [libavahi-client-dev, libgnutls28-dev, libpng-dev, zlib1g-dev]
         stage-packages: [libavahi-client3]
