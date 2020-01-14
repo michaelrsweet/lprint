@@ -37,6 +37,19 @@ extern char **environ;
 
 
 //
+// New operations defined in CUPS 2.3 and later...
+//
+
+#  if CUPS_MAJOR == 2 && CUPS_MINOR < 3
+#    define IPP_OP_CREATE_PRINTER		(ipp_op_t)0x004C
+#    define IPP_OP_DELETE_PRINTER		(ipp_op_t)0x004E
+#    define IPP_OP_GET_SYSTEM_ATTRIBUTES	(ipp_op_t)0x005B
+#    define IPP_OP_SET_SYSTEM_ATTRIBUTES	(ipp_op_t)0x0062
+#    define IPP_OP_SHUTDOWN_ALL_PRINTERS	(ipp_op_t)0x0063
+#  endif // CUPS_MAJOR == 2 && CUPS_MINOR < 3
+
+
+//
 // Wrappers for global constants...
 //
 
