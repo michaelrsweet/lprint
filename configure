@@ -3125,6 +3125,11 @@ if test "x$CUPSCONFIG" = x; then
     as_fn_error $? "Sorry, this software requires libcups-dev." "$LINENO" 5
 fi
 
+case "`$CUPSCONFIG --api-version`" in
+	1.* | 2.0 | 2.1)
+		as_fn_error $? "Sorry, you need CUPS 2.2.0 or higher." "$LINENO" 5
+		;;
+esac
 
 if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.

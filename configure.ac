@@ -80,6 +80,11 @@ if test "x$CUPSCONFIG" = x; then
     AC_MSG_ERROR([Sorry, this software requires libcups-dev.])
 fi
 
+case "`$CUPSCONFIG --api-version`" in
+	1.* | 2.0 | 2.1)
+		AC_MSG_ERROR([Sorry, you need CUPS 2.2.0 or higher.])
+		;;
+esac
 
 dnl Check for pkg-config, which is used for some other tests later on...
 AC_PATH_TOOL(PKGCONFIG, pkg-config)
