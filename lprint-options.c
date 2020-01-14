@@ -90,7 +90,8 @@ lprintDoOptions(
   print_option(response, "orientation-requested");
   print_option(response, "print-color-mode");
   print_option(response, "print-content-optimize");
-  print_option(response, "print-darkness");
+  if (ippFindAttribute(response, "print-darkness-supported", IPP_TAG_ZERO))
+    puts("  -o print-darkness=-100 to 100");
   print_option(response, "print-quality");
   print_option(response, "print-speed");
   print_option(response, "printer-resolution");
@@ -99,7 +100,8 @@ lprintDoOptions(
   puts("\nPrinter options:");
   print_option(response, "label-mode");
   print_option(response, "label-tear-offset");
-  print_option(response, "printer-darkness");
+  if (ippFindAttribute(response, "printer-darkness-supported", IPP_TAG_ZERO))
+    puts("  -o printer-darkness=0 to 100");
   puts("  -o printer-geo-location='geo:LATITUDE,LONGITUDE'");
   puts("  -o printer-location='LOCATION'");
   puts("  -o printer-organization='ORGANIZATION'");

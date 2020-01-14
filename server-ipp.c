@@ -546,7 +546,7 @@ copy_printer_attributes(
     ipp_t *col = lprintCreateMediaCol(&printer->driver->media_default, 0);
 					// Collection value
 
-    ippAddCollection(client->response, IPP_TAG_PRINTER, "media-col", col);
+    ippAddCollection(client->response, IPP_TAG_PRINTER, "media-col-default", col);
     ippDelete(col);
   }
 

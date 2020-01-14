@@ -58,9 +58,9 @@ lprintAddOptions(
 
     if ((value = cupsGetOption("media-ready", num_options, options)) != NULL)
     {
-      int		num_values;		// Number of values
+      int	num_values;		// Number of values
       char	*values[4],		// Pointers to size strings
-		  sizes[4][256];		// Size strings
+		sizes[4][256];		// Size strings
 
 
       if ((num_values = sscanf(value, "%255s,%255s,%255s,%255s", sizes[0], sizes[1], sizes[2], sizes[3])) > 0)
