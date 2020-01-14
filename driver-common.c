@@ -137,8 +137,39 @@ lprintCreateDriver(
 	else
 	  lprintInitZPL(driver);
 
-	// media-xxx
+        // label-mode-supported
+        if (driver->mode_supported)
+        {
+          lprint_label_mode_t	mode;		// Current mode
+	  int			num_values = 0;	// Number of values
+	  const char		*values[20];	// Keyword values
+
+          for (mode = LPRINT_LABEL_MODE_APPLICATOR; mode <= LPRINT_LABEL_MODE_TEAR_OFF; mode *= 2)
+          {
+            if (driver->mode_supported & mode)
+              values[num_values ++] = lprintLabelModeString(mode);
+          }
+          ippAddStrings(driver->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "label-mode-supported", num_values, NULL, values);
+	}
+
+        // label-tear-offset-supported
+        if (driver->tear_offset_supported[0] || driver->tear_offset_supported[1])
+          ippAddRange(driver->attrs, IPP_TAG_PRINTER, "label-tear-offset-supported", driver->tear_offset_supported[0], driver->tear_offset_supported[1]);
+
+        // media-xxx
 	lprint_copy_media(driver);
+
+        // print-darkness-supported
+	if (driver->darkness_supported)
+          ippAddInteger(driver->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "print-darkness-supported", 2 * driver->darkness_supported);
+
+        // print-speed-supported
+        if (driver->speed_supported[1])
+          ippAddRange(driver->attrs, IPP_TAG_PRINTER, "print-speed-supported", driver->speed_supported[0], driver->speed_supported[1]);
+
+        // printer-darkness-supported
+	if (driver->darkness_supported)
+          ippAddInteger(driver->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "printer-darkness-supported", driver->darkness_supported);
 
 	// printer-make-and-model
 	ippAddString(driver->attrs, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-make-and-model", NULL, lprint_models[i]);

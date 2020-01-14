@@ -16,7 +16,7 @@
 #include "lprint.h"
 
 
-#define ZPL_COMPRESSION 0
+#define ZPL_COMPRESSION 1
 
 //
 // Local types...
@@ -471,7 +471,7 @@ lprint_zpl_rstartjob(
   // label-tear-offset-configured
   if (driver->tear_offset_configured < 0)
     lprintPrintfDevice(device, "~TA%04d\n", driver->tear_offset_configured);
-  else
+  else if (driver->tear_offset_configured > 0)
     lprintPrintfDevice(device, "~TA%03d\n", driver->tear_offset_configured);
 
   // printer-darkness
