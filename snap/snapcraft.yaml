@@ -38,7 +38,7 @@ parts:
             - -include/cups/*
             - -lib/libcups*
     main:
-    	after: [cups]
+        after: [cups]
         plugin: autotools
         source: .
         build-packages: [libavahi-client-dev, libgnutls28-dev, libpng-dev, zlib1g-dev]
