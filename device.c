@@ -420,7 +420,7 @@ lprint_find_usb(
 	LPRINT_DEBUG("lprint_find_usb:             num_altsetting=%d\n", ifaceptr->num_altsetting);
 	LPRINT_DEBUG("lprint_find_usb:             altsetting=%p\n", ifaceptr->altsetting);
 
-	for (altset = 0, altptr = ifaceptr->altsetting; altset < ifaceptr->num_altsetting; altset ++, altptr ++)
+	for (altset = 0, altptr = ifaceptr->altsetting; (int)altset < ifaceptr->num_altsetting; altset ++, altptr ++)
 	{
 	  LPRINT_DEBUG("lprint_find_usb:             altset%d - bInterfaceClass=%d, bInterfaceSubClass=%d, bInterfaceProtocol=%d\n", altset, altptr->bInterfaceClass, altptr->bInterfaceSubClass, altptr->bInterfaceProtocol);
 

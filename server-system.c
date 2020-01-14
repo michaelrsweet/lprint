@@ -141,11 +141,11 @@ lprintCreateSystem(
   if (!system->logfile)
   {
     // Default log file is $TMPDIR/lprintUID.log...
-    char logfile[256];			// Log filename
+    char newlogfile[256];			// Log filename
 
-    snprintf(logfile, sizeof(logfile), "%s/lprint%d.log", tmpdir, (int)getuid());
+    snprintf(newlogfile, sizeof(newlogfile), "%s/lprint%d.log", tmpdir, (int)getuid());
 
-    system->logfile = strdup(logfile);
+    system->logfile = strdup(newlogfile);
   }
 
   if (!strcmp(system->logfile, "syslog"))
