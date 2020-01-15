@@ -1,4 +1,12 @@
 "copies" = "Number of Copies";
+"job-state" = "Job State";
+"job-state.3" = "Pending";
+"job-state.4" = "Held";
+"job-state.5" = "Processing";
+"job-state.6" = "Stopped";
+"job-state.7" = "Canceled";
+"job-state.8" = "Aborted";
+"job-state.9" = "Completed";
 "job-state-reasons" = "Job Status";
 "job-state-reasons.aborted-by-system" = "Aborted.";
 "job-state-reasons.job-canceled-by-user" = "Canceled.";
@@ -14,8 +22,8 @@
 "media-size" = "Media Size";
 "media-size-name" = "Media Size";
 "media-source" = "Roll";
-"media-source.main-roll" = "Main Roll";
 "media-source.alternate-roll" = "Alternate Roll";
+"media-source.main-roll" = "Main Roll";
 "media-top-offset" = "Top Offset";
 "media-tracking" = "Label Tracking";
 "media-tracking.continuous" = "Continuous";
@@ -47,6 +55,10 @@
 "print-quality.5" = "Best";
 "print-speed" = "Print Speed";
 "printer-resolution" = "Print Resolution";
+"printer-state" = "Printer State";
+"printer-state.3" = "Idle";
+"printer-state.4" = "Processing";
+"printer-state.5" = "Stopped";
 "printer-state-reaosns" = "Printer Status";
 "printer-state-reasons.cover-open" = "Cover open.";
 "printer-state-reasons.media-empty" = "Out of paper.";
