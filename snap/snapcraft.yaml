@@ -21,7 +21,7 @@ description: |
 
 grade: stable
 confinement: strict
-icon: lprint.png
+icon: resources/lprint.png
 
 apps:
     lprint:
@@ -33,5 +33,5 @@ parts:
         plugin: autotools
         configflags: [--enable-libpng,--enable-libusb,--with-dnssd=avahi]
         source: .
-        build-packages: [libavahi-client-dev, libcups=dev, libgnutls28-dev, libpng16-dev, libusb-1.0-0-dev, zlib1g-dev]
+        build-packages: [libavahi-client-dev, libcups2-dev, libgnutls28-dev, libpng-dev, libusb-1.0-0-dev, zlib1g-dev]
         stage-packages: [libavahi-client3]
