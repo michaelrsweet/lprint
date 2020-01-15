@@ -1,4 +1,5 @@
 name: lprint
+base: core18
 version: 1.0b1
 summary: Label Printer Utility
 description: |
@@ -28,42 +29,9 @@ apps:
         plugs: [avahi-observe, home, network, network-bind, raw-usb]
 
 parts:
-    libcups:
-        plugin: autotools
-        configflags: [--with-components=libcupslite]
-        source: https://github.com/apple/cups/releases/download/v2.3.1/cups-2.3.1-source.tar.gz
-        build-packages: [libavahi-client-dev, libgnutls28-dev, zlib1g-dev]
-        prime:
-            - -bin/*
-            - -include/cups/*
-            - -lib/*
-        stage:
-            - -lib/*
-    libpng:
-        plugin: autotools
-        source: https://download.sourceforge.net/libpng/libpng-1.6.37.tar.gz
-        build-packages: [zlib1g-dev]
-        prime:
-            - -include/*
-            - -lib/*
-            - -lib/pkg-config/*
-        stage:
-            - -lib/*
-    libusb:
-        plugin: autotools
-        source: https://github.com/libusb/libusb/releases/download/v1.0.22/libusb-1.0.22.tar.bz2
-        build-packages: [libudev-dev]
-        prime:
-            - -include/*
-            - -lib/*
-            - -lib/pkg-config/*
-        stage:
-            - -lib/*
     main:
-        after: [libcups, libpng, libusb]
         plugin: autotools
-        configflags: [--enable-libpng,--enable-libusb,--with-dnssd=avahi,--with-ldflags="-L$SNAPCRAFT_PART_INSTALL/../../libcups/install/lib"]
+        configflags: [--enable-libpng,--enable-libusb,--with-dnssd=avahi]
         source: .
-        build-packages: [libavahi-client-dev, libgnutls28-dev, zlib1g-dev]
+        build-packages: [libavahi-client-dev, libcups=dev, libgnutls28-dev, libpng16-dev, libusb-1.0-0-dev, zlib1g-dev]
         stage-packages: [libavahi-client3]
-
