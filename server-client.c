@@ -13,8 +13,13 @@
 //
 
 #include "lprint.h"
-#include "lprint-png.h"
-#include "lprint-large-png.h"
+#include "resources/lprint-png.h"
+#include "resources/lprint-large-png.h"
+#include "resources/lprint-de-strings.h"
+#include "resources/lprint-en-strings.h"
+#include "resources/lprint-es-strings.h"
+#include "resources/lprint-fr-strings.h"
+#include "resources/lprint-it-strings.h"
 #include <ctype.h>
 
 
@@ -26,10 +31,7 @@ static void		html_escape(lprint_client_t *client, const char *s, size_t slen);
 static void		html_footer(lprint_client_t *client);
 static void		html_header(lprint_client_t *client, const char *title, int refresh);
 static void		html_printf(lprint_client_t *client, const char *format, ...) LPRINT_FORMAT(2, 3);
-//static int		parse_options(lprint_client_t *client, cups_option_t **options);
-//static int		show_media(lprint_client_t *client);
 static int		show_status(lprint_client_t *client);
-//static int		show_supplies(lprint_client_t *client);
 static char		*time_string(time_t tv, char *buffer, size_t bufsize);
 
 
@@ -159,6 +161,7 @@ lprintProcessHTTP(
 			hostname[HTTP_MAX_HOST];
 					// Hostname
   int			port;		// Port number
+  const char		*ext;		// Extension on URI
   static const char * const http_states[] =
   {					// Strings for logging HTTP method
     "WAITING",
@@ -297,12 +300,10 @@ lprintProcessHTTP(
     case HTTP_STATE_HEAD :
         if (!strcmp(client->uri, "/lprint.png") || !strcmp(client->uri, "/lprint-large.png"))
 	  return (lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "image/png", 0));
+        else if ((ext = strrchr(client->uri, '.')) != NULL && !strcmp(ext, ".strings"))
+          return (lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/strings", 0));
 	else if (!strcmp(client->uri, "/"))
 	  return (lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/html", 0));
-#if 0
-	else if (!strcmp(client->uri, "/") || !strcmp(client->uri, "/media") || !strcmp(client->uri, "/supplies"))
-	  return (lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/html", 0));
-#endif // 0
 	else
 	  return (lprintRespondHTTP(client, HTTP_STATUS_NOT_FOUND, NULL, NULL, 0));
 
@@ -325,6 +326,46 @@ lprintProcessHTTP(
 	  httpWrite2(client->http, (const char *)lprint_large_png, sizeof(lprint_large_png));
 	  httpFlushWrite(client->http);
 	}
+        else if (!strcmp(client->uri, "/de.strings"))
+        {
+          if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/strings", sizeof(lprint_de_strings)))
+            return (0);
+
+	  httpWrite2(client->http, (const char *)lprint_de_strings, sizeof(lprint_de_strings));
+	  httpFlushWrite(client->http);
+	}
+        else if (!strcmp(client->uri, "/en.strings"))
+        {
+          if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/strings", sizeof(lprint_en_strings)))
+            return (0);
+
+	  httpWrite2(client->http, (const char *)lprint_en_strings, sizeof(lprint_en_strings));
+	  httpFlushWrite(client->http);
+	}
+        else if (!strcmp(client->uri, "/es.strings"))
+        {
+          if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/strings", sizeof(lprint_es_strings)))
+            return (0);
+
+	  httpWrite2(client->http, (const char *)lprint_es_strings, sizeof(lprint_es_strings));
+	  httpFlushWrite(client->http);
+	}
+        else if (!strcmp(client->uri, "/fr.strings"))
+        {
+          if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/strings", sizeof(lprint_fr_strings)))
+            return (0);
+
+	  httpWrite2(client->http, (const char *)lprint_fr_strings, sizeof(lprint_fr_strings));
+	  httpFlushWrite(client->http);
+	}
+        else if (!strcmp(client->uri, "/it.strings"))
+        {
+          if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/strings", sizeof(lprint_it_strings)))
+            return (0);
+
+	  httpWrite2(client->http, (const char *)lprint_it_strings, sizeof(lprint_it_strings));
+	  httpFlushWrite(client->http);
+	}
 	else if (!strcmp(client->uri, "/"))
 	{
 	 /*
@@ -333,24 +374,6 @@ lprintProcessHTTP(
 
           return (show_status(client));
 	}
-#if 0
-	else if (!strcmp(client->uri, "/media"))
-	{
-	 /*
-	  * Show web media page...
-	  */
-
-          return (show_media(client));
-	}
-	else if (!strcmp(client->uri, "/supplies"))
-	{
-	 /*
-	  * Show web supplies page...
-	  */
-
-          return (show_supplies(client));
-	}
-#endif // 0
 	else
 	  return (lprintRespondHTTP(client, HTTP_STATUS_NOT_FOUND, NULL, NULL, 0));
 	break;

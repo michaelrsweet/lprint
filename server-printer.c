@@ -205,6 +205,14 @@ lprintCreatePrinter(
     "printer-organizational-unit",
     "printer-resolution-default"
   };
+  static const char * const printer_strings_languages[] =
+  {					// printer-strings-languages-supported values
+    "de",
+    "en",
+    "es",
+    "fr",
+    "it"
+  };
   static const char * const uri_authentication[] =
   {					// uri-authentication-supported values
     "none",
@@ -419,6 +427,9 @@ lprintCreatePrinter(
 
   // printer-settable-attributes
   ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "printer-settable-attributes", (int)(sizeof(printer_settable_attributes) / sizeof(printer_settable_attributes[0])), NULL, printer_settable_attributes);
+
+  // printer-strings-languages-supported
+  ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_LANGUAGE, "printer-strings-languages-supported", (int)(sizeof(printer_strings_languages) / sizeof(printer_strings_languages[0])), NULL, printer_strings_languages);
 
   // printer-supply-info-uri
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-supply-info-uri", NULL, supplyurl);

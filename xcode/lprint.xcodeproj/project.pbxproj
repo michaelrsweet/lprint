@@ -68,7 +68,7 @@
 		27BE5C4623CCA1B10095CD45 /* CONTRIBUTING.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = CONTRIBUTING.md; path = ../CONTRIBUTING.md; sourceTree = "<group>"; };
 		27BE5C4723CCA1B10095CD45 /* DOCUMENTATION.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = DOCUMENTATION.md; path = ../DOCUMENTATION.md; sourceTree = "<group>"; };
 		27BE5C4823CCA1B10095CD45 /* CHANGES.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = CHANGES.md; path = ../CHANGES.md; sourceTree = "<group>"; };
-		27FB485723BD7D8000BE0E47 /* lprint-large-png.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-large-png.h"; path = "../lprint-large-png.h"; sourceTree = "<group>"; };
+		27FB485723BD7D8000BE0E47 /* lprint-large-png.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-large-png.h"; path = "../resources/lprint-large-png.h"; sourceTree = "<group>"; };
 		27FB485823C0D84800BE0E47 /* driver-pwg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "driver-pwg.c"; path = "../driver-pwg.c"; sourceTree = "<group>"; };
 		27FB485F23C1B02A00BE0E47 /* dither.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dither.h; path = ../dither.h; sourceTree = "<group>"; };
 		27FB486023C2519B00BE0E47 /* lprint-drivers.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-drivers.1"; path = "../man/lprint-drivers.1"; sourceTree = "<group>"; };
@@ -82,7 +82,7 @@
 		27FBEEA72396988200BB195A /* DESIGN.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = DESIGN.md; path = ../DESIGN.md; sourceTree = "<group>"; };
 		27FBEEA82396988200BB195A /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		27FBEEA92396988200BB195A /* lprint-printers.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-printers.1"; path = "../man/lprint-printers.1"; sourceTree = "<group>"; };
-		27FBEEAA2396988200BB195A /* lprint-png.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-png.h"; path = "../lprint-png.h"; sourceTree = "<group>"; };
+		27FBEEAA2396988200BB195A /* lprint-png.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-png.h"; path = "../resources/lprint-png.h"; sourceTree = "<group>"; };
 		27FBEEAC2396988200BB195A /* NOTICE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = NOTICE; path = ../NOTICE; sourceTree = "<group>"; };
 		27FBEEAD2396988200BB195A /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
 		27FBEEAE2396988200BB195A /* lprint-cancel.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-cancel.1"; path = "../man/lprint-cancel.1"; sourceTree = "<group>"; };

@@ -488,9 +488,7 @@ copy_job_attributes(
       case IPP_JSTATE_HELD :
           if (job->fd >= 0)
 	    ippAddString(client->response, IPP_TAG_JOB, IPP_CONST_TAG(IPP_TAG_KEYWORD), "job-state-reasons", NULL, "job-incoming");
-	  else if (ippFindAttribute(job->attrs, "job-hold-until", IPP_TAG_ZERO))
-	    ippAddString(client->response, IPP_TAG_JOB, IPP_CONST_TAG(IPP_TAG_KEYWORD), "job-state-reasons", NULL, "job-hold-until-specified");
-          else
+	  else
 	    ippAddString(client->response, IPP_TAG_JOB, IPP_CONST_TAG(IPP_TAG_KEYWORD), "job-state-reasons", NULL, "job-data-insufficient");
 	  break;
 
@@ -640,6 +638,21 @@ copy_printer_attributes(
 
   if (!ra || cupsArrayFind(ra, "printer-state-change-time"))
     ippAddInteger(client->response, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "printer-state-change-time", (int)(printer->state_time - printer->start_time));
+
+  if (!ra || cupsArrayFind(ra, "printer-strings-uri"))
+  {
+    const char	*lang = ippGetString(ippFindAttribute(client->request, "attributes-natural-language", IPP_TAG_LANGUAGE), 0, NULL);
+					// Language
+    char	baselang[3],		// Base language
+		uri[1024];		// Strings file URI
+
+    strlcpy(baselang, lang, sizeof(baselang));
+    if (!strcmp(baselang, "de") || !strcmp(baselang, "en") || !strcmp(baselang, "es") || !strcmp(baselang, "fr") || !strcmp(baselang, "it"))
+    {
+      httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "https", NULL, client->system->hostname ? client->system->hostname : "localhost", client->system->port, "/%s.strings", baselang);
+      ippAddString(client->response, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-strings-uri", NULL, uri);
+    }
+  }
 
   if (!ra || cupsArrayFind(ra, "printer-up-time"))
     ippAddInteger(client->response, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "printer-up-time", (int)(time(NULL) - printer->start_time));

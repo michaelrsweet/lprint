@@ -15,6 +15,10 @@
 LPRINT_VERSION	=	@LPRINT_VERSION@
 
 
+# Languages we have localized messages for...
+LANGUAGES	=	de en es fr it
+
+
 # Programs and options...
 AR		=	@AR@
 ARFLAGS		=	@ARFLAGS@
@@ -158,22 +162,32 @@ lprint:	$(OBJS)
 	fi
 
 
-# lprint-png.h from lprint.png and lprint-png-large.h from lprint-large.png
-pngheaders:
+# Generate resource headers from the corresponding files in the resource
+# directory...
+resheaders:
 	echo "Generating lprint-png.h from lprint.png..."
-	echo "static const unsigned char lprint_png[] =" >lprint-png.h
-	echo "{" >>lprint-png.h
-	od -t x1 -A n -v lprint.png | awk '{printf("  "); for (i = 1; i <= NF; i ++) printf("0x%s,", $$i); print "";}' >>lprint-png.h
-	echo "};" >>lprint-png.h
+	echo "static const unsigned char lprint_png[] =" >resources/lprint-png.h
+	echo "{" >>resources/lprint-png.h
+	od -t x1 -A n -v resources/lprint.png | awk '{printf("  "); for (i = 1; i <= NF; i ++) printf("0x%s,", $$i); print "";}' >>resources/lprint-png.h
+	echo "};" >>resources/lprint-png.h
 	echo "Generating lprint-large-png.h from lprint-large.png..."
-	echo "static const unsigned char lprint_large_png[] =" >lprint-large-png.h
-	echo "{" >>lprint-large-png.h
-	od -t x1 -A n -v lprint-large.png | awk '{printf("  "); for (i = 1; i <= NF; i ++) printf("0x%s,", $$i); print "";}' >>lprint-large-png.h
-	echo "};" >>lprint-large-png.h
-
+	echo "static const unsigned char lprint_large_png[] =" >resources/lprint-large-png.h
+	echo "{" >>resources/lprint-large-png.h
+	od -t x1 -A n -v resources/lprint-large.png | awk '{printf("  "); for (i = 1; i <= NF; i ++) printf("0x%s,", $$i); print "";}' >>resources/lprint-large-png.h
+	echo "};" >>resources/lprint-large-png.h
+	for lang in $(LANGUAGES); do \
+		echo "Generating lprint-$$lang-strings.h from lprint-$$lang.strings..."; \
+		echo "static const char *lprint_$${lang}_strings =" >resources/lprint-$$lang-strings.h; \
+		sed -e '1,$$s/"/\\"/g' resources/lprint-$$lang.strings | awk '{print "\"" $$0 "\\n\""}' >>resources/lprint-$$lang-strings.h; \
+		echo ";" >>resources/lprint-$$lang-strings.h; \
+	done
+	
 
 # Dependencies...
 $(OBJS):	common.h config.h device.h driver.h lprint.h Makefile
-server-client.o: lprint-png.h lprint-large-png.h
+server-client.o: \
+		resources/lprint-png.h \
+		resources/lprint-large-png.h \
+		resources/lprint-en-strings.h
 server-print.o: dither.h
 
