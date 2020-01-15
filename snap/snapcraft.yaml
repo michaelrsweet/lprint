@@ -33,5 +33,6 @@ parts:
         plugin: autotools
         configflags: [--enable-libpng,--enable-libusb,--with-dnssd=avahi]
         source: .
-        build-packages: [libavahi-client-dev, libcups2-dev, libgnutls28-dev, libpng-dev, libusb-1.0-0-dev, zlib1g-dev]
-        stage-packages: [libavahi-client3]
+        build-packages: [libavahi-client-dev, libcups2-dev, libcupsimage2-dev, libgnutls28-dev, libpng-dev, libusb-1.0-0-dev, zlib1g-dev]
+        stage-packages: [libavahi-client3, libcups2, libcupsimage2, libpng16-16, libusb-1.0-0]
+ 
