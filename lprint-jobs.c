@@ -66,6 +66,7 @@ lprintDoJobs(int           num_options,	// I - Number of options
   else
     lprintAddPrinterURI(request, printer_name, resource, sizeof(resource));
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
+  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "which-joba", NULL, "all");
 
   response = cupsDoRequest(http, request, resource);
 
