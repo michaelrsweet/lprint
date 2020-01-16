@@ -18,7 +18,7 @@ AC_CONFIG_HEADERS(config.h)
 
 LPRINT_VERSION="AC_PACKAGE_VERSION"
 AC_SUBST(LPRINT_VERSION)
-AC_DEFINE_UNQUOTED(LPRINT_VERSION, "$LPRINT_VERSION")
+AC_DEFINE_UNQUOTED([LPRINT_VERSION], ["$LPRINT_VERSION"], [LPrint version])
 
 
 dnl Get the build and host platforms and split the host_os value
@@ -96,7 +96,7 @@ fi
 
 
 dnl Random number support...
-AC_CHECK_HEADER(sys/random.h, AC_DEFINE(HAVE_SYS_RANDOM_H))
+AC_CHECK_HEADER(sys/random.h, AC_DEFINE([HAVE_SYS_RANDOM_H], [], [sys/random.h available]))
 AC_CHECK_FUNCS(arc4random getrandom gnutls_rnd)
 
 
@@ -136,7 +136,7 @@ if test "x$with_dnssd" != xmdnsresponder -a "x$with_dnssd" != xno -a "x$PKGCONFI
 		AC_MSG_RESULT([yes])
 		CFLAGS="$CFLAGS `$PKGCONFIG --cflags avahi-client`"
 		LIBS="$LIBS `$PKGCONFIG --libs avahi-client`"
-		AC_DEFINE(HAVE_AVAHI)
+		AC_DEFINE([HAVE_AVAHI], [], [Avahi available])
 	else
 		AC_MSG_RESULT([no])
 		if test x$with_dnssd = xavahi; then
@@ -150,7 +150,7 @@ elif test x$with_dnssd != xavahi -a "x$with_dnssd" != xno; then
 		case "$host_os_name" in
 			darwin*)
 				# Darwin and macOS...
-				AC_DEFINE(HAVE_DNSSD)
+				AC_DEFINE([HAVE_DNSSD], [], [mDNSResponder available])
 				LIBS="$LIBS -framework CoreFoundation -framework SystemConfiguration"
 				;;
 			*)
@@ -165,7 +165,7 @@ elif test x$with_dnssd != xavahi -a "x$with_dnssd" != xno; then
 					TXTRecordGetValuePtr(sizeof(txtRecord),
 					    txtRecord, "value", &valueLen);],[
 					AC_MSG_RESULT([yes])
-					AC_DEFINE(HAVE_DNSSD)],[
+					AC_DEFINE([HAVE_DNSSD], [], [mDNSResponder available])],[
 					AC_MSG_RESULT([no])
 					LIBS="$SAVELIBS"
 					if test x$with_dnssd = xmdnsresponder; then
@@ -184,7 +184,7 @@ if test "x$PKGCONFIG" != x -a x$enable_libpng != xno; then
 	AC_MSG_CHECKING([for libpng-1.6.x])
 	if $PKGCONFIG --exists libpng16; then
 		AC_MSG_RESULT([yes]);
-		AC_DEFINE(HAVE_LIBPNG)
+		AC_DEFINE([HAVE_LIBPNG], [], [LibPNG available])
 		CFLAGS="$CFLAGS `$PKGCONFIG --cflags libpng16`"
 		LIBS="$LIBS `$PKGCONFIG --libs libpng16`"
 	else
@@ -205,7 +205,7 @@ if test "x$PKGCONFIG" != x -a x$enable_libusb != xno; then
 	AC_MSG_CHECKING([for libusb-1.0])
 	if $PKGCONFIG --exists libusb-1.0; then
 		AC_MSG_RESULT([yes])
-		AC_DEFINE(HAVE_LIBUSB)
+		AC_DEFINE([HAVE_LIBUSB], [], [LibUSB available])
 		CFLAGS="$CFLAGS `$PKGCONFIG --cflags libusb-1.0`"
 		LIBS="$LIBS `$PKGCONFIG --libs libusb-1.0`"
 		if test "x$host_os_name" = xdarwin; then
@@ -228,8 +228,8 @@ fi
 #if test x$enable_pam != xno; then
 #	AC_CHECK_LIB(dl,dlopen)
 #	AC_CHECK_LIB(pam,pam_start)
-#	AC_CHECK_HEADER(security/pam_appl.h, AC_DEFINE(HAVE_SECURITY_PAM_APPL_H))
-#	AC_CHECK_HEADER(pam/pam_appl.h, AC_DEFINE(HAVE_PAM_PAM_APPL_H))
+#	AC_CHECK_HEADER(security/pam_appl.h, AC_DEFINE([HAVE_SECURITY_PAM_APPL_H], [], [security/pam_appl.h available]))
+#	AC_CHECK_HEADER(pam/pam_appl.h, AC_DEFINE([HAVE_PAM_PAM_APPL_H], [], [pam/pam_appl.h available]))
 #
 #	if test x$ac_pam_start = xno -a x$enable_pam = xyes; then
 #		AC_MSG_ERROR([libpam-dev required for --enable-pam.])
