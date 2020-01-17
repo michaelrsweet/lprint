@@ -267,16 +267,18 @@ if test -n "$GCC"; then
 	OLDCFLAGS="$CFLAGS"
 	case "$host_os_name" in
 		darwin*)
-			CFLAGS="$CFLAGS -fPIE -Wl,-pie"
+			CFLAGS="$CFLAGS -fPIC -fPIE -Wl,-pie"
 			AC_TRY_COMPILE(,,[
+				OLDCFLAGS="-fPIC $OLDCFLAGS"
 				LDFLAGS="-fPIE -Wl,-pie $LDFLAGS"
 				AC_MSG_RESULT(yes)],
 				AC_MSG_RESULT(no))
 			;;
 
 		*)
-			CFLAGS="$CFLAGS -fPIE -pie"
+			CFLAGS="$CFLAGS -fPIC -fPIE -pie"
 			AC_TRY_COMPILE(,,[
+				OLDCFLAGS="-fPIC $OLDCFLAGS"
 				LDFLAGS="-fPIE -pie $LDFLAGS"
 				AC_MSG_RESULT(yes)],
 				AC_MSG_RESULT(no))
