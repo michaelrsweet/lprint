@@ -482,6 +482,22 @@ lprint_find_usb(
               }
             }
 
+#ifdef __linux
+            if (device->handle)
+            {
+	      // Make sure the old, busted usblp kernel driver is not loaded...
+	      if (libusb_kernel_driver_active(device->handle, device->iface) == 1)
+	      {
+		if (libusb_detach_kernel_driver(device->handle, device->iface) < 0)
+		{
+		  fprintf(stderr, "lprint: Unable to detach usblp kernel driver for USB printer %04x:%04x.\n", devdesc.idVendor, devdesc.idProduct);
+		  libusb_close(device->handle);
+		  device->handle = NULL;
+		}
+	      }
+	    }
+#endif // __linux
+
             if (device->handle)
             {
               // Claim the interface...
