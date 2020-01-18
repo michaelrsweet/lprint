@@ -14,11 +14,11 @@ AC_PREREQ(2.60)
 
 dnl Package name and version...
 AC_INIT([lprint], [1.0b1], [https://github.com/michaelrsweet/lprint/issues], [lprint], [https://michaelrsweet.github.io/lprint])
-AC_CONFIG_HEADERS(config.h)
+AC_CONFIG_HEADERS([config.h])
 
 LPRINT_VERSION="AC_PACKAGE_VERSION"
-AC_SUBST(LPRINT_VERSION)
-AC_DEFINE_UNQUOTED(LPRINT_VERSION, "$LPRINT_VERSION")
+AC_SUBST([LPRINT_VERSION])
+AC_DEFINE_UNQUOTED([LPRINT_VERSION], "$LPRINT_VERSION", [Version number])
 
 
 dnl Get the build and host platforms and split the host_os value
@@ -58,10 +58,10 @@ AC_SUBST(ARFLAGS)
 
 
 dnl install-sh
-AC_MSG_CHECKING(for install-sh script)
+AC_MSG_CHECKING([for install-sh script])
 INSTALL="`pwd`/install-sh"
 AC_SUBST(INSTALL)
-AC_MSG_RESULT(using $INSTALL)
+AC_MSG_RESULT([using $INSTALL])
 
 
 dnl CUPS
@@ -96,7 +96,7 @@ fi
 
 
 dnl Random number support...
-AC_CHECK_HEADER(sys/random.h, AC_DEFINE(HAVE_SYS_RANDOM_H))
+AC_CHECK_HEADER(sys/random.h, AC_DEFINE([HAVE_SYS_RANDOM_H], 1, [Have <sys/random.h> header?]))
 AC_CHECK_FUNCS(arc4random getrandom gnutls_rnd)
 
 
@@ -136,7 +136,7 @@ if test "x$with_dnssd" != xmdnsresponder -a "x$with_dnssd" != xno -a "x$PKGCONFI
 		AC_MSG_RESULT([yes])
 		CFLAGS="$CFLAGS `$PKGCONFIG --cflags avahi-client`"
 		LIBS="$LIBS `$PKGCONFIG --libs avahi-client`"
-		AC_DEFINE(HAVE_AVAHI)
+		AC_DEFINE([HAVE_AVAHI], 1, [DNS-SD (mDNSResponder or Avahi)])
 	else
 		AC_MSG_RESULT([no])
 		if test x$with_dnssd = xavahi; then
@@ -150,7 +150,7 @@ elif test x$with_dnssd != xavahi -a "x$with_dnssd" != xno; then
 		case "$host_os_name" in
 			darwin*)
 				# Darwin and macOS...
-				AC_DEFINE(HAVE_DNSSD)
+				AC_DEFINE([HAVE_DNSSD], 1, [DNS-SD (mDNSResponder or Avahi)])
 				LIBS="$LIBS -framework CoreFoundation -framework SystemConfiguration"
 				;;
 			*)
@@ -165,7 +165,7 @@ elif test x$with_dnssd != xavahi -a "x$with_dnssd" != xno; then
 					TXTRecordGetValuePtr(sizeof(txtRecord),
 					    txtRecord, "value", &valueLen);],[
 					AC_MSG_RESULT([yes])
-					AC_DEFINE(HAVE_DNSSD)],[
+					AC_DEFINE([HAVE_DNSSD], 1, [DNS-SD (mDNSResponder or Avahi)])],[
 					AC_MSG_RESULT([no])
 					LIBS="$SAVELIBS"
 					if test x$with_dnssd = xmdnsresponder; then
@@ -184,7 +184,7 @@ if test "x$PKGCONFIG" != x -a x$enable_libpng != xno; then
 	AC_MSG_CHECKING([for libpng-1.6.x])
 	if $PKGCONFIG --exists libpng16; then
 		AC_MSG_RESULT([yes]);
-		AC_DEFINE(HAVE_LIBPNG)
+		AC_DEFINE([HAVE_LIBPNG], 1, [libpng])
 		CFLAGS="$CFLAGS `$PKGCONFIG --cflags libpng16`"
 		LIBS="$LIBS `$PKGCONFIG --libs libpng16`"
 	else
@@ -205,7 +205,7 @@ if test "x$PKGCONFIG" != x -a x$enable_libusb != xno; then
 	AC_MSG_CHECKING([for libusb-1.0])
 	if $PKGCONFIG --exists libusb-1.0; then
 		AC_MSG_RESULT([yes])
-		AC_DEFINE(HAVE_LIBUSB)
+		AC_DEFINE([HAVE_LIBUSB], 1, [libusb])
 		CFLAGS="$CFLAGS `$PKGCONFIG --cflags libusb-1.0`"
 		LIBS="$LIBS `$PKGCONFIG --libs libusb-1.0`"
 		if test "x$host_os_name" = xdarwin; then

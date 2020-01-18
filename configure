@@ -2133,6 +2133,7 @@ ac_config_headers="$ac_config_headers config.h"
 
 LPRINT_VERSION="1.0b1"
 
+
 cat >>confdefs.h <<_ACEOF
 #define LPRINT_VERSION "$LPRINT_VERSION"
 _ACEOF
@@ -3707,7 +3708,8 @@ done
 
 ac_fn_c_check_header_mongrel "$LINENO" "sys/random.h" "ac_cv_header_sys_random_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_random_h" = xyes; then :
-  $as_echo "#define HAVE_SYS_RANDOM_H 1" >>confdefs.h
+
+$as_echo "#define HAVE_SYS_RANDOM_H 1" >>confdefs.h
 
 fi
 
@@ -3795,7 +3797,8 @@ $as_echo_n "checking for Avahi... " >&6; }
 $as_echo "yes" >&6; }
 		CFLAGS="$CFLAGS `$PKGCONFIG --cflags avahi-client`"
 		LIBS="$LIBS `$PKGCONFIG --libs avahi-client`"
-		$as_echo "#define HAVE_AVAHI 1" >>confdefs.h
+
+$as_echo "#define HAVE_AVAHI 1" >>confdefs.h
 
 	else
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
@@ -3813,7 +3816,8 @@ if test "x$ac_cv_header_dns_sd_h" = xyes; then :
 		case "$host_os_name" in
 			darwin*)
 				# Darwin and macOS...
-				$as_echo "#define HAVE_DNSSD 1" >>confdefs.h
+
+$as_echo "#define HAVE_DNSSD 1" >>confdefs.h
 
 				LIBS="$LIBS -framework CoreFoundation -framework SystemConfiguration"
 				;;
@@ -3843,7 +3847,8 @@ if ac_fn_c_try_compile "$LINENO"; then :
 
 					{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-					$as_echo "#define HAVE_DNSSD 1" >>confdefs.h
+
+$as_echo "#define HAVE_DNSSD 1" >>confdefs.h
 
 else
 
@@ -3876,7 +3881,8 @@ $as_echo_n "checking for libpng-1.6.x... " >&6; }
 	if $PKGCONFIG --exists libpng16; then
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; };
-		$as_echo "#define HAVE_LIBPNG 1" >>confdefs.h
+
+$as_echo "#define HAVE_LIBPNG 1" >>confdefs.h
 
 		CFLAGS="$CFLAGS `$PKGCONFIG --cflags libpng16`"
 		LIBS="$LIBS `$PKGCONFIG --libs libpng16`"
@@ -3904,7 +3910,8 @@ $as_echo_n "checking for libusb-1.0... " >&6; }
 	if $PKGCONFIG --exists libusb-1.0; then
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-		$as_echo "#define HAVE_LIBUSB 1" >>confdefs.h
+
+$as_echo "#define HAVE_LIBUSB 1" >>confdefs.h
 
 		CFLAGS="$CFLAGS `$PKGCONFIG --cflags libusb-1.0`"
 		LIBS="$LIBS `$PKGCONFIG --libs libusb-1.0`"
