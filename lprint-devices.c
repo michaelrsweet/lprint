@@ -18,6 +18,7 @@
 // Local functions...
 //
 
+static void	lprint_error_device(const char *message, void *err_data);
 static int	lprint_print_device(const char *device_uri, const void *user_data);
 
 
@@ -33,9 +34,24 @@ lprintDoDevices(
   (void)num_options;
   (void)options;
 
-  lprintListDevices(lprint_print_device, NULL);
+  lprintListDevices(lprint_print_device, NULL, lprint_error_device, NULL);
 
   return (0);
+}
+
+
+//
+// 'lprint_error_device()' - Display an error message to the standard error.
+//
+
+static void
+lprint_error_device(
+    const char *message,		// I - Message
+    void       *err_data)		// I - Callback data (not used)
+{
+  (void)err_data;
+
+  fprintf(stderr, "lprint: %s\n", message);
 }
 
 

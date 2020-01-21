@@ -22,6 +22,7 @@
 // Local functions...
 //
 
+static void	device_error(const char *message, void *err_data);
 static ipp_attribute_t *find_attr(lprint_job_t *job, const char *name, ipp_tag_t value_tag);
 static void	prepare_options(lprint_job_t *job, lprint_options_t *options, unsigned num_pages);
 #ifdef HAVE_LIBPNG
@@ -55,7 +56,7 @@ lprintProcessJob(lprint_job_t *job)	// I - Job
 
   while (!job->printer->driver->device)
   {
-    job->printer->driver->device = lprintOpenDevice(job->printer->device_uri);
+    job->printer->driver->device = lprintOpenDevice(job->printer->device_uri, device_error, job->system);
 
     if (!job->printer->driver->device)
     {
@@ -144,6 +145,23 @@ lprintProcessJob(lprint_job_t *job)	// I - Job
   }
 
   return (NULL);
+}
+
+
+//
+// 'device_error()' - Log a device error for the system...
+//
+
+static void
+device_error(
+    const char *message,		// I - Message
+    void       *err_data)		// I - Callback data (system)
+{
+  lprint_system_t	*system = (lprint_system_t *)err_data;
+					// System
+
+
+  lprintLog(system, LPRINT_LOGLEVEL_ERROR, "[Device] %s", message);
 }
 
 

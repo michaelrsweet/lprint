@@ -20,8 +20,9 @@
 // Local functions...
 //
 
+static void	lprint_error(lprint_deverr_cb_t err_cb, void *err_data, const char *message, ...);
 #ifdef HAVE_LIBUSB
-static int	lprint_find_usb(lprint_device_cb_t cb, const void *user_data, lprint_device_t *device);
+static int	lprint_find_usb(lprint_device_cb_t cb, const void *user_data, lprint_device_t *device, lprint_deverr_cb_t err_cb, void *err_data);
 static int	lprint_open_cb(const char *device_uri, const void *user_data);
 #endif // HAVE_LIBUSB
 
@@ -61,13 +62,15 @@ lprintCloseDevice(
 void
 lprintListDevices(
     lprint_device_cb_t cb,		// I - Callback function
-    const void         *user_data)	// I - User data for callback
+    const void         *user_data,	// I - User data for callback
+    lprint_deverr_cb_t err_cb,		// I - Error callback
+    void               *err_data)	// I - Data for error callback
 {
 #ifdef HAVE_LIBUSB
   lprint_device_t	junk;		// Dummy device data
 
 
-  lprint_find_usb(cb, user_data, &junk);
+  lprint_find_usb(cb, user_data, &junk, err_cb, err_data);
 #endif /* HAVE_LIBUSB */
 }
 
@@ -81,7 +84,9 @@ lprintListDevices(
 
 lprint_device_t	*			// O - Device connection or `NULL`
 lprintOpenDevice(
-    const char *device_uri)		// I - Device URI
+    const char         *device_uri,	// I - Device URI
+    lprint_deverr_cb_t err_cb,		// I - Error callback
+    void               *err_data)	// I - Data for error callback
 {
   lprint_device_t	*device;	// Device structure
   char			scheme[32],	// URI scheme
@@ -90,16 +95,17 @@ lprintOpenDevice(
 			resource[256],	// Resource path, if any
 			*options;	// Pointer to options, if any
   int			port;		// Port number
+  http_uri_status_t	status;		// URI status
 
 
   if (!device_uri)
     return (NULL);
 
-  if (httpSeparateURI(HTTP_URI_CODING_ALL, device_uri, scheme, sizeof(scheme), userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
+  if ((status = httpSeparateURI(HTTP_URI_CODING_ALL, device_uri, scheme, sizeof(scheme), userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource))) < HTTP_URI_STATUS_OK)
+  {
+    lprint_error(err_cb, err_data, "Bad device URI '%s': %s", device_uri, httpURIStatusString(status));
     return (NULL);
-
-  if (strcmp(scheme, "file") && strcmp(scheme, "socket") && strcmp(scheme, "usb"))
-    return (NULL);
+  }
 
   if ((options = strchr(resource, '?')) != NULL)
     *options++ = '\0';
@@ -112,7 +118,10 @@ lprintOpenDevice(
     {
       // Character device file...
       if ((device->fd = open(resource, O_RDWR | O_EXCL)) < 0)
+      {
+        lprint_error(err_cb, err_data, "Unable to open '%s': %s", resource, strerror(errno));
         goto error;
+      }
     }
     else if (!strcmp(scheme, "socket"))
     {
@@ -122,13 +131,19 @@ lprintOpenDevice(
 
       snprintf(port_str, sizeof(port_str), "%d", port);
       if ((list = httpAddrGetList(host, AF_UNSPEC, port_str)) == NULL)
+      {
+        lprint_error(err_cb, err_data, "Unable to lookup '%s:%d': %s", host, port, cupsLastErrorString());
         goto error;
+      }
 
       httpAddrConnect2(list, &device->fd, 30000, NULL);
       httpAddrFreeList(list);
 
       if (device->fd < 0)
+      {
+        lprint_error(err_cb, err_data, "Unable to connect to '%s:%d': %s", host, port, cupsLastErrorString());
         goto error;
+      }
     }
 #ifdef HAVE_LIBUSB
     else if (!strcmp(scheme, "usb"))
@@ -136,10 +151,15 @@ lprintOpenDevice(
       // USB printer class device
       device->fd = -1;
 
-      if (!lprint_find_usb(lprint_open_cb, device_uri, device))
+      if (!lprint_find_usb(lprint_open_cb, device_uri, device, err_cb, err_data))
         goto error;
     }
 #endif // HAVE_LIBUSB
+    else
+    {
+      lprint_error(err_cb, err_data, "Unsupported device URI scheme '%s'.", scheme);
+      goto error;
+    }
 
     if (lprint_device_debug)
       device->debug_fd = open(lprint_device_debug, O_WRONLY | O_CREAT | O_TRUNC, 0666);
@@ -153,7 +173,6 @@ lprintOpenDevice(
 
   free(device);
   return (NULL);
-
 }
 
 
@@ -285,6 +304,32 @@ lprintWriteDevice(
 }
 
 
+//
+// 'lprint_error()' - Report an error.
+//
+
+static void
+lprint_error(
+    lprint_deverr_cb_t err_cb,		// I - Error callback
+    void               *err_data,	// I - Error callback data
+    const char         *message,	// I - Printf-style message
+    ...)				// I - Additional args as needed
+{
+  va_list	ap;			// Pointer to additional args
+  char		buffer[8192];		// Formatted message
+
+
+  if (!err_cb)
+    return;
+
+  va_start(ap, message);
+  vsnprintf(buffer, sizeof(buffer), message, ap);
+  va_end(ap);
+
+  (*err_cb)(buffer, err_data);
+}
+
+
 #ifdef HAVE_LIBUSB
 //
 // 'lprint_find_usb()' - Find a USB printer.
@@ -294,7 +339,9 @@ static int				// O - 1 if found, 0 if not
 lprint_find_usb(
     lprint_device_cb_t cb,		// I - Callback function
     const void         *user_data,	// I - User data pointer
-    lprint_device_t    *device)		// O - Device info
+    lprint_device_t    *device,		// O - Device info
+    lprint_deverr_cb_t err_cb,		// I - Error callback
+    void               *err_data)	// I - Error callback data
 {
   ssize_t	err = 0,		// Current error
 		i,			// Looping var
@@ -311,7 +358,7 @@ lprint_find_usb(
 
   if ((err = libusb_init(NULL)) != 0)
   {
-    fprintf(stderr, "lprint: Unable to initialize USB access: %s\n", libusb_strerror((enum libusb_error)err));
+    lprint_error(err_cb, err_data, "Unable to initialize USB access: %s", libusb_strerror((enum libusb_error)err));
     return (0);
   }
 
@@ -488,9 +535,9 @@ lprint_find_usb(
 	      // Make sure the old, busted usblp kernel driver is not loaded...
 	      if (libusb_kernel_driver_active(device->handle, device->iface) == 1)
 	      {
-		if (libusb_detach_kernel_driver(device->handle, device->iface) < 0)
+		if ((err = libusb_detach_kernel_driver(device->handle, device->iface)) < 0)
 		{
-		  fprintf(stderr, "lprint: Unable to detach usblp kernel driver for USB printer %04x:%04x.\n", devdesc.idVendor, devdesc.idProduct);
+		  lprint_error(err_cb, err_data, "Unable to detach usblp kernel driver for USB printer %04x:%04x: %s", devdesc.idVendor, devdesc.idProduct, libusb_strerror((enum libusb_error)err));
 		  libusb_close(device->handle);
 		  device->handle = NULL;
 		}
@@ -501,8 +548,9 @@ lprint_find_usb(
             if (device->handle)
             {
               // Claim the interface...
-              if (libusb_claim_interface(device->handle, device->ifacenum) < 0)
+              if ((err = libusb_claim_interface(device->handle, device->ifacenum)) < 0)
               {
+		lprint_error(err_cb, err_data, "Unable to claim USB interface: %s", libusb_strerror((enum libusb_error)err));
                 libusb_close(device->handle);
                 device->handle = NULL;
               }
@@ -511,8 +559,9 @@ lprint_find_usb(
             if (device->handle && ifaceptr->num_altsetting > 1)
             {
               // Set the alternate setting as needed...
-              if (libusb_set_interface_alt_setting(device->handle, device->ifacenum, device->altset) < 0)
+              if ((err = libusb_set_interface_alt_setting(device->handle, device->ifacenum, device->altset)) < 0)
               {
+		lprint_error(err_cb, err_data, "Unable to set alternate USB interface: %s", libusb_strerror((enum libusb_error)err));
                 libusb_close(device->handle);
                 device->handle = NULL;
               }
@@ -521,8 +570,9 @@ lprint_find_usb(
             if (device->handle)
             {
               // Get the 1284 Device ID...
-              if (libusb_control_transfer(device->handle, LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_ENDPOINT_IN | LIBUSB_RECIPIENT_INTERFACE, 0, device->conf, (device->iface << 8) | device->altset, (unsigned char *)device_id, sizeof(device_id), 5000) < 0)
+              if ((err = libusb_control_transfer(device->handle, LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_ENDPOINT_IN | LIBUSB_RECIPIENT_INTERFACE, 0, device->conf, (device->iface << 8) | device->altset, (unsigned char *)device_id, sizeof(device_id), 5000)) < 0)
               {
+		lprint_error(err_cb, err_data, "Unable to get IEEE-1284 device ID: %s", libusb_strerror((enum libusb_error)err));
                 device_id[0] = '\0';
                 libusb_close(device->handle);
                 device->handle = NULL;

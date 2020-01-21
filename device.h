@@ -44,6 +44,8 @@ typedef struct lprint_device_s		// Device connection data
 
 // Device callback - return 1 to stop, 0 to continue
 typedef int (*lprint_device_cb_t)(const char *device_uri, const void *user_data);
+// Device error callback
+typedef void (*lprint_deverr_cb_t)(const char *message, void *err_data);
 
 
 //
@@ -51,8 +53,8 @@ typedef int (*lprint_device_cb_t)(const char *device_uri, const void *user_data)
 //
 
 extern void		lprintCloseDevice(lprint_device_t *device);
-extern void		lprintListDevices(lprint_device_cb_t cb, const void *user_data);
-extern lprint_device_t	*lprintOpenDevice(const char *device_uri);
+extern void		lprintListDevices(lprint_device_cb_t cb, const void *user_data, lprint_deverr_cb_t err_cb, void *err_data);
+extern lprint_device_t	*lprintOpenDevice(const char *device_uri, lprint_deverr_cb_t err_cb, void *err_data);
 extern ssize_t		lprintPrintfDevice(lprint_device_t *device, const char *format, ...) LPRINT_FORMAT(2, 3);
 extern ssize_t		lprintPutsDevice(lprint_device_t *device, const char *s);
 extern ssize_t		lprintReadDevice(lprint_device_t *device, void *buffer, size_t bytes);
