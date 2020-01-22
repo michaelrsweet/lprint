@@ -226,6 +226,14 @@ typedef struct lprint_client_s		// Client data
 			*options;	// URI options
   http_addr_t		addr;		// Client address
   char			hostname[256];	// Client hostname
+  char			username[256];	/* Authenticated username, if any */
+  uid_t			uid;		/* Authenticated UID, if any */
+  int			num_groups;	/* Number of autbenticated groups, if any */
+#  ifdef __APPLE__
+  int			groups[32];	/* Authenticated groups, if any */
+#  else
+  gid_t			groups[32];	/* Authenticated groups, if any */
+#  endif // __APPLE__
   lprint_printer_t	*printer;	// Printer, if any
   lprint_job_t		*job;		// Job, if any
 } lprint_client_t;
@@ -237,6 +245,7 @@ typedef struct lprint_client_s		// Client data
 
 extern void		lprintAddOptions(ipp_t *request, int num_options, cups_option_t *options);
 extern void		lprintAddPrinterURI(ipp_t *request, const char *printer_name, char *resource, size_t rsize);
+extern int		lprintAuthenticateUser(lprint_client_t *client, const char *username, const char *password);
 extern void		lprintCheckJobs(lprint_printer_t *printer);
 extern void		lprintCleanJobs(lprint_system_t *system);
 extern http_t		*lprintConnect(int auto_start);

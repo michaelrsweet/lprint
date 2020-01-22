@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		277BC9BD23D8002C0022AC4D /* server-auth.c in Sources */ = {isa = PBXBuildFile; fileRef = 277BC9BC23D8002C0022AC4D /* server-auth.c */; };
 		27FB485923C0D84900BE0E47 /* driver-pwg.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FB485823C0D84800BE0E47 /* driver-pwg.c */; };
 		27FB486323C251C000BE0E47 /* lprint-options.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FB486223C251C000BE0E47 /* lprint-options.c */; };
 		27FBEED02396988300BB195A /* server-system.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEA22396988200BB195A /* server-system.c */; };
@@ -65,6 +66,7 @@
 		2724351023A441DB00B318AF /* lprint-delete.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-delete.1"; path = "../man/lprint-delete.1"; sourceTree = "<group>"; };
 		2724351123A441DB00B318AF /* lprint-modify.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-modify.1"; path = "../man/lprint-modify.1"; sourceTree = "<group>"; };
 		2724351223A441DB00B318AF /* lprint-add.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-add.1"; path = "../man/lprint-add.1"; sourceTree = "<group>"; };
+		277BC9BC23D8002C0022AC4D /* server-auth.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "server-auth.c"; path = "../server-auth.c"; sourceTree = "<group>"; };
 		27BE5C4623CCA1B10095CD45 /* CONTRIBUTING.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = CONTRIBUTING.md; path = ../CONTRIBUTING.md; sourceTree = "<group>"; };
 		27BE5C4723CCA1B10095CD45 /* DOCUMENTATION.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = DOCUMENTATION.md; path = ../DOCUMENTATION.md; sourceTree = "<group>"; };
 		27BE5C4823CCA1B10095CD45 /* CHANGES.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = CHANGES.md; path = ../CHANGES.md; sourceTree = "<group>"; };
@@ -230,6 +232,7 @@
 		27FB485D23C0D8F400BE0E47 /* Server */ = {
 			isa = PBXGroup;
 			children = (
+				277BC9BC23D8002C0022AC4D /* server-auth.c */,
 				27FBEECE2396988300BB195A /* server-client.c */,
 				27FBEECA2396988300BB195A /* server-dnssd.c */,
 				27FBEEBB2396988200BB195A /* server-ipp.c */,
@@ -390,6 +393,7 @@
 				27FBEEE82396988300BB195A /* lprint-shutdown.c in Sources */,
 				27FBEF0B239747C300BB195A /* lprint-drivers.c in Sources */,
 				27FBEEE02396988300BB195A /* lprint-cancel.c in Sources */,
+				277BC9BD23D8002C0022AC4D /* server-auth.c in Sources */,
 				27FBEED42396988300BB195A /* server-log.c in Sources */,
 				27FBEEDA2396988300BB195A /* driver-common.c in Sources */,
 				27FBEF08239747C300BB195A /* lprint-modify.c in Sources */,

@@ -24,6 +24,12 @@
 #undef HAVE_LIBUSB
 
 
+// PAM stuff...
+#undef HAVE_LIBPAM
+#undef HAVE_SECURITY_PAM_APPL_H
+#undef HAVE_PAM_PAM_APPL_H
+
+
 // Random number support
 #undef HAVE_SYS_RANDOM_H
 #undef HAVE_ARC4RANDOM

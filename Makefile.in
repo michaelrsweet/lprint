@@ -106,6 +106,7 @@ OBJS		=	\
 			lprint-shutdown.o \
 			lprint-status.o \
 			lprint-submit.o \
+			server-auth.o \
 			server-client.o \
 			server-dnssd.o \
 			server-ipp.o \
@@ -181,7 +182,7 @@ resheaders:
 		sed -e '1,$$s/"/\\"/g' resources/lprint-$$lang.strings | awk '{print "\"" $$0 "\\n\""}' >>resources/lprint-$$lang-strings.h; \
 		echo ";" >>resources/lprint-$$lang-strings.h; \
 	done
-	
+
 
 # Dependencies...
 $(OBJS):	common.h config.h device.h driver.h lprint.h Makefile

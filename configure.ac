@@ -222,19 +222,19 @@ elif test x$enable_libusb = xyes; then
 fi
 
 
-#dnl PAM support...
-#AC_ARG_ENABLE(pam, [  --disable-pam           disable PAM support])
-#
-#if test x$enable_pam != xno; then
-#	AC_CHECK_LIB(dl,dlopen)
-#	AC_CHECK_LIB(pam,pam_start)
-#	AC_CHECK_HEADER(security/pam_appl.h, AC_DEFINE(HAVE_SECURITY_PAM_APPL_H))
-#	AC_CHECK_HEADER(pam/pam_appl.h, AC_DEFINE(HAVE_PAM_PAM_APPL_H))
-#
-#	if test x$ac_pam_start = xno -a x$enable_pam = xyes; then
-#		AC_MSG_ERROR([libpam-dev required for --enable-pam.])
-#	fi
-#fi
+dnl PAM support...
+AC_ARG_ENABLE(pam, [  --disable-pam           disable PAM support])
+
+if test x$enable_pam != xno; then
+	AC_CHECK_LIB(dl,dlopen)
+	AC_CHECK_LIB(pam,pam_start)
+	AC_CHECK_HEADER(security/pam_appl.h, AC_DEFINE(HAVE_SECURITY_PAM_APPL_H))
+	AC_CHECK_HEADER(pam/pam_appl.h, AC_DEFINE(HAVE_PAM_PAM_APPL_H))
+
+	if test x$ac_pam_start = xno -a x$enable_pam = xyes; then
+		AC_MSG_ERROR([libpam-dev required for --enable-pam.])
+	fi
+fi
 
 
 dnl Extra compiler options...
