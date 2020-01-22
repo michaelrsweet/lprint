@@ -2315,7 +2315,7 @@ valid_job_attributes(
     }
     else
     {
-      supported = ippFindAttribute(client->printer->attrs, "media-supported", IPP_TAG_KEYWORD);
+      supported = ippFindAttribute(client->printer->driver->attrs, "media-supported", IPP_TAG_KEYWORD);
 
       if (!ippContainsString(supported, ippGetString(attr, 0, NULL)))
       {
@@ -2352,7 +2352,7 @@ valid_job_attributes(
       }
       else
       {
-	supported = ippFindAttribute(client->printer->attrs, "media-supported", IPP_TAG_KEYWORD);
+	supported = ippFindAttribute(client->printer->driver->attrs, "media-supported", IPP_TAG_KEYWORD);
 
 	if (!ippContainsString(supported, ippGetString(member, 0, NULL)))
 	{
@@ -2381,7 +2381,7 @@ valid_job_attributes(
 	{
 	  x_value   = ippGetInteger(x_dim, 0);
 	  y_value   = ippGetInteger(y_dim, 0);
-	  supported = ippFindAttribute(client->printer->attrs, "media-size-supported", IPP_TAG_BEGIN_COLLECTION);
+	  supported = ippFindAttribute(client->printer->driver->attrs, "media-size-supported", IPP_TAG_BEGIN_COLLECTION);
 	  count     = ippGetCount(supported);
 
 	  for (i = 0; i < count ; i ++)
@@ -2442,7 +2442,7 @@ valid_job_attributes(
 
   if ((attr = ippFindAttribute(client->request, "printer-resolution", IPP_TAG_ZERO)) != NULL)
   {
-    supported = ippFindAttribute(client->printer->attrs, "printer-resolution-supported", IPP_TAG_RESOLUTION);
+    supported = ippFindAttribute(client->printer->driver->attrs, "printer-resolution-supported", IPP_TAG_RESOLUTION);
 
     if (ippGetCount(attr) != 1 || ippGetValueTag(attr) != IPP_TAG_RESOLUTION || !supported)
     {
@@ -2471,31 +2471,6 @@ valid_job_attributes(
 	respond_unsupported(client, attr);
 	valid = 0;
       }
-    }
-  }
-
-  if ((attr = ippFindAttribute(client->request, "sides", IPP_TAG_ZERO)) != NULL)
-  {
-    const char *sides = ippGetString(attr, 0, NULL);
-					// "sides" value...
-
-    if (ippGetCount(attr) != 1 || ippGetValueTag(attr) != IPP_TAG_KEYWORD)
-    {
-      respond_unsupported(client, attr);
-      valid = 0;
-    }
-    else if ((supported = ippFindAttribute(client->printer->attrs, "sides-supported", IPP_TAG_KEYWORD)) != NULL)
-    {
-      if (!ippContainsString(supported, sides))
-      {
-	respond_unsupported(client, attr);
-	valid = 0;
-      }
-    }
-    else if (strcmp(sides, "one-sided"))
-    {
-      respond_unsupported(client, attr);
-      valid = 0;
     }
   }
 
