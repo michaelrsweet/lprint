@@ -6,7 +6,7 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint-server 1 "LPrint" "January 4, 2020" "Michael R Sweet"
+.TH lprint-server 1 "LPrint" "January 23, 2020" "Michael R Sweet"
 .SH NAME
 lprint-server \- start a label print server.
 .SH SYNOPSIS
@@ -22,6 +22,14 @@ Normally a server is started automatically as needed, however you can run the se
 .SH OPTIONS
 The following options are recognized by
 .B lprint server:
+.TP 5
+\fB\-o admin\-group=\fIGROUP\fR
+Specifies that remote configuration is authenticated against the named group.
+If not specified or the value "none" is given then any authenticated user may remotely configure lprint.
+.TP 5
+\fB\-o auth\-service=\fISERVICE\fR
+Specifies the PAM service to use to authenticate for remote configuration requests.
+If not specified or the value "none" is given then printers can only be added, modified, or deleted locally.
 .TP 5
 .B \-o log-file=\-
 Specifies that all messages are written to the standard error.

@@ -180,7 +180,13 @@ lprintCreateSystem(
     lprintLog(system, LPRINT_LOGLEVEL_INFO, "Listening for TCP connections at '%s' on port %d.", system->hostname, system->port);
 
   // Initialize authentication...
-  if (system->admin_group)
+  if (system->auth_service && !strcmp(system->auth_service, "none"))
+  {
+    free(system->auth_service);
+    system->auth_service = NULL;
+  }
+
+  if (system->admin_group && strcmp(system->admin_group, "none"))
   {
     char		buffer[8192];	// Buffer for strings
     struct group	grpbuf,		// Group buffer
