@@ -71,7 +71,7 @@ lprintDoServer(
     port = 0;
 
   // Create the system object and run it...
-  if ((system = lprintCreateSystem(hostname, port, hostname ? "_print,_universal" : NULL, logfile, loglevel)) == NULL)
+  if ((system = lprintCreateSystem(hostname, port, hostname ? "_print,_universal" : NULL, logfile, loglevel, cupsGetOption("auth-service", num_options, options), cupsGetOption("admin-group", num_options, options))) == NULL)
     return (1);
 
   lprintRunSystem(system);

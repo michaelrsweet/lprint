@@ -13,7 +13,7 @@ AC_PREREQ(2.60)
 
 
 dnl Package name and version...
-AC_INIT([lprint], [1.0b1], [https://github.com/michaelrsweet/lprint/issues], [lprint], [https://michaelrsweet.github.io/lprint])
+AC_INIT([lprint], [1.0b2], [https://github.com/michaelrsweet/lprint/issues], [lprint], [https://michaelrsweet.github.io/lprint])
 AC_CONFIG_HEADERS([config.h])
 
 LPRINT_VERSION="AC_PACKAGE_VERSION"
@@ -226,10 +226,15 @@ dnl PAM support...
 AC_ARG_ENABLE(pam, [  --disable-pam           disable PAM support])
 
 if test x$enable_pam != xno; then
-	AC_CHECK_LIB(dl,dlopen)
-	AC_CHECK_LIB(pam,pam_start)
-	AC_CHECK_HEADER(security/pam_appl.h, AC_DEFINE(HAVE_SECURITY_PAM_APPL_H))
-	AC_CHECK_HEADER(pam/pam_appl.h, AC_DEFINE(HAVE_PAM_PAM_APPL_H))
+	dnl PAM needs dlopen...
+	AC_CHECK_LIB([dl], [dlopen])
+	AC_CHECK_LIB([pam], [pam_start], [
+		AC_DEFINE([HAVE_LIBPAM], 1, [libpam])
+		LIBS="$LIBS -lpam"])
+
+	dnl PAM has two "standard" locations for its header...
+	AC_CHECK_HEADER(security/pam_appl.h, AC_DEFINE([HAVE_SECURITY_PAM_APPL_H], 1, [Have <security/pam_appl.h> header?]))
+	AC_CHECK_HEADER(pam/pam_appl.h, AC_DEFINE([HAVE_PAM_PAM_APPL_H], 1, [Have <pam/pam_appl.h> header?]))
 
 	if test x$ac_pam_start = xno -a x$enable_pam = xyes; then
 		AC_MSG_ERROR([libpam-dev required for --enable-pam.])
@@ -239,7 +244,7 @@ fi
 
 dnl Extra compiler options...
 AC_ARG_ENABLE(debug, [  --enable-debug          turn on debugging, default=no])
-AC_ARG_ENABLE(sanitizer, [  --enable-sanitizer      build with AddressSanitizer])
+AC_ARG_ENABLE(sanitizer, [  --enable-sanitizer      build with AddressSanitizer, default=no])
 
 if test x$enable_debug = xyes; then
 	OPTIM="-g"

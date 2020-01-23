@@ -14,6 +14,7 @@
 
 #include "lprint.h"
 #include <ctype.h>
+#include <grp.h>
 
 
 //
@@ -46,7 +47,9 @@ lprintCreateSystem(
     int               port,		// I - Port number or `0` for auto
     const char        *subtypes,	// I - DNS-SD sub-types or `NULL` for none
     const char        *logfile,		// I - Log file or `NULL` for default
-    lprint_loglevel_t loglevel)		// I - Log level
+    lprint_loglevel_t loglevel,		// I - Log level
+    const char        *auth_service,	// I - PAM authentication service or `NULL` for none
+    const char        *admin_group)	// I - Administrative group or `NULL` for none
 {
   lprint_system_t	*system;	// System object
   const char		*tmpdir;	// TMPDIR environment variable
@@ -89,9 +92,14 @@ lprintCreateSystem(
   system->loglevel        = loglevel;
   system->next_client     = 1;
   system->next_printer_id = 1;
+  system->admin_gid       = (gid_t)-1;
 
   if (subtypes)
     system->subtypes = strdup(subtypes);
+  if (auth_service)
+    system->auth_service = strdup(auth_service);
+  if (admin_group)
+    system->admin_group = strdup(admin_group);
 
   // Setup listeners...
   if ((system->listeners[0].fd = create_listener(lprintGetServerPath(sockname, sizeof(sockname)), 0, AF_LOCAL)) < 0)
@@ -170,6 +178,19 @@ lprintCreateSystem(
   lprintLog(system, LPRINT_LOGLEVEL_INFO, "Listening for local connections at '%s'.", sockname);
   if (system->hostname)
     lprintLog(system, LPRINT_LOGLEVEL_INFO, "Listening for TCP connections at '%s' on port %d.", system->hostname, system->port);
+
+  // Initialize authentication...
+  if (system->admin_group)
+  {
+    char		buffer[8192];	// Buffer for strings
+    struct group	grpbuf,		// Group buffer
+			*grp = NULL;	// Admin group
+
+    if (getgrnam_r(system->admin_group, &grpbuf, buffer, sizeof(buffer), &grp) || !grp)
+      lprintLog(system, LPRINT_LOGLEVEL_ERROR, "Unable to find admin-group '%s'.", system->admin_group);
+    else
+      system->admin_gid = grp->gr_gid;
+  }
 
   return (system);
 
@@ -431,6 +452,16 @@ load_config(lprint_system_t *system)	// I - System
     {
       system->next_printer_id = atoi(value);
     }
+    else if (!strcmp(line, "AdminGroup"))
+    {
+      if (!system->admin_group)
+        system->admin_group = strdup(value);
+    }
+    else if (!strcmp(line, "AuthService"))
+    {
+      if (!system->auth_service)
+        system->auth_service = strdup(value);
+    }
     else if (!strcmp(line, "LogFile"))
     {
       if (!system->logfile)
@@ -660,6 +691,11 @@ save_config(lprint_system_t *system)	// I - System
 
   cupsFilePrintf(fp, "DefaultPrinterId %d\n", system->default_printer);
   cupsFilePrintf(fp, "NextPrinterId %d\n", system->next_printer_id);
+
+  if (system->admin_group)
+    cupsFilePutConf(fp, "AdminGroup", system->admin_group);
+  if (system->auth_service)
+    cupsFilePutConf(fp, "AuthService", system->auth_service);
 
   if (system->logfile)
     cupsFilePutConf(fp, "LogFile", system->logfile);

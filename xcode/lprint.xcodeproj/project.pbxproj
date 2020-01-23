@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		277BC9BD23D8002C0022AC4D /* server-auth.c in Sources */ = {isa = PBXBuildFile; fileRef = 277BC9BC23D8002C0022AC4D /* server-auth.c */; };
+		277BC9BE23D88C930022AC4D /* libpam.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEEF2396995C00BB195A /* libpam.tbd */; };
 		27FB485923C0D84900BE0E47 /* driver-pwg.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FB485823C0D84800BE0E47 /* driver-pwg.c */; };
 		27FB486323C251C000BE0E47 /* lprint-options.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FB486223C251C000BE0E47 /* lprint-options.c */; };
 		27FBEED02396988300BB195A /* server-system.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEA22396988200BB195A /* server-system.c */; };
@@ -67,10 +68,15 @@
 		2724351123A441DB00B318AF /* lprint-modify.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-modify.1"; path = "../man/lprint-modify.1"; sourceTree = "<group>"; };
 		2724351223A441DB00B318AF /* lprint-add.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-add.1"; path = "../man/lprint-add.1"; sourceTree = "<group>"; };
 		277BC9BC23D8002C0022AC4D /* server-auth.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "server-auth.c"; path = "../server-auth.c"; sourceTree = "<group>"; };
+		277BC9BF23D9E2DA0022AC4D /* lprint-es-strings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-es-strings.h"; path = "../static-resources/lprint-es-strings.h"; sourceTree = "<group>"; };
+		277BC9C023D9E2DA0022AC4D /* lprint-fr-strings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-fr-strings.h"; path = "../static-resources/lprint-fr-strings.h"; sourceTree = "<group>"; };
+		277BC9C123D9E2DB0022AC4D /* lprint-it-strings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-it-strings.h"; path = "../static-resources/lprint-it-strings.h"; sourceTree = "<group>"; };
+		277BC9C223D9E2DB0022AC4D /* lprint-de-strings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-de-strings.h"; path = "../static-resources/lprint-de-strings.h"; sourceTree = "<group>"; };
+		277BC9C323D9E2DB0022AC4D /* lprint-en-strings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-en-strings.h"; path = "../static-resources/lprint-en-strings.h"; sourceTree = "<group>"; };
 		27BE5C4623CCA1B10095CD45 /* CONTRIBUTING.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = CONTRIBUTING.md; path = ../CONTRIBUTING.md; sourceTree = "<group>"; };
 		27BE5C4723CCA1B10095CD45 /* DOCUMENTATION.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = DOCUMENTATION.md; path = ../DOCUMENTATION.md; sourceTree = "<group>"; };
 		27BE5C4823CCA1B10095CD45 /* CHANGES.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = CHANGES.md; path = ../CHANGES.md; sourceTree = "<group>"; };
-		27FB485723BD7D8000BE0E47 /* lprint-large-png.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-large-png.h"; path = "../resources/lprint-large-png.h"; sourceTree = "<group>"; };
+		27FB485723BD7D8000BE0E47 /* lprint-large-png.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-large-png.h"; path = "../static-resources/lprint-large-png.h"; sourceTree = "<group>"; };
 		27FB485823C0D84800BE0E47 /* driver-pwg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "driver-pwg.c"; path = "../driver-pwg.c"; sourceTree = "<group>"; };
 		27FB485F23C1B02A00BE0E47 /* dither.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dither.h; path = ../dither.h; sourceTree = "<group>"; };
 		27FB486023C2519B00BE0E47 /* lprint-drivers.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-drivers.1"; path = "../man/lprint-drivers.1"; sourceTree = "<group>"; };
@@ -84,7 +90,7 @@
 		27FBEEA72396988200BB195A /* DESIGN.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = DESIGN.md; path = ../DESIGN.md; sourceTree = "<group>"; };
 		27FBEEA82396988200BB195A /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		27FBEEA92396988200BB195A /* lprint-printers.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-printers.1"; path = "../man/lprint-printers.1"; sourceTree = "<group>"; };
-		27FBEEAA2396988200BB195A /* lprint-png.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-png.h"; path = "../resources/lprint-png.h"; sourceTree = "<group>"; };
+		27FBEEAA2396988200BB195A /* lprint-png.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-png.h"; path = "../static-resources/lprint-png.h"; sourceTree = "<group>"; };
 		27FBEEAC2396988200BB195A /* NOTICE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = NOTICE; path = ../NOTICE; sourceTree = "<group>"; };
 		27FBEEAD2396988200BB195A /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
 		27FBEEAE2396988200BB195A /* lprint-cancel.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-cancel.1"; path = "../man/lprint-cancel.1"; sourceTree = "<group>"; };
@@ -144,6 +150,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27FE0EED23CBFDFD00FE1347 /* libpng16.a in Frameworks */,
+				277BC9BE23D88C930022AC4D /* libpam.tbd in Frameworks */,
 				27FE0EEB23CBFC6200FE1347 /* libz.tbd in Frameworks */,
 				27FBEEF02396995C00BB195A /* libpam.tbd in Frameworks */,
 				27FBEEF823969AB700BB195A /* libdl.tbd in Frameworks */,
@@ -169,8 +176,8 @@
 				27FBEEBD2396988200BB195A /* lprint.h */,
 				27FB485A23C0D86500BE0E47 /* Devices */,
 				27FB485B23C0D89300BE0E47 /* Drivers */,
-				27FB485E23C0D91300BE0E47 /* Resources */,
 				27FB485D23C0D8F400BE0E47 /* Server */,
+				27FB485E23C0D91300BE0E47 /* Static Resources */,
 				27FB485C23C0D8B600BE0E47 /* Sub-Commands */,
 				27155EA4239697D4000D0567 /* Products */,
 				27FBEEEC2396994E00BB195A /* Frameworks */,
@@ -245,13 +252,18 @@
 			name = Server;
 			sourceTree = "<group>";
 		};
-		27FB485E23C0D91300BE0E47 /* Resources */ = {
+		27FB485E23C0D91300BE0E47 /* Static Resources */ = {
 			isa = PBXGroup;
 			children = (
+				277BC9C223D9E2DB0022AC4D /* lprint-de-strings.h */,
+				277BC9C323D9E2DB0022AC4D /* lprint-en-strings.h */,
+				277BC9BF23D9E2DA0022AC4D /* lprint-es-strings.h */,
+				277BC9C023D9E2DA0022AC4D /* lprint-fr-strings.h */,
+				277BC9C123D9E2DB0022AC4D /* lprint-it-strings.h */,
 				27FBEEAA2396988200BB195A /* lprint-png.h */,
 				27FB485723BD7D8000BE0E47 /* lprint-large-png.h */,
 			);
-			name = Resources;
+			name = "Static Resources";
 			sourceTree = "<group>";
 		};
 		27FBEEEB2396988F00BB195A /* Documentation */ = {

@@ -24,7 +24,7 @@
 #undef HAVE_LIBUSB
 
 
-// PAM stuff...
+// libpam
 #undef HAVE_LIBPAM
 #undef HAVE_SECURITY_PAM_APPL_H
 #undef HAVE_PAM_PAM_APPL_H

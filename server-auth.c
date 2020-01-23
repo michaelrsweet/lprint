@@ -51,8 +51,8 @@ static int	lprint_pam_func(int num_msg, const struct pam_message **msg, struct p
 int					// O - 1 if correct, 0 otherwise
 lprintAuthenticateUser(
     lprint_client_t *client,		// I - Client
-    const char       *username,		// I - Username string
-    const char       *password)		// I - Password string
+    const char      *username,		// I - Username string
+    const char      *password)		// I - Password string
 {
   int			status = 0;	// Return status
 #ifdef HAVE_LIBPAM
@@ -69,7 +69,7 @@ lprintAuthenticateUser(
   pamdata.appdata_ptr = &data;
   pamh                = NULL;
 
-  if ((pamerr = pam_start(client->server->auth_service, data.username, &pamdata, &pamh)) != PAM_SUCCESS)
+  if ((pamerr = pam_start(client->system->auth_service, data.username, &pamdata, &pamh)) != PAM_SUCCESS)
   {
     lprintLogClient(client, LPRINT_LOGLEVEL_ERROR, "pam_start() returned %d (%s)", pamerr, pam_strerror(pamh, pamerr));
   }
@@ -109,6 +109,22 @@ lprintAuthenticateUser(
 #endif // HAVE_LIBPAM
 
   return (status);
+}
+
+
+//
+// 'lprintIsAuthorized()' - Determine whether a client is authorized for
+//                          administrative requests.
+//
+
+http_status_t				// O - HTTP status
+lprintIsAuthorized(
+    lprint_client_t *client)		// I - Client
+{
+  if (httpAddrFamily(httpGetAddress(client->http)) == AF_LOCAL)
+    return (HTTP_STATUS_CONTINUE);
+
+  return (HTTP_STATUS_FORBIDDEN);
 }
 
 

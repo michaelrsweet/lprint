@@ -139,6 +139,9 @@ typedef struct lprint_system_s		// System data
   int			logfd;		// Log file descriptor, if any
   lprint_loglevel_t	loglevel;	// Log level
   char			*subtypes;	// DNS-SD sub-types, if any
+  char			*auth_service;	// PAM authorization service, if any
+  char			*admin_group;	// PAM administrative group, if any
+  gid_t			admin_gid;	// PAM administrative group ID
   int			num_listeners;	// Number of listener sockets
   struct pollfd		listeners[3];	// Listener sockets
   int			next_client;	// Next client number
@@ -255,7 +258,7 @@ extern lprint_client_t	*lprintCreateClient(lprint_system_t *system, int sock);
 extern lprint_job_t	*lprintCreateJob(lprint_client_t *client);
 extern int		lprintCreateJobFile(lprint_job_t *job, char *fname, size_t fnamesize, const char *dir, const char *ext);
 extern lprint_printer_t	*lprintCreatePrinter(lprint_system_t *system, int printer_id, const char *printer_name, const char *driver_name, const char *device_uri, const char *location, const char *geo_location, const char *organization, const char *org_unit);
-extern lprint_system_t	*lprintCreateSystem(const char *hostname, int port, const char *subtypes, const char *logfile, lprint_loglevel_t loglevel);
+extern lprint_system_t	*lprintCreateSystem(const char *hostname, int port, const char *subtypes, const char *logfile, lprint_loglevel_t loglevel, const char *auth_service, const char *admin_group);
 extern void		lprintDeleteClient(lprint_client_t *client);
 extern void		lprintDeleteJob(lprint_job_t *job);
 extern void		lprintDeletePrinter(lprint_printer_t *printer);
@@ -279,6 +282,7 @@ extern lprint_printer_t	*lprintFindPrinter(lprint_system_t *system, const char *
 extern char		*lprintGetDefaultPrinter(http_t *http, char *buffer, size_t bufsize);
 extern char		*lprintGetServerPath(char *buffer, size_t bufsize);
 extern void		lprintInitDNSSD(lprint_system_t *system);
+extern http_status_t	lprintIsAuthorized(lprint_client_t *client);
 // Note: Log functions currently only support %d, %p, %s, %u, and %x!
 extern void		lprintLog(lprint_system_t *system, lprint_loglevel_t level, const char *message, ...);
 extern void		lprintLogAttributes(lprint_client_t *client, const char *title, ipp_t *ipp, int is_response);
