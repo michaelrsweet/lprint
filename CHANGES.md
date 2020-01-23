@@ -14,6 +14,8 @@ v1.0b2 - January ??, 2020
   access errors (Issue #8)
 - Job attributes are now validated properly against the driver attributes
   (Issue #9)
+- Fixed an issue in server mode - a failed IPv6 listener would prevent the
+  server from starting (Issue #12)
 
 
 v1.0b1 - January 15, 2020

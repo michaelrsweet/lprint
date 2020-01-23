@@ -114,24 +114,30 @@ lprintCreateSystem(
 
   if (system->hostname)
   {
+    // Create listener sockets...
+    const char *lishost;		// Listen hostname
+
+    if (strcmp(system->hostname, "localhost"))
+      lishost = NULL;
+    else
+      lishost = "localhost";
+
     if (system->port == 0)
       system->port = 9000 + (getuid() % 1000);
 
-    if ((system->listeners[system->num_listeners].fd = create_listener(NULL, system->port, AF_INET)) < 0)
-    {
-      lprintLog(system, LPRINT_LOGLEVEL_FATAL, "Unable to create IPv4 listener for %s:%d: %s", system->hostname, system->port, strerror(errno));
-      goto fatal;
-    }
+    if ((system->listeners[system->num_listeners].fd = create_listener(lishost, system->port, AF_INET)) < 0)
+      lprintLog(system, LPRINT_LOGLEVEL_ERROR, "Unable to create IPv4 listener for %s:%d: %s", lishost ? lishost : "*", system->port, strerror(errno));
     else
       system->listeners[system->num_listeners ++].events = POLLIN;
 
-    if ((system->listeners[system->num_listeners].fd = create_listener(NULL, system->port, AF_INET6)) < 0)
-    {
-      lprintLog(system, LPRINT_LOGLEVEL_FATAL, "Unable to create IPv6 listener for %s:%d: %s", system->hostname, system->port, strerror(errno));
-      goto fatal;
-    }
+    if ((system->listeners[system->num_listeners].fd = create_listener(lishost, system->port, AF_INET6)) < 0)
+      lprintLog(system, LPRINT_LOGLEVEL_ERROR, "Unable to create IPv6 listener for %s:%d: %s", lishost ? lishost : "*", system->port, strerror(errno));
     else
       system->listeners[system->num_listeners ++].events = POLLIN;
+
+    // Error out if we cannot listen to IPv4 or IPv6 addresses...
+    if (system->num_listeners == 1)
+      goto fatal;
   }
 
   // Initialize DNS-SD as needed...
