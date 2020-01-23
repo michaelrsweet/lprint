@@ -56,8 +56,6 @@ static void		ipp_set_system_attributes(lprint_client_t *client);
 static void		ipp_shutdown_all_printers(lprint_client_t *client);
 static void		ipp_validate_job(lprint_client_t *client);
 
-static int		is_domain_connection(lprint_client_t *client);
-
 static void		respond_unsupported(lprint_client_t *client, ipp_attribute_t *attr);
 
 static int		set_printer_attributes(lprint_client_t *client, lprint_printer_t *printer);
@@ -927,12 +925,13 @@ static void
 ipp_cancel_jobs(lprint_client_t *client)// I - Client
 {
   lprint_job_t	*job;			// Job information
+  http_status_t	auth_status;		// Authorization status
 
 
-  // Verify the connection is local...
-  if (!is_domain_connection(client))
+  // Verify the connection is authorized...
+  if ((auth_status = lprintIsAuthorized(client)) != HTTP_STATUS_CONTINUE)
   {
-    lprintRespondIPP(client, IPP_STATUS_ERROR_FORBIDDEN, "Administrative requests not supported over network connections.");
+    lprintRespondHTTP(client, auth_status, NULL, NULL, 0);
     return;
   }
 
@@ -1076,12 +1075,13 @@ ipp_create_printer(
   char		resource[256];		// Resource path
   lprint_printer_t *printer;		// Printer
   cups_array_t	*ra;			// Requested attributes
+  http_status_t	auth_status;		// Authorization status
 
 
-  // Verify the connection is local...
-  if (!is_domain_connection(client))
+  // Verify the connection is authorized...
+  if ((auth_status = lprintIsAuthorized(client)) != HTTP_STATUS_CONTINUE)
   {
-    lprintRespondIPP(client, IPP_STATUS_ERROR_FORBIDDEN, "Administrative requests not supported over network connections.");
+    lprintRespondHTTP(client, auth_status, NULL, NULL, 0);
     return;
   }
 
@@ -1200,10 +1200,13 @@ static void
 ipp_delete_printer(
     lprint_client_t *client)		// I - Client
 {
-  // Verify the connection is local...
-  if (!is_domain_connection(client))
+  http_status_t	auth_status;		// Authorization status
+
+
+  // Verify the connection is authorized...
+  if ((auth_status = lprintIsAuthorized(client)) != HTTP_STATUS_CONTINUE)
   {
-    lprintRespondIPP(client, IPP_STATUS_ERROR_FORBIDDEN, "Administrative requests not supported over network connections.");
+    lprintRespondHTTP(client, auth_status, NULL, NULL, 0);
     return;
   }
 
@@ -1462,12 +1465,13 @@ ipp_get_system_attributes(
   ipp_t			*col;		// configured-printers value
   time_t		config_time = 0;// system-config-change-[date-]time value
   time_t		state_time = 0;	// system-state-change-[date-]time value
+  http_status_t	auth_status;		// Authorization status
 
 
-  // Verify the connection is local...
-  if (!is_domain_connection(client))
+  // Verify the connection is authorized...
+  if ((auth_status = lprintIsAuthorized(client)) != HTTP_STATUS_CONTINUE)
   {
-    lprintRespondIPP(client, IPP_STATUS_ERROR_FORBIDDEN, "Administrative requests not supported over network connections.");
+    lprintRespondHTTP(client, auth_status, NULL, NULL, 0);
     return;
   }
 
@@ -1749,10 +1753,13 @@ static void
 ipp_set_printer_attributes(
     lprint_client_t *client)		// I - Client
 {
-  // Verify the connection is local...
-  if (!is_domain_connection(client))
+  http_status_t	auth_status;		// Authorization status
+
+
+  // Verify the connection is authorized...
+  if ((auth_status = lprintIsAuthorized(client)) != HTTP_STATUS_CONTINUE)
   {
-    lprintRespondIPP(client, IPP_STATUS_ERROR_FORBIDDEN, "Administrative requests not supported over network connections.");
+    lprintRespondHTTP(client, auth_status, NULL, NULL, 0);
     return;
   }
 
@@ -1778,16 +1785,17 @@ ipp_set_system_attributes(
   int			count;		// Number of values
   const char		*name;		// Attribute name
   int			i;		// Looping var
+  http_status_t		auth_status;	// Authorization status
   static lprint_attr_t	sattrs[] =	// Settable system attributes
   {
     { "default-printer-id",		IPP_TAG_INTEGER,	1 }
   };
 
 
-  // Verify the connection is local...
-  if (!is_domain_connection(client))
+  // Verify the connection is authorized...
+  if ((auth_status = lprintIsAuthorized(client)) != HTTP_STATUS_CONTINUE)
   {
-    lprintRespondIPP(client, IPP_STATUS_ERROR_FORBIDDEN, "Administrative requests not supported over network connections.");
+    lprintRespondHTTP(client, auth_status, NULL, NULL, 0);
     return;
   }
 
@@ -1866,10 +1874,13 @@ static void
 ipp_shutdown_all_printers(
     lprint_client_t *client)		// I - Client
 {
-  // Verify the connection is local...
-  if (!is_domain_connection(client))
+  http_status_t	auth_status;		// Authorization status
+
+
+  // Verify the connection is authorized...
+  if ((auth_status = lprintIsAuthorized(client)) != HTTP_STATUS_CONTINUE)
   {
-    lprintRespondIPP(client, IPP_STATUS_ERROR_FORBIDDEN, "Administrative requests not supported over network connections.");
+    lprintRespondHTTP(client, auth_status, NULL, NULL, 0);
     return;
   }
 
@@ -1889,18 +1900,6 @@ ipp_validate_job(
 {
   if (valid_job_attributes(client))
     lprintRespondIPP(client, IPP_STATUS_OK, NULL);
-}
-
-
-//
-// 'is_domain_connection()' - Return whether a client is local.
-//
-
-static int				// O - 1 if local, 0 otherwise
-is_domain_connection(
-    lprint_client_t *client)		// I - Client
-{
-  return (httpAddrFamily(httpGetAddress(client->http)) == AF_LOCAL);
 }
 
 

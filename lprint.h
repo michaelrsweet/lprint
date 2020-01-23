@@ -241,7 +241,6 @@ typedef struct lprint_client_s		// Client data
 
 extern void		lprintAddOptions(ipp_t *request, int num_options, cups_option_t *options);
 extern void		lprintAddPrinterURI(ipp_t *request, const char *printer_name, char *resource, size_t rsize);
-extern int		lprintAuthenticateUser(lprint_client_t *client, const char *username, const char *password);
 extern void		lprintCheckJobs(lprint_printer_t *printer);
 extern void		lprintCleanJobs(lprint_system_t *system);
 extern http_t		*lprintConnect(int auto_start);
