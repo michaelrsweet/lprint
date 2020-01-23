@@ -167,28 +167,32 @@ lprint:	$(OBJS)
 # directory...
 resheaders:
 	echo "Generating lprint-png.h from lprint.png..."
-	echo "static const unsigned char lprint_png[] =" >resources/lprint-png.h
-	echo "{" >>resources/lprint-png.h
-	od -t x1 -A n -v resources/lprint.png | awk '{printf("  "); for (i = 1; i <= NF; i ++) printf("0x%s,", $$i); print "";}' >>resources/lprint-png.h
-	echo "};" >>resources/lprint-png.h
+	echo "static const unsigned char lprint_png[] =" >static-resources/lprint-png.h
+	echo "{" >>static-resources/lprint-png.h
+	od -t x1 -A n -v static-resources/lprint.png | awk '{printf("  "); for (i = 1; i <= NF; i ++) printf("0x%s,", $$i); print "";}' >>static-resources/lprint-png.h
+	echo "};" >>static-resources/lprint-png.h
 	echo "Generating lprint-large-png.h from lprint-large.png..."
-	echo "static const unsigned char lprint_large_png[] =" >resources/lprint-large-png.h
-	echo "{" >>resources/lprint-large-png.h
-	od -t x1 -A n -v resources/lprint-large.png | awk '{printf("  "); for (i = 1; i <= NF; i ++) printf("0x%s,", $$i); print "";}' >>resources/lprint-large-png.h
-	echo "};" >>resources/lprint-large-png.h
+	echo "static const unsigned char lprint_large_png[] =" >static-resources/lprint-large-png.h
+	echo "{" >>static-resources/lprint-large-png.h
+	od -t x1 -A n -v static-resources/lprint-large.png | awk '{printf("  "); for (i = 1; i <= NF; i ++) printf("0x%s,", $$i); print "";}' >>static-resources/lprint-large-png.h
+	echo "};" >>static-resources/lprint-large-png.h
 	for lang in $(LANGUAGES); do \
 		echo "Generating lprint-$$lang-strings.h from lprint-$$lang.strings..."; \
-		echo "static const char *lprint_$${lang}_strings =" >resources/lprint-$$lang-strings.h; \
-		sed -e '1,$$s/"/\\"/g' resources/lprint-$$lang.strings | awk '{print "\"" $$0 "\\n\""}' >>resources/lprint-$$lang-strings.h; \
-		echo ";" >>resources/lprint-$$lang-strings.h; \
+		echo "static const char *lprint_$${lang}_strings =" >static-resources/lprint-$$lang-strings.h; \
+		sed -e '1,$$s/"/\\"/g' static-resources/lprint-$$lang.strings | awk '{print "\"" $$0 "\\n\""}' >>static-resources/lprint-$$lang-strings.h; \
+		echo ";" >>static-resources/lprint-$$lang-strings.h; \
 	done
 
 
 # Dependencies...
 $(OBJS):	common.h config.h device.h driver.h lprint.h Makefile
 server-client.o: \
-		resources/lprint-png.h \
-		resources/lprint-large-png.h \
-		resources/lprint-en-strings.h
+		static-resources/lprint-png.h \
+		static-resources/lprint-large-png.h \
+		static-resources/lprint-de-strings.h \
+		static-resources/lprint-en-strings.h \
+		static-resources/lprint-es-strings.h \
+		static-resources/lprint-fr-strings.h \
+		static-resources/lprint-it-strings.h
 server-print.o: dither.h
 

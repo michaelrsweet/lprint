@@ -13,13 +13,13 @@
 //
 
 #include "lprint.h"
-#include "resources/lprint-png.h"
-#include "resources/lprint-large-png.h"
-#include "resources/lprint-de-strings.h"
-#include "resources/lprint-en-strings.h"
-#include "resources/lprint-es-strings.h"
-#include "resources/lprint-fr-strings.h"
-#include "resources/lprint-it-strings.h"
+#include "static-resources/lprint-png.h"
+#include "static-resources/lprint-large-png.h"
+#include "static-resources/lprint-de-strings.h"
+#include "static-resources/lprint-en-strings.h"
+#include "static-resources/lprint-es-strings.h"
+#include "static-resources/lprint-fr-strings.h"
+#include "static-resources/lprint-it-strings.h"
 #include <ctype.h>
 
 
