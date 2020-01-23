@@ -470,6 +470,9 @@ lprintRespondHTTP(
       client->operation == HTTP_STATE_OPTIONS)
     httpSetField(client->http, HTTP_FIELD_ALLOW, "GET, HEAD, OPTIONS, POST");
 
+  if (code == HTTP_STATUS_UNAUTHORIZED)
+    httpSetField(client->http, HTTP_FIELD_WWW_AUTHENTICATE, "Basic realm=\"LPrint\"");
+
   if (type)
   {
     if (!strcmp(type, "text/html"))
