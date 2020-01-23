@@ -229,14 +229,7 @@ typedef struct lprint_client_s		// Client data
 			*options;	// URI options
   http_addr_t		addr;		// Client address
   char			hostname[256];	// Client hostname
-  char			username[256];	/* Authenticated username, if any */
-  uid_t			uid;		/* Authenticated UID, if any */
-  int			num_groups;	/* Number of autbenticated groups, if any */
-#  ifdef __APPLE__
-  int			groups[32];	/* Authenticated groups, if any */
-#  else
-  gid_t			groups[32];	/* Authenticated groups, if any */
-#  endif // __APPLE__
+  char			username[256];	// Authenticated username, if any
   lprint_printer_t	*printer;	// Printer, if any
   lprint_job_t		*job;		// Job, if any
 } lprint_client_t;

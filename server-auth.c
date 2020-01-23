@@ -12,9 +12,9 @@
 //
 
 #include "lprint.h"
-
 #include <pwd.h>
 #include <grp.h>
+#include <ctype.h>
 #ifdef HAVE_LIBPAM
 #  ifdef HAVE_PAM_PAM_APPL_H
 #    include <pam/pam_appl.h>
@@ -121,10 +121,111 @@ http_status_t				// O - HTTP status
 lprintIsAuthorized(
     lprint_client_t *client)		// I - Client
 {
+  const char		*authorization;	// Authorization: header value
+
+
   if (httpAddrFamily(httpGetAddress(client->http)) == AF_LOCAL)
     return (HTTP_STATUS_CONTINUE);
 
-  return (HTTP_STATUS_FORBIDDEN);
+  if (!client->system->auth_service)
+    return (HTTP_STATUS_FORBIDDEN);
+
+  if ((authorization = httpGetField(client->http, HTTP_FIELD_AUTHORIZATION)) != NULL && *authorization)
+  {
+    if (!strncmp(authorization, "Basic ", 6))
+    {
+      // Basic authentication...
+      char	username[512],		// Username value
+		*password;		// Password value
+      int	userlen = sizeof(username);
+					// Length of username:password
+      struct passwd *user;		// User information
+      int	num_groups;		// Number of autbenticated groups, if any
+#  ifdef __APPLE__
+      int	groups[32];		// Authenticated groups, if any
+#  else
+      gid_t	groups[32];		// Authenticated groups, if any
+#  endif // __APPLE__
+
+
+      for (authorization += 6; *authorization && isspace(*authorization & 255); authorization ++);
+
+      httpDecode64_2(username, &userlen, authorization);
+      if ((password = strchr(username, ':')) != NULL)
+      {
+	*password++ = '\0';
+
+        // Authenticate the username and password...
+	if (lprintAuthenticateUser(client, username, password))
+	{
+	  // Get the user information (groups, etc.)
+	  if ((user = getpwnam(username)) != NULL)
+	  {
+	    lprintLogClient(client, LPRINT_LOGLEVEL_INFO, "Authenticated as \"%s\" using Basic.", username);
+	    strlcpy(client->username, username, sizeof(client->username));
+
+	    num_groups = (int)(sizeof(groups) / sizeof(groups[0]));
+
+#ifdef __APPLE__
+	    if (getgrouplist(username, (int)user->pw_gid, groups, &num_groups))
+#else
+	    if (getgrouplist(username, user->pw_gid, groups, &num_groups))
+#endif // __APPLE__
+	    {
+	      lprintLogClient(client, LPRINT_LOGLEVEL_ERROR, "Unable to lookup groups for user '%s': %s", username, strerror(errno));
+	      num_groups = 0;
+	    }
+
+            // Check group membership...
+            if (client->system->admin_gid != -1)
+            {
+              if (user->pw_gid != client->system->admin_gid)
+              {
+                int i;			// Looping var
+
+                for (i = 0; i < num_groups; i ++)
+		{
+		  if (groups[i] == client->system->admin_gid)
+		    break;
+		}
+
+                if (i >= num_groups)
+                {
+                  // Not in the admin group, access is forbidden...
+                  return (HTTP_STATUS_FORBIDDEN);
+		}
+              }
+            }
+
+            // If we get this far, authentication and authorization are good...
+            return (HTTP_STATUS_CONTINUE);
+	  }
+	  else
+	  {
+	    lprintLogClient(client, LPRINT_LOGLEVEL_ERROR, "Unable to lookup user '%s'.", username);
+	    return (HTTP_STATUS_SERVER_ERROR);
+	  }
+	}
+	else
+	{
+	  lprintLogClient(client, LPRINT_LOGLEVEL_INFO, "Basic authentication of '%s' failed.", username);
+	}
+      }
+      else
+      {
+	lprintLogClient(client, LPRINT_LOGLEVEL_ERROR, "Bad Basic Authorization header value seen.");
+	return (HTTP_STATUS_BAD_REQUEST);
+      }
+    }
+    else
+    {
+      lprintLogClient(client, LPRINT_LOGLEVEL_ERROR, "Unsupported Authorization header value seen.");
+      return (HTTP_STATUS_BAD_REQUEST);
+    }
+  }
+
+  // If we get there then we don't have any authorization value we can use...
+  return (HTTP_STATUS_UNAUTHORIZED);
 }
 
 
