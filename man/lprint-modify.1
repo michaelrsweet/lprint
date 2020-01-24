@@ -6,7 +6,7 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint-modify 1 "LPrint" "January 5, 2020" "Michael R Sweet"
+.TH lprint-modify 1 "LPrint" "January 24, 2020" "Michael R Sweet"
 .SH NAME
 lprint-modify \- modify a printer queue.
 .SH SYNOPSIS
@@ -14,6 +14,21 @@ lprint-modify \- modify a printer queue.
 .B modify
 .B \-d
 .I PRINTER
+[
+.B \-m
+.I DRIVER-NAME
+] [
+.B \-v
+.I DEVICE-URI
+] [
+.B \-o
+.I OPTION=VALUE
+]
+.br
+.B lprint
+.B modify
+.B \-u
+.I PRINTER-URI
 [
 .B \-m
 .I DRIVER-NAME
@@ -68,6 +83,9 @@ Specifies the organization name, for example "Acme, Inc.".
 .TP 5
 \fB\-o printer-organizational-unit\fI=UNIT\fR
 Specifies the organizational unit, for example "Shipping Department".
+.TP 5
+\fB\-u \fIPRINTER-URI\fR
+Specifies an "ipp:" or "ipps:" URI for a remote printer.
 .TP 5
 \fB\-v \fIDEVICE-URI\fR
 Specifies the device for the print queue.

@@ -6,12 +6,16 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint-add 1 "LPrint" "January 5, 2020" "Michael R Sweet"
+.TH lprint-add 1 "LPrint" "January 24, 2020" "Michael R Sweet"
 .SH NAME
 lprint-add \- add a printer queue.
 .SH SYNOPSIS
 .B lprint
 .B add
+[
+.B \-u
+.I SYSTEM-URI
+]
 .B \-d
 .I PRINTER
 .B \-m
@@ -66,6 +70,10 @@ Specifies the organization name, for example "Acme, Inc.".
 .TP 5
 \fB\-o printer-organizational-unit\fI=UNIT\fR
 Specifies the organizational unit, for example "Shipping Department".
+.TP 5
+\fB\-u \fISYSTEM-URI\fR
+Specifies a remote LPrint server to use.
+The "SYSTEM-URI" is of the form "ipps://HOSTNAME:PORT/ipp/system".
 .TP 5
 \fB\-v \fIDEVICE-URI\fR
 Specifies the device for the printer queue.

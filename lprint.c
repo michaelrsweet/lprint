@@ -462,7 +462,7 @@ usage(int status)			// O - Exit status
   fputs("  -m DRIVER-NAME   Specify driver (add/modify).\n", fp);
   fputs("  -n COPIES        Specify number of copies (submit).\n", fp);
   fputs("  -o NAME=VALUE    Specify option (add,modify,server,submit).\n", fp);
-  fputs("  -u PRINTER-URI   Specify ipp: or ipps: printer (cancel/options/status/submit).\n", fp);
+  fputs("  -u URI           Specify ipp: or ipps: printer/server.\n", fp);
   fputs("  -v DEVICE-URI    Specify socket: or usb: device (add/modify).\n", fp);
 
   exit(status);

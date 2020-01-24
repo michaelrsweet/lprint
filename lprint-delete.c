@@ -23,7 +23,8 @@ lprintDoDelete(
     int           num_options,		// I - Number of options
     cups_option_t *options)		// I - Options
 {
-  const char	*printer_name;		// Printer name
+  const char	*printer_uri,		// Printer URI
+		*printer_name;		// Printer name
   http_t	*http;			// Server connection
   ipp_t		*request,		// IPP request
 		*response;		// IPP response
@@ -32,9 +33,15 @@ lprintDoDelete(
 
 
   // Connect to/start up the server and get the destination printer...
-  http = lprintConnect(1);
-
-  if ((printer_name = cupsGetOption("printer-name", num_options, options)) == NULL)
+  if ((printer_uri = cupsGetOption("printer-uri", num_options, options)) != NULL)
+  {
+    // Connect to the remote server...
+    if ((http = lprintConnectURI(printer_uri, resource, sizeof(resource))) == NULL)
+      return (1);
+  }
+  else if ((http = lprintConnect(1)) == NULL)
+    return (1);
+  else if ((printer_name = cupsGetOption("printer-name", num_options, options)) == NULL)
   {
     fputs("lprint: No printer specified.\n", stderr);
     httpClose(http);
@@ -43,7 +50,10 @@ lprintDoDelete(
 
   // Get the printer-id for the printer we are deleting...
   request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
-  lprintAddPrinterURI(request, printer_name, resource, sizeof(resource));
+  if (printer_uri)
+    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-uri", NULL, printer_uri);
+  else
+    lprintAddPrinterURI(request, printer_name, resource, sizeof(resource));
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", NULL, "printer-id");
 

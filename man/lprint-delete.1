@@ -6,7 +6,7 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint-delete 1 "LPrint" "January 4, 2020" "Michael R Sweet"
+.TH lprint-delete 1 "LPrint" "January 24, 2020" "Michael R Sweet"
 .SH NAME
 lprint-delete \- delete a label printer queue.
 .SH SYNOPSIS
@@ -14,6 +14,11 @@ lprint-delete \- delete a label printer queue.
 .B delete
 .B \-d
 .I PRINTER
+.br
+.B lprint
+.B delete
+.B \-u
+.I PRINTER-URI
 .SH DESCRIPTION
 This command deletes the specified label printer queue.
 .SH OPTIONS
@@ -22,6 +27,9 @@ The following options are recognized by
 .TP 5
 \fB\-d \fIPRINTER\fR
 Specifies the printer queue to delete.
+.TP 5
+\fB\-u \fIPRINTER-URI\fR
+Specifies an "ipp:" or "ipps:" URI for a remote printer.
 .SH SEE ALSO
 .BR lprint (1),
 .BR lprint-add (1),

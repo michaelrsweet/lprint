@@ -219,7 +219,8 @@ lprintDoAdd(int           num_options,	// I - Number of options
 {
   http_t	*http;			// Connection to server
   ipp_t		*request;		// Create-Printer request
-  const char	*device_uri,		// Device URI
+  const char	*printer_uri,		// Printer URI
+		*device_uri,		// Device URI
 		*lprint_driver,		// Name of driver
 		*printer_name;		// Name of printer
 
@@ -242,7 +243,15 @@ lprintDoAdd(int           num_options,	// I - Number of options
   }
 
   // Open a connection to the server...
-  if ((http = lprintConnect(1)) == NULL)
+  if ((printer_uri = cupsGetOption("printer-uri", num_options, options)) != NULL)
+  {
+    // Connect to the remote server...
+    char	resource[1024];		// Resource path
+
+    if ((http = lprintConnectURI(printer_uri, resource, sizeof(resource))) == NULL)
+      return (1);
+  }
+  else if ((http = lprintConnect(1)) == NULL)
     return (1);
 
   // Send a Create-Printer request to the server...

@@ -6,7 +6,7 @@
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint-default 1 "LPrint" "January 4, 2020" "Michael R Sweet"
+.TH lprint-default 1 "LPrint" "January 24, 2020" "Michael R Sweet"
 .SH NAME
 lprint-default \- set or get the default printer queue.
 .SH SYNOPSIS
@@ -15,6 +15,9 @@ lprint-default \- set or get the default printer queue.
 [
 .B \-d
 .I PRINTER
+] [
+.B \-u
+.I PRINTER-URI
 ]
 .SH DESCRIPTION
 This command gets or sets the default printer queue.
@@ -26,6 +29,9 @@ The following options are recognized by
 .TP 5
 \fB\-d \fIPRINTER\fR
 Specifies the new default printer queue.
+.TP 5
+\fB\-u \fIPRINTER-URI\fR
+Specifies an "ipp:" or "ipps:" URI for a remote printer.
 .SH SEE ALSO
 .BR lprint (1),
 .BR lprint-add (1),
