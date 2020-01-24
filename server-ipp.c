@@ -647,7 +647,7 @@ copy_printer_attributes(
     strlcpy(baselang, lang, sizeof(baselang));
     if (!strcmp(baselang, "de") || !strcmp(baselang, "en") || !strcmp(baselang, "es") || !strcmp(baselang, "fr") || !strcmp(baselang, "it"))
     {
-      httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "https", NULL, client->system->hostname ? client->system->hostname : "localhost", client->system->port, "/%s.strings", baselang);
+      httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "https", NULL, client->system->hostname ? client->system->hostname : "localhost", client->system->port, "/lprint-%s.strings", baselang);
       ippAddString(client->response, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-strings-uri", NULL, uri);
     }
   }

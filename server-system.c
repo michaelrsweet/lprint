@@ -138,6 +138,9 @@ lprintCreateSystem(
     // Error out if we cannot listen to IPv4 or IPv6 addresses...
     if (system->num_listeners == 1)
       goto fatal;
+
+    // Set the server credentials...
+    cupsSetServerCredentials(NULL, system->hostname, 1);
   }
 
   // Initialize DNS-SD as needed...

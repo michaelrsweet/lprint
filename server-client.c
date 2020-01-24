@@ -24,6 +24,19 @@
 
 
 //
+// Local types...
+//
+
+typedef struct lprint_resource_s	// Resource data
+{
+  const char	*path,			// Resource path
+		*content_type;		// Content-Type value
+  const void	*data;			// Pointer to resource data
+  size_t	length;			// Size of resource
+} lprint_resource_t;
+
+
+//
 // Local functions...
 //
 
@@ -161,7 +174,8 @@ lprintProcessHTTP(
 			hostname[HTTP_MAX_HOST];
 					// Hostname
   int			port;		// Port number
-  const char		*ext;		// Extension on URI
+  int			i;		// Looping var
+  const lprint_resource_t *resource;	// Current resource
   static const char * const http_states[] =
   {					// Strings for logging HTTP method
     "WAITING",
@@ -180,6 +194,16 @@ lprintProcessHTTP(
     "STATUS",
     "UNKNOWN_METHOD",
     "UNKNOWN_VERSION"
+  };
+  const lprint_resource_t	resources[] =
+  {
+    { "/lprint-de.strings",	"text/strings",	lprint_de_strings, 0 },
+    { "/lprint-en.strings",	"text/strings",	lprint_en_strings, 0 },
+    { "/lprint-es.strings",	"text/strings",	lprint_es_strings, 0 },
+    { "/lprint-fr.strings",	"text/strings",	lprint_fr_strings, 0 },
+    { "/lprint-it.strings",	"text/strings",	lprint_it_strings, 0 },
+    { "/lprint.png",		"image/png",	lprint_png, sizeof(lprint_png) },
+    { "/lprint-large.png",	"image/png",	lprint_large_png, sizeof(lprint_large_png) }
   };
 
 
@@ -298,85 +322,46 @@ lprintProcessHTTP(
 	return (lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, NULL, 0));
 
     case HTTP_STATE_HEAD :
-        if (!strcmp(client->uri, "/lprint.png") || !strcmp(client->uri, "/lprint-large.png"))
-	  return (lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "image/png", 0));
-        else if ((ext = strrchr(client->uri, '.')) != NULL && !strcmp(ext, ".strings"))
-          return (lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/strings", 0));
-	else if (!strcmp(client->uri, "/"))
+	if (!strcmp(client->uri, "/"))
 	  return (lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/html", 0));
-	else
-	  return (lprintRespondHTTP(client, HTTP_STATUS_NOT_FOUND, NULL, NULL, 0));
+
+        for (i = (int)(sizeof(resources) / sizeof(resources[0])), resource = resources; i > 0; i --, resource ++)
+        {
+          if (!strcmp(resource->path, client->uri))
+          {
+	    return (lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, resource->content_type, 0));
+          }
+        }
+
+	return (lprintRespondHTTP(client, HTTP_STATUS_NOT_FOUND, NULL, NULL, 0));
 
     case HTTP_STATE_GET :
-        if (!strcmp(client->uri, "/lprint.png"))
+	if (!strcmp(client->uri, "/"))
 	{
-	  // Send PNG icon file.
-	  if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "image/png", sizeof(lprint_png)))
-	    return (0);
-
-	  httpWrite2(client->http, (const char *)lprint_png, sizeof(lprint_png));
-	  httpFlushWrite(client->http);
-	}
-        else if (!strcmp(client->uri, "/lprint-large.png"))
-	{
-	  // Send PNG icon file.
-	  if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "image/png", sizeof(lprint_large_png)))
-	    return (0);
-
-	  httpWrite2(client->http, (const char *)lprint_large_png, sizeof(lprint_large_png));
-	  httpFlushWrite(client->http);
-	}
-        else if (!strcmp(client->uri, "/de.strings"))
-        {
-          if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/strings", sizeof(lprint_de_strings)))
-            return (0);
-
-	  httpWrite2(client->http, (const char *)lprint_de_strings, sizeof(lprint_de_strings));
-	  httpFlushWrite(client->http);
-	}
-        else if (!strcmp(client->uri, "/en.strings"))
-        {
-          if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/strings", sizeof(lprint_en_strings)))
-            return (0);
-
-	  httpWrite2(client->http, (const char *)lprint_en_strings, sizeof(lprint_en_strings));
-	  httpFlushWrite(client->http);
-	}
-        else if (!strcmp(client->uri, "/es.strings"))
-        {
-          if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/strings", sizeof(lprint_es_strings)))
-            return (0);
-
-	  httpWrite2(client->http, (const char *)lprint_es_strings, sizeof(lprint_es_strings));
-	  httpFlushWrite(client->http);
-	}
-        else if (!strcmp(client->uri, "/fr.strings"))
-        {
-          if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/strings", sizeof(lprint_fr_strings)))
-            return (0);
-
-	  httpWrite2(client->http, (const char *)lprint_fr_strings, sizeof(lprint_fr_strings));
-	  httpFlushWrite(client->http);
-	}
-        else if (!strcmp(client->uri, "/it.strings"))
-        {
-          if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/strings", sizeof(lprint_it_strings)))
-            return (0);
-
-	  httpWrite2(client->http, (const char *)lprint_it_strings, sizeof(lprint_it_strings));
-	  httpFlushWrite(client->http);
-	}
-	else if (!strcmp(client->uri, "/"))
-	{
-	 /*
-	  * Show web status page...
-	  */
-
+	  // Show web status page...
           return (show_status(client));
 	}
-	else
-	  return (lprintRespondHTTP(client, HTTP_STATUS_NOT_FOUND, NULL, NULL, 0));
-	break;
+
+        for (i = (int)(sizeof(resources) / sizeof(resources[0])), resource = resources; i > 0; i --, resource ++)
+        {
+          if (!strcmp(resource->path, client->uri))
+          {
+	    // Send resource file...
+	    size_t length;		// Length
+
+            if ((length = resource->length) == 0)
+              length = strlen((char *)resource->data);
+
+	    if (!lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, resource->content_type, length))
+	      return (0);
+
+	    httpWrite2(client->http, (const char *)resource->data, length);
+	    httpFlushWrite(client->http);
+	    return (1);
+          }
+	}
+
+	return (lprintRespondHTTP(client, HTTP_STATUS_NOT_FOUND, NULL, NULL, 0));
 
     case HTTP_STATE_POST :
 	if (strcmp(httpGetField(client->http, HTTP_FIELD_CONTENT_TYPE),
