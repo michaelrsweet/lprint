@@ -16,6 +16,7 @@ v1.0b2 - January ??, 2020
   (Issue #9)
 - Fixed an issue in server mode - a failed IPv6 listener would prevent the
   server from starting (Issue #12)
+- Added a "spool-directory" option for the `server` sub-command.
 
 
 v1.0b1 - January 15, 2020
