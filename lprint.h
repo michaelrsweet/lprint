@@ -142,6 +142,7 @@ typedef struct lprint_system_s		// System data
   char			*auth_service;	// PAM authorization service, if any
   char			*admin_group;	// PAM administrative group, if any
   gid_t			admin_gid;	// PAM administrative group ID
+  char			*session_key;	// Session key
   int			num_listeners;	// Number of listener sockets
   struct pollfd		listeners[3];	// Listener sockets
   int			next_client;	// Next client number
@@ -286,6 +287,7 @@ extern void		*lprintProcessClient(lprint_client_t *client);
 extern int		lprintProcessHTTP(lprint_client_t *client);
 extern int		lprintProcessIPP(lprint_client_t *client);
 extern void		*lprintProcessJob(lprint_job_t *job);
+extern unsigned		lprintRand(void);
 extern int		lprintRegisterDNSSD(lprint_printer_t *printer);
 extern int		lprintRespondHTTP(lprint_client_t *client, http_status_t code, const char *content_coding, const char *type, size_t length);
 extern void		lprintRespondIPP(lprint_client_t *client, ipp_status_t status, const char *message, ...) LPRINT_FORMAT(3, 4);

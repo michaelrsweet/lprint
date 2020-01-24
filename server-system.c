@@ -53,7 +53,8 @@ lprintCreateSystem(
     const char        *admin_group)	// I - Administrative group or `NULL` for none
 {
   lprint_system_t	*system;	// System object
-  char			sockname[256];	// Domain socket
+  char			sockname[256],	// Domain socket
+			key[65];	// Session key
   const char		*tmpdir;	// Temporary directory
 
 
@@ -127,6 +128,10 @@ lprintCreateSystem(
     // Set the server credentials...
     cupsSetServerCredentials(NULL, system->hostname, 1);
   }
+
+  // Initialize random data for a session key...
+  snprintf(key, sizeof(key), "%08x%08x%08x%08x%08x%08x%08x%08x", lprintRand(), lprintRand(), lprintRand(), lprintRand(), lprintRand(), lprintRand(), lprintRand(), lprintRand());
+  system->session_key = strdup(key);
 
   // Initialize DNS-SD as needed...
   if (system->subtypes)

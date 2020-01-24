@@ -37,7 +37,6 @@ static int	compare_completed_jobs(lprint_job_t *a, lprint_job_t *b);
 static int	compare_jobs(lprint_job_t *a, lprint_job_t *b);
 static int	compare_printers(lprint_printer_t *a, lprint_printer_t *b);
 static void	free_printer(lprint_printer_t *printer);
-static unsigned	lprint_rand(void);
 static ipp_t	*make_xri(const char *uri, const char *authentication, const char *security);
 
 
@@ -568,7 +567,7 @@ lprintMakeUUID(
   // Start with the SHA-256 sum of the hostname, port, object name and
   // number, and some random data on the end for jobs (to avoid duplicates).
   if (printer_name && job_id)
-    snprintf(data, sizeof(data), "_LPRINT_JOB_:%s:%d:%s:%d:%08x", system->hostname, system->port, printer_name, job_id, lprint_rand());
+    snprintf(data, sizeof(data), "_LPRINT_JOB_:%s:%d:%s:%d:%08x", system->hostname, system->port, printer_name, job_id, lprintRand());
   else if (printer_name)
     snprintf(data, sizeof(data), "_LPRINT_PRINTER_:%s:%d:%s", system->hostname, system->port, printer_name);
   else
@@ -580,6 +579,48 @@ lprintMakeUUID(
   snprintf(buffer, bufsize, "urn:uuid:%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x", sha256[0], sha256[1], sha256[3], sha256[4], sha256[5], sha256[6], (sha256[10] & 15) | 0x30, sha256[11], (sha256[15] & 0x3f) | 0x40, sha256[16], sha256[20], sha256[21], sha256[25], sha256[26], sha256[30], sha256[31]);
 
   return (buffer);
+}
+
+
+//
+// 'lprintRand()' - Return the best 32-bit random number we can.
+//
+
+unsigned				// O - Random number
+lprintRand(void)
+{
+#ifdef HAVE_ARC4RANDOM
+  // arc4random uses real entropy automatically...
+  return (arc4random());
+
+#else
+#  ifdef HAVE_GETRANDOM
+  // Linux has the getrandom function to get real entropy, but can fail...
+  unsigned	buffer;			// Random number buffer
+
+  if (getrandom(&buffer, sizeof(buffer), 0) == sizeof(buffer))
+    return (buffer);
+
+#  elif defined(HAVE_GNUTLS_RND)
+  // GNU TLS has the gnutls_rnd function we can use as well, but can fail...
+  unsigned	buffer;			// Random number buffer
+
+  if (!gnutls_rnd(GNUTLS_RND_NONCE, &buffer, sizeof(buffer)))
+    return (buffer);
+#  endif // HAVE_GETRANDOM
+
+  // Fall back to random() seeded with the current time - not ideal, but for
+  // our non-cryptographic purposes this is OK...
+  static int first_time = 1;		// First time we ran?
+
+  if (first_time)
+  {
+    srandom(time(NULL));
+    first_time = 0;
+  }
+
+  return ((unsigned)random());
+#endif // __APPLE__
 }
 
 
@@ -660,48 +701,6 @@ free_printer(lprint_printer_t *printer)	// I - Printer
   cupsArrayDelete(printer->jobs);
 
   free(printer);
-}
-
-
-//
-// 'lprint_rand()' - Return the best 32-bit random number we can.
-//
-
-static unsigned				// O - Random number
-lprint_rand(void)
-{
-#ifdef HAVE_ARC4RANDOM
-  // arc4random uses real entropy automatically...
-  return (arc4random());
-
-#else
-#  ifdef HAVE_GETRANDOM
-  // Linux has the getrandom function to get real entropy, but can fail...
-  unsigned	buffer;			// Random number buffer
-
-  if (getrandom(&buffer, sizeof(buffer), 0) == sizeof(buffer))
-    return (buffer);
-
-#  elif defined(HAVE_GNUTLS_RND)
-  // GNU TLS has the gnutls_rnd function we can use as well, but can fail...
-  unsigned	buffer;			// Random number buffer
-
-  if (!gnutls_rnd(GNUTLS_RND_NONCE, &buffer, sizeof(buffer)))
-    return (buffer);
-#  endif // HAVE_GETRANDOM
-
-  // Fall back to random() seeded with the current time - not ideal, but for
-  // our non-cryptographic purposes this is OK...
-  static int first_time = 1;		// First time we ran?
-
-  if (first_time)
-  {
-    srandom(time(NULL));
-    first_time = 0;
-  }
-
-  return ((unsigned)random());
-#endif // __APPLE__
 }
 
 

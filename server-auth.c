@@ -66,7 +66,7 @@ lprintIsAuthorized(
     return (HTTP_STATUS_FORBIDDEN);
 
   // Remote admin access requires encryption...
-  if (!httpIsEncrypted(client->http))
+  if (!httpIsEncrypted(client->http) && !httpAddrLocalhost(httpGetAddress(client->http)))
     return (HTTP_STATUS_UPGRADE_REQUIRED);
 
   // Get the authorization header...
