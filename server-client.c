@@ -578,16 +578,16 @@ html_header(lprint_client_t *client,	/* I - Client */
 	      "<!doctype html>\n"
 	      "<html>\n"
 	      "<head>\n"
-	      "<title>%s</title>\n"
+	      "<title>%s%sLPrint v" LPRINT_VERSION "</title>\n"
 	      "<link rel=\"shortcut icon\" href=\"/lprint.png\" type=\"image/png\">\n"
 	      "<link rel=\"apple-touch-icon\" href=\"/lprint.png\" type=\"image/png\">\n"
-	      "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=9\">\n", title);
+	      "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=9\">\n", title, title ? " - " : "");
   if (refresh > 0)
     html_printf(client, "<meta http-equiv=\"refresh\" content=\"%d\">\n", refresh);
   html_printf(client,
 	      "<meta name=\"viewport\" content=\"width=device-width\">\n"
 	      "<style>\n"
-	      "body { font-family: sans-serif; margin: 0; }\n"
+	      "body { font-family: sans-serif; margin: 10px 20px; }\n"
 	      "div.body { padding: 0px 10px 10px; }\n"
 	      "span.badge { background: #090; border-radius: 5px; color: #fff; padding: 5px 10px; }\n"
 	      "span.bar { box-shadow: 0px 1px 5px #333; font-size: 75%%; }\n"
@@ -600,22 +600,10 @@ html_header(lprint_client_t *client,	/* I - Client */
 	      "table.striped tr:nth-child(odd) { background: #f0f0f0; }\n"
 	      "table.striped th { background: white; border-bottom: solid thin black; text-align: left; vertical-align: bottom; }\n"
 	      "table.striped td { margin: 0; padding: 5px; vertical-align: top; }\n"
-	      "table.nav { border-collapse: collapse; width: 100%%; }\n"
-	      "table.nav td { margin: 0; text-align: center; }\n"
-	      "td.nav a, td.nav a:active, td.nav a:hover, td.nav a:hover:link, td.nav a:hover:link:visited, td.nav a:link, td.nav a:link:visited, td.nav a:visited { background: inherit; color: inherit; font-size: 80%%; text-decoration: none; }\n"
-	      "td.nav { background: #333; color: #fff; padding: 4px 8px; width: 33%%; }\n"
-	      "td.nav.sel { background: #fff; color: #000; font-weight: bold; }\n"
-	      "td.nav:hover { background: #666; color: #fff; }\n"
-	      "td.nav:active { background: #000; color: #ff0; }\n"
 	      "</style>\n"
 	      "</head>\n"
 	      "<body>\n"
-	      "<table class=\"nav\"><tr>"
-	      "<td class=\"nav%s\"><a href=\"/\">Status</a></td>"
-	      "<td class=\"nav%s\"><a href=\"/supplies\">Supplies</a></td>"
-	      "<td class=\"nav%s\"><a href=\"/media\">Media</a></td>"
-	      "</tr></table>\n"
-	      "<div class=\"body\">\n", !strcmp(client->uri, "/") ? " sel" : "", !strcmp(client->uri, "/supplies") ? " sel" : "", !strcmp(client->uri, "/media") ? " sel" : "");
+	      "<h1>%s</h1>\n", title);
 }
 
 
@@ -880,11 +868,11 @@ show_status(lprint_client_t  *client)	/* I - Client connection */
       break;
   }
 
-  html_header(client, "LPrint", printer ? 5 : 15);
+  html_header(client, "Printers", printer ? 5 : 15);
 
   for (printer = (lprint_printer_t *)cupsArrayFirst(system->printers); printer; printer = (lprint_printer_t *)cupsArrayNext(system->printers))
   {
-    html_printf(client, "<h1><img style=\"background: %s; border-radius: 10px; float: left; margin-right: 10px; padding: 10px;\" src=\"/lprint-large.png\" width=\"64\" height=\"64\">%s</h1>\n", state_colors[printer->state - IPP_PSTATE_IDLE], printer->printer_name);
+    html_printf(client, "<h2><img style=\"background: %s; border-radius: 10px; float: left; margin-right: 10px; padding: 10px;\" src=\"/lprint-large.png\" width=\"64\" height=\"64\">%s</h2>\n", state_colors[printer->state - IPP_PSTATE_IDLE], printer->printer_name);
     html_printf(client, "<p>%s, %d job(s).", printer->state == IPP_PSTATE_IDLE ? "Idle" : printer->state == IPP_PSTATE_PROCESSING ? "Printing" : "Stopped", cupsArrayCount(printer->jobs));
     for (i = 0, reason = 1; i < (int)(sizeof(reasons) / sizeof(reasons[0])); i ++, reason <<= 1)
       if (printer->state_reasons & reason)
