@@ -46,31 +46,16 @@ lprintCreateSystem(
     const char        *hostname,	// I - Hostname or `NULL` for none
     int               port,		// I - Port number or `0` for auto
     const char        *subtypes,	// I - DNS-SD sub-types or `NULL` for none
+    const char        *spooldir,	// I - Spool directory or `NULL` for default
     const char        *logfile,		// I - Log file or `NULL` for default
     lprint_loglevel_t loglevel,		// I - Log level
     const char        *auth_service,	// I - PAM authentication service or `NULL` for none
     const char        *admin_group)	// I - Administrative group or `NULL` for none
 {
   lprint_system_t	*system;	// System object
-  const char		*tmpdir;	// TMPDIR environment variable
-  char			spooldir[256],	// Spool directory
-			sockname[256];	// Domain socket
+  char			sockname[256];	// Domain socket
+  const char		*tmpdir;	// Temporary directory
 
-
-  // See if the spool directory can be created...
-  if ((tmpdir = getenv("TMPDIR")) == NULL)
-#ifdef __APPLE__
-    tmpdir = "/private/tmp";
-#else
-    tmpdir = "/tmp";
-#endif // __APPLE__
-
-  snprintf(spooldir, sizeof(spooldir), "%s/lprint%d.d", tmpdir, (int)getuid());
-  if (mkdir(spooldir, 0700) && errno != EEXIST)
-  {
-    perror(spooldir);
-    return (NULL);
-  }
 
   // Allocate memory...
   if ((system = (lprint_system_t *)calloc(1, sizeof(lprint_system_t))) == NULL)
@@ -86,7 +71,7 @@ lprintCreateSystem(
   }
 
   system->start_time      = time(NULL);
-  system->directory       = strdup(spooldir);
+  system->directory       = spooldir ? strdup(spooldir) : NULL;
   system->logfd           = 2;
   system->logfile         = logfile ? strdup(logfile) : NULL;
   system->loglevel        = loglevel;
@@ -151,6 +136,28 @@ lprintCreateSystem(
   if (!load_config(system))
     goto fatal;
 
+  // See if the spool directory can be created...
+  if ((tmpdir = getenv("TMPDIR")) == NULL)
+#ifdef __APPLE__
+    tmpdir = "/private/tmp";
+#else
+    tmpdir = "/tmp";
+#endif // __APPLE__
+
+  if (!system->directory)
+  {
+    char	newspooldir[256];	// Spool directory
+
+    snprintf(newspooldir, sizeof(newspooldir), "%s/lprint%d.d", tmpdir, (int)getuid());
+    system->directory = strdup(newspooldir);
+  }
+
+  if (mkdir(system->directory, 0700) && errno != EEXIST)
+  {
+    perror(system->directory);
+    goto fatal;
+  }
+
   // Initialize logging...
   if (system->loglevel == LPRINT_LOGLEVEL_UNSPEC)
     system->loglevel = LPRINT_LOGLEVEL_ERROR;
@@ -158,7 +165,7 @@ lprintCreateSystem(
   if (!system->logfile)
   {
     // Default log file is $TMPDIR/lprintUID.log...
-    char newlogfile[256];			// Log filename
+    char newlogfile[256];		// Log filename
 
     snprintf(newlogfile, sizeof(newlogfile), "%s/lprint%d.log", tmpdir, (int)getuid());
 
@@ -635,6 +642,11 @@ load_config(lprint_system_t *system)	// I - System
 	}
       }
     }
+    else if (!strcmp(line, "SpoolDir"))
+    {
+      if (!system->directory)
+        system->directory = strdup(value);
+    }
     else
     {
       lprintLog(system, LPRINT_LOGLEVEL_ERROR, "Unknown '%s %s' on line %d of '%s'.", line, value, linenum, configfile);
@@ -715,6 +727,9 @@ save_config(lprint_system_t *system)	// I - System
   if (system->logfile)
     cupsFilePutConf(fp, "LogFile", system->logfile);
   cupsFilePutConf(fp, "LogLevel", llevels[system->loglevel]);
+
+  if (system->directory)
+    cupsFilePutConf(fp, "SpoolDir", system->directory);
 
   for (printer = (lprint_printer_t *)cupsArrayFirst(system->printers); printer; printer = (lprint_printer_t *)cupsArrayNext(system->printers))
   {

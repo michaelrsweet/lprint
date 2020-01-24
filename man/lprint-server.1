@@ -59,6 +59,10 @@ If not specified, the server only listens for connections on a per-user (local) 
 \fB\-o server-port=\fIPORT\fR
 Listens for IPP connections on the specified port.
 If not specified, a random port between 9000 and 9999 is chosen.
+.TP 5
+\fB\-o spool\-directory=\fIDIRECTORY\fR
+Specifies a directory that holds pending print files.
+If not specified, a subdirectory in the system temporary directory is used.
 .SH SEE ALSO
 .BR lprint (1),
 .BR lprint-shutdown (1).

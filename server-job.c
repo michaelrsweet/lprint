@@ -271,7 +271,7 @@ lprintCreateJobFile(
   }
 
   // Create a filename with the job-id, job-name, and document-format (extension)...
-  snprintf(fname, fnamesize, "%s/%d-%s.%s", directory, job->id, name, ext);
+  snprintf(fname, fnamesize, "%s/%s-%d-%s.%s", directory, job->printer->printer_name, job->id, name, ext);
 
   return (open(fname, O_WRONLY | O_CREAT | O_TRUNC | O_NOFOLLOW | O_CLOEXEC, 0600));
 }

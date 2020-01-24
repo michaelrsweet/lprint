@@ -250,7 +250,7 @@ extern lprint_client_t	*lprintCreateClient(lprint_system_t *system, int sock);
 extern lprint_job_t	*lprintCreateJob(lprint_client_t *client);
 extern int		lprintCreateJobFile(lprint_job_t *job, char *fname, size_t fnamesize, const char *dir, const char *ext);
 extern lprint_printer_t	*lprintCreatePrinter(lprint_system_t *system, int printer_id, const char *printer_name, const char *driver_name, const char *device_uri, const char *location, const char *geo_location, const char *organization, const char *org_unit);
-extern lprint_system_t	*lprintCreateSystem(const char *hostname, int port, const char *subtypes, const char *logfile, lprint_loglevel_t loglevel, const char *auth_service, const char *admin_group);
+extern lprint_system_t	*lprintCreateSystem(const char *hostname, int port, const char *subtypes, const char *spooldir, const char *logfile, lprint_loglevel_t loglevel, const char *auth_service, const char *admin_group);
 extern void		lprintDeleteClient(lprint_client_t *client);
 extern void		lprintDeleteJob(lprint_job_t *job);
 extern void		lprintDeletePrinter(lprint_printer_t *printer);
