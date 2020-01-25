@@ -46,6 +46,8 @@ static void		html_escape(lprint_client_t *client, const char *s, size_t slen);
 static void		html_footer(lprint_client_t *client);
 static void		html_header(lprint_client_t *client, const char *title, int refresh);
 static void		html_printf(lprint_client_t *client, const char *format, ...) LPRINT_FORMAT(2, 3);
+static void		media_chooser(lprint_client_t *client, lprint_printer_t *printer, const char *title, const char *name, lprint_media_col_t *media);
+static void		media_parse(const char *name, lprint_media_col_t *media, int num_form, cups_option_t *form);
 static int		show_add(lprint_client_t *client);
 static int		show_default(lprint_client_t *client, int printer_id);
 static int		show_delete(lprint_client_t *client, int printer_id);
@@ -963,6 +965,84 @@ html_printf(lprint_client_t *client,	// I - Client
 
 
 //
+// 'media_chooser()' - Show the media chooser.
+
+static void
+media_chooser(
+    lprint_client_t    *client,		// I - Client
+    lprint_printer_t   *printer,	// I - Printer
+    const char         *title,		// I - Label/title
+    const char         *name,		// I - Base name
+    lprint_media_col_t *media)		// I - Current media values
+{
+  int		i;			// Looping var
+  pwg_media_t	*pwg;			// PWG media size info
+  char		text[256];		// Human-readable value/text
+  lprint_driver_t *driver = printer->driver;
+					// Driver info
+
+
+  html_printf(client, "<tr><th>%s</th><td><select name=\"%s-size\">", title, name);
+  for (i = 0; i < driver->num_media; i ++)
+  {
+    if (!strncmp(driver->media[i], "roll_", 5))
+      continue;
+
+    pwg = pwgMediaForPWG(driver->media[i]);
+
+    if ((pwg->width % 100) == 0)
+      snprintf(text, sizeof(text), "%dx%dmm", pwg->width / 100, pwg->length / 100);
+    else
+      snprintf(text, sizeof(text), "%gx%g\"", pwg->width / 2540.0, pwg->length / 2540.0);
+
+    html_printf(client, "<option value=\"%s\"%s>%s</option>", driver->media[i], !strcmp(driver->media[i], media->size_name) ? " selected" : "", text);
+  }
+  html_printf(client, "</select><select name=\"%s-tracking\">", name);
+  for (i = LPRINT_MEDIA_TRACKING_CONTINUOUS; i <= LPRINT_MEDIA_TRACKING_WEB; i *= 2)
+  {
+    const char *val = lprintMediaTrackingString(i);
+
+    if (!(driver->tracking_supported & i))
+      continue;
+
+    strlcpy(text, val, sizeof(text));
+    text[0] = toupper(text[0]);
+
+    html_printf(client, "<option value=\"%s\"%s>%s</option>", val, i == media->tracking ? " selected" : "", text);
+  }
+  html_printf(client, "</select><select name=\"%s-type\">", name);
+  for (i = 0; i < driver->num_type; i ++)
+  {
+    if (!strcmp(driver->type[i], "labels"))
+      strlcpy(text, "Cut Labels", sizeof(text));
+    else if (!strcmp(driver->type[i], "labels-continuous"))
+      strlcpy(text, "Continuous Labels", sizeof(text));
+    else if (!strcmp(driver->type[i], "continuous"))
+      strlcpy(text, "Continuous Paper", sizeof(text));
+    else
+      strlcpy(text, driver->type[i], sizeof(text));
+
+    html_printf(client, "<option value=\"%s\"%s>%s</option>", driver->type[i], !strcmp(driver->type[i], media->type) ? " selected" : "", text);
+  }
+  html_printf(client, "</select></td></tr>");
+}
+
+
+//
+// 'media_parse()' - Parse media values.
+//
+
+static void
+media_parse(
+    const char         *name,		// I - Base name
+    lprint_media_col_t *media,		// I - Media values
+    int                num_form,	// I - Number of form values
+    cups_option_t      *form)		// I - Form values
+{
+}
+
+
+//
 // 'show_add()' - Show the add printer page.
 //
 
@@ -1107,7 +1187,7 @@ show_add(lprint_client_t *client)	// I - Client connection
                       "<input name=\"session-key\" type=\"hidden\" value=\"%s\">"
 		      "<table class=\"form\">\n"
                       "<tr><th>Name:</th><td><input name=\"printer-name\" value=\"%s\" size=\"32\" placeholder=\"Letters, numbers, '.', and '-'.\"></td></tr>\n"
-                      "<tr><th>Device:</th><td><select name=\"device-uri\">", printer_name ? printer_name : "", client->system->session_key);
+                      "<tr><th>Device:</th><td><select name=\"device-uri\">", client->system->session_key, printer_name ? printer_name : "");
   lprintListDevices((lprint_device_cb_t)device_cb, NULL, NULL, NULL);
   html_printf(client, "<option value=\"socket\">Network Printer</option></select><br>\n"
                       "<input name=\"socket-address\" value=\"%s\" size=\"32\" placeholder=\"IP address or hostname\"></td></tr>\n", socket_address ? socket_address : "");
@@ -1318,12 +1398,14 @@ show_modify(lprint_client_t *client,	// I - Client connection
   html_printf(client, "<form method=\"POST\" action=\"/modify/%d\">"
                       "<input name=\"session-key\" type=\"hidden\" value=\"%s\">"
 		      "<table class=\"form\">\n", printer_id, client->system->session_key);
-  html_printf(client, "<tr><th>Location:</th><td><input name=\"printer-location\" value=\"%s\" size=\"32\" placeholder=\"Human-readable location\"><br>\n"
-                      "<input name=\"latitude\" type=\"number\" value=\"%g\" min=\"-90\" max=\"90\" step=\"0.000001\" size=\"10\" placeholder=\"Latitude Degrees\">"
-                      "<input name=\"longitude\" type=\"number\" value=\"%g\" min=\"-180\" max=\"180\" step=\"0.000001\" size=\"11\" placeholder=\"Longitude Degrees\">"
-                      "</td></tr>\n", location ? location : "", latval, lonval);
+  html_printf(client, "<tr><th>Location:</th><td><input name=\"printer-location\" value=\"%s\" size=\"32\" placeholder=\"Human-readable location\"></td></tr>\n", location ? location : "");
+  html_printf(client, "<tr><th>Latitude:</th><td><input name=\"latitude\" type=\"number\" value=\"%g\" min=\"-90\" max=\"90\" step=\"0.000001\" size=\"10\" placeholder=\"Latitude Degrees\"></td></tr>\n", latval);
+  html_printf(client, "<tr><th>Longitude:</th><td><input name=\"longitude\" type=\"number\" value=\"%g\" min=\"-180\" max=\"180\" step=\"0.000001\" size=\"11\" placeholder=\"Longitude Degrees\"></td></tr>\n", lonval);
   html_printf(client, "<tr><th>Organization:</th><td><input name=\"printer-organization\" value=\"%s\" size=\"32\" placeholder=\"Organization name\"></td></tr>\n", organization ? organization : "");
   html_printf(client, "<tr><th>Organizational Unit:</th><td><input name=\"printer-organizational-unit\" value=\"%s\" size=\"32\" placeholder=\"Unit/division/group\"></td></tr>\n", org_unit ? org_unit : "");
+  media_chooser(client, printer, "Main Roll:", "media-ready0", printer->driver->media_ready + 0);
+  if (printer->driver->num_source > 1)
+    media_chooser(client, printer, "Second Roll:", "media-ready1", printer->driver->media_ready + 1);
   html_printf(client, "<tr><th></th><td><input type=\"submit\" value=\"Modify Printer\"></td></tr>\n"
                       "</table></form>\n");
   html_footer(client);
