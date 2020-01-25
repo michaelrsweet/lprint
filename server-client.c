@@ -1178,7 +1178,7 @@ show_add(lprint_client_t *client)	// I - Client connection
   lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/html", 0);
 
   html_header(client, "Add Printer", 0);
-  html_printf(client, "<p><button onclick=\"window.location.href='/';\">Return to Printers</button></p>\n");
+  html_printf(client, "<p><button onclick=\"window.location.href='/';\">&lArr; Return to Printers</button></p>\n");
 
   if (error)
     html_printf(client, "<blockquote><em>Error:</em> %s</blockquote>\n", error);
@@ -1390,7 +1390,7 @@ show_modify(lprint_client_t *client,	// I - Client connection
 
   snprintf(title, sizeof(title), "Modify Printer %s", printer->printer_name);
   html_header(client, title, 0);
-  html_printf(client, "<p><button onclick=\"window.location.href='/';\">Return to Printers</button></p>\n");
+  html_printf(client, "<p><button onclick=\"window.location.href='/';\">&lArr; Return to Printers</button></p>\n");
 
   if (error)
     html_printf(client, "<blockquote><em>Error:</em> %s</blockquote>\n", error);
