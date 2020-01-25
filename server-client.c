@@ -539,9 +539,9 @@ device_cb(const char      *device_uri,	// I - Device URI
     }
 
     if (serial)
-      html_printf(client, "<option value=\"%s\">%s %s (%s)</option>", device_uri, make, model, serial);
+      html_printf(client, "<option value=\"%s\">%s %s (%s)</option>", device_uri, make, model + 1, serial);
     else
-      html_printf(client, "<option value=\"%s\">%s %s</option>", device_uri, make, model);
+      html_printf(client, "<option value=\"%s\">%s %s</option>", device_uri, make, model + 1);
   }
 
   return (1);
@@ -1187,9 +1187,9 @@ show_add(lprint_client_t *client)	// I - Client connection
                       "<input name=\"session-key\" type=\"hidden\" value=\"%s\">"
 		      "<table class=\"form\">\n"
                       "<tr><th>Name:</th><td><input name=\"printer-name\" value=\"%s\" size=\"32\" placeholder=\"Letters, numbers, '.', and '-'.\"></td></tr>\n"
-                      "<tr><th>Device:</th><td><select name=\"device-uri\">", client->system->session_key, printer_name ? printer_name : "");
-  lprintListDevices((lprint_device_cb_t)device_cb, NULL, NULL, NULL);
-  html_printf(client, "<option value=\"socket\">Network Printer</option></select><br>\n"
+                      "<tr><th>Device:</th><td><select name=\"device-uri\"><option value=\"socket\">Network Printer</option>", client->system->session_key, printer_name ? printer_name : "");
+  lprintListDevices((lprint_device_cb_t)device_cb, client, NULL, NULL);
+  html_printf(client, "</select><br>\n"
                       "<input name=\"socket-address\" value=\"%s\" size=\"32\" placeholder=\"IP address or hostname\"></td></tr>\n", socket_address ? socket_address : "");
   html_printf(client, "<tr><th>Driver:</th><td><select name=\"lprint-driver\">");
   drivers = lprintGetDrivers(&num_drivers);
@@ -1440,9 +1440,9 @@ show_status(lprint_client_t  *client)	// I - Client connection
   };
   static const char * const state_colors[] =
   {					// State colors
-    "#0C0",				// Idle
-    "#EE0",				// Processing
-    "#C00"				// Stopped
+    "rgba(0,192,0,0.5)",		// Idle
+    "rgba(224,224,0,0.5)",		// Processing
+    "rgba(192,0,0,0.5)"			// Stopped
   };
 
 
