@@ -8,12 +8,46 @@ if test $# != 1; then
 	exit 1
 fi
 
-version=$1
+version="$1"
 
+# See if we have local changes (other than this script...)
+if (git status | grep -v makesrcdist | grep -q modified:); then
+        echo Local changes remain:
+        git status | grep -v makesrcdist | grep modified:
+        exit 1
+fi
+
+# Verify that files are updated with the correct version...
+temp=`grep AC_INIT configure.ac | awk '{print $2}' | sed -e '1,$s/^\[//' -e '1,$s/\],$//'`
+if test "$temp" != $version; then
+	echo "Still need to update version to $version in configure.ac (saw $temp)"
+	exit 1
+fi
+
+temp=`head -4 CHANGES.md | tail -1 | awk '{print $1}'`
+if test "$temp" != "v$version"; then
+	echo "Still need to add Changes in v$version in CHANGES.md (saw $temp)"
+	exit 1
+fi
+
+temp=`grep '^version:' snap/snapcraft.yaml | awk '{print $2}'`
+if test "$temp" != $version; then
+	echo "Still need to update version to $version in snap/snapcraft.yaml (saw $temp)"
+	exit 1
+fi
+
+temp=`grep LPRINT_VERSION xcode/config.h | awk -F\" '{print $2}'`
+if test "$temp" != $version; then
+	echo "Still need to update version to $version in xcode/config.h (saw $temp)"
+	exit 1
+fi
+
+# Create the tag and push it...
 echo Creating tag for release...
 git tag -m "Tag $version" v$version
 git push origin v$version
 
+# Create the tarball and sign it...
 echo Creating lprint-$version.tar.gz...
 git archive --format tar --prefix=lprint-$version/ HEAD | gzip -v9 >lprint-$version.tar.gz
 gpg --detach-sign lprint-$version.tar.gz
