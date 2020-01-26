@@ -36,7 +36,7 @@ For more information, see the file "DOCUMENTATION.md", the man pages in the
 %setup
 
 %build
-CFLAGS="$RPM_OPT_FLAGS" CXXFLAGS="$RPM_OPT_FLAGS" LDFLAGS="$RPM_OPT_FLAGS" ./configure --enable-libpng --enable-libusb --enable-pam --with-dnssd=avahi
+CFLAGS="$RPM_OPT_FLAGS" CXXFLAGS="$RPM_OPT_FLAGS" LDFLAGS="$RPM_OPT_FLAGS" ./configure --enable-libpng --enable-libusb --enable-pam --with-dnssd=avahi --prefix=/usr
 make
 
 %install
