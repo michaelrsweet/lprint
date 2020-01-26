@@ -1,6 +1,6 @@
 name: lprint
 base: core18
-version: 1.0b1
+version: 1.0b2
 summary: A Label Printer Application
 description: |
    LPrint implements printing for a variety of common label and receipt printers
@@ -35,4 +35,4 @@ parts:
         source: .
         build-packages: [libavahi-client-dev, libcups2-dev, libcupsimage2-dev, libgnutls28-dev, libpng-dev, libusb-1.0-0-dev, zlib1g-dev]
         stage-packages: [libavahi-client3, libcups2, libcupsimage2, libpng16-16, libusb-1.0-0]
- 
+
