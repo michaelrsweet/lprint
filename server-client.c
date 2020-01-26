@@ -486,6 +486,16 @@ lprintRespondHTTP(
 
   httpSetLength(client->http, length);
 
+  if (code == HTTP_STATUS_UPGRADE_REQUIRED && client->operation == HTTP_STATE_GET)
+  {
+    char	redirect[1024];		// Redirect URI
+
+    code = HTTP_STATUS_MOVED_PERMANENTLY;
+
+    httpAssembleURI(HTTP_URI_CODING_ALL, redirect, sizeof(redirect), "https", NULL, client->system->hostname, client->system->port, client->uri);
+    httpSetField(client->http, HTTP_FIELD_LOCATION, redirect);
+  }
+
   if (httpWriteResponse(client->http, code) < 0)
     return (0);
 
@@ -705,6 +715,7 @@ html_footer(lprint_client_t *client)	// I - Client
 {
   html_printf(client,
 	      "</div>\n"
+	      "<div class=\"footer\">Copyright 2019-2020 by Michael R Sweet. <a href=\"https://www.msweet.org/lprint\">LPrint v" LPRINT_VERSION "</a> is provided under the terms of the Apache License, Version 2.0.</div>\n"
 	      "</body>\n"
 	      "</html>\n");
   httpWrite2(client->http, "", 0);
@@ -733,22 +744,30 @@ html_header(lprint_client_t *client,	// I - Client
   html_printf(client,
 	      "<meta name=\"viewport\" content=\"width=device-width\">\n"
 	      "<style>\n"
-	      "body { font-family: sans-serif; margin: 10px 20px; }\n"
-	      "div.body { padding: 0px 10px 10px; }\n"
+	      "body { font-family: sans-serif; margin: 0px; }\n"
+	      "div.body { padding: 0px 20px 30px; }\n"
+	      "div.footer { background: rgba(0,0,0,0.9); bottom: 0px; color: white; font-size: 80%%; left: 0px; padding: 10px; position: fixed; right: 0px; width: 100%%; }\n"
+	      "div.footer a { color: #ccf; }\n"
+	      "h2.title { border-bottom: solid 2px black; clear: all; }\n"
 	      "span.badge { background: #090; border-radius: 5px; color: #fff; padding: 5px 10px; }\n"
 	      "span.bar { box-shadow: 0px 1px 5px #333; font-size: 75%%; }\n"
 	      "table.form { border-collapse: collapse; margin-left: auto; margin-right: auto; margin-top: 10px; width: auto; }\n"
 	      "table.form td, table.form th { padding: 5px 2px; }\n"
 	      "table.form td.meter { border-right: solid 1px #ccc; padding: 0px; width: 400px; }\n"
 	      "table.form th { text-align: right; }\n"
-	      "table.striped { border-bottom: solid thin black; border-collapse: collapse; width: 100%%; }\n"
+	      "table.striped { border-bottom: solid thin black; border-collapse: collapse; clear: all; width: 100%%; }\n"
 	      "table.striped tr:nth-child(even) { background: #fcfcfc; }\n"
 	      "table.striped tr:nth-child(odd) { background: #f0f0f0; }\n"
 	      "table.striped th { background: white; border-bottom: solid thin black; text-align: left; vertical-align: bottom; }\n"
 	      "table.striped td { margin: 0; padding: 5px; vertical-align: top; }\n"
+	      "@media only screen and (min-device-width: 320px) and (max-device-width: 480px), only screen and (min-device-width: 320px) and (max-device-width: 568px) {\n"
+	      "  div.body { padding: 0px 20px 10px; }\n"
+	      "  div.footer { position: relative; }\n"
+	      "}\n"
 	      "</style>\n"
 	      "</head>\n"
 	      "<body>\n"
+	      "<div class=\"body\">\n"
 	      "<h1>%s</h1>\n", title);
 }
 
@@ -1039,6 +1058,36 @@ media_parse(
     int                num_form,	// I - Number of form values
     cups_option_t      *form)		// I - Form values
 {
+  char		varname[64];		// Variable name
+  const char	*value;			// Variable value
+
+
+  snprintf(varname, sizeof(varname), "%s-size", name);
+  if ((value = cupsGetOption(varname, num_form, form)) != NULL)
+  {
+    pwg_media_t	*pwg;			// PWG media size
+
+    strlcpy(media->size_name, value, sizeof(media->size_name));
+
+    if ((pwg = pwgMediaForPWG(value)) != NULL)
+    {
+      media->size_width  = pwg->width;
+      media->size_length = pwg->length;
+    }
+    else
+    {
+      media->size_width  = 0;
+      media->size_length = 0;
+    }
+  }
+
+  snprintf(varname, sizeof(varname), "%s-tracking", name);
+  if ((value = cupsGetOption(varname, num_form, form)) != NULL)
+    media->tracking = lprintMediaTrackingValue(value);
+
+  snprintf(varname, sizeof(varname), "%s-type", name);
+  if ((value = cupsGetOption(varname, num_form, form)) != NULL)
+    strlcpy(media->type, value, sizeof(media->type));
 }
 
 
@@ -1166,7 +1215,7 @@ show_add(lprint_client_t *client)	// I - Client connection
 	lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/html", 0);
 
 	html_header(client, "Printer Added", 0);
-	html_printf(client, "<p><button onclick=\"window.location.href='/';\">Return to Printers</button> <button onclick=\"window.location.href='/modify/%d';\">Modify Printer</button></p>\n", printer->printer_id);
+	html_printf(client, "<p><button onclick=\"window.location.href='/';\">&lArr; Return to Printers</button> <button onclick=\"window.location.href='/modify/%d';\">Modify Printer</button></p>\n", printer->printer_id);
 	html_footer(client);
 	return (1);
       }
@@ -1216,6 +1265,76 @@ static int				// O - 1 on success, 0 on failure
 show_default(lprint_client_t *client,	// I - Client connection
              int             printer_id)// I - Printer ID
 {
+  lprint_printer_t *printer;		// Printer
+  http_status_t	status;			// Authorization status
+  int		num_form = 0;		// Number of form variables
+  cups_option_t	*form = NULL;		// Form variables
+  const char	*session = NULL,	// Session key
+		*error = NULL;		// Error message, if any
+  char		title[1024];		// Title for page
+
+
+  if ((printer = lprintFindPrinter(client->system, NULL, printer_id)) == NULL)
+  {
+    // Printer not found...
+    return (lprintRespondHTTP(client, HTTP_STATUS_NOT_FOUND, NULL, NULL, 0));
+  }
+
+  if ((status = lprintIsAuthorized(client)) != HTTP_STATUS_CONTINUE)
+  {
+    // Need authentication...
+    return (lprintRespondHTTP(client, status, NULL, NULL, 0));
+  }
+
+  if (client->operation == HTTP_STATE_POST)
+  {
+    // Get form data...
+    int	valid = 1;
+
+    num_form       = get_form_data(client, &form);
+    session        = cupsGetOption("session-key", num_form, form);
+
+    if (!session || strcmp(session, client->system->session_key))
+    {
+      valid = 0;
+      error = "Bad or missing session key.";
+    }
+
+    if (valid)
+    {
+      // Set as default...
+      client->system->default_printer = printer_id;
+      if (!client->system->save_time)
+	client->system->save_time = time(NULL) + 1;
+
+      lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/html", 0);
+
+      snprintf(title, sizeof(title), "Default Printer Set to '%s'", printer->printer_name);
+      html_header(client, title, 0);
+      html_printf(client, "<p><button onclick=\"window.location.href='/';\">&lArr; Return to Printers</button></p>\n");
+      html_footer(client);
+      return (1);
+    }
+  }
+
+  lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/html", 0);
+
+  snprintf(title, sizeof(title), "Set '%s' As Default Printer", printer->printer_name);
+  html_header(client, title, 0);
+  html_printf(client, "<p><button onclick=\"window.location.href='/';\">&lArr; Return to Printers</button></p>\n");
+
+  if (error)
+    html_printf(client, "<blockquote><em>Error:</em> %s</blockquote>\n", error);
+
+  html_printf(client, "<form method=\"POST\" action=\"/default/%d\">"
+                      "<input name=\"session-key\" type=\"hidden\" value=\"%s\">"
+		      "<table class=\"form\">\n"
+		      "<tr><th>Confirm:</th><td><input type=\"submit\" value=\"Set '%s' As Default Printer\"></td></tr>\n"
+		      "</table></form>\n", printer_id, client->system->session_key, printer->printer_name);
+  html_footer(client);
+
+  cupsFreeOptions(num_form, form);
+
   return (1);
 }
 
@@ -1228,6 +1347,82 @@ static int				// O - 1 on success, 0 on failure
 show_delete(lprint_client_t *client,	// I - Client connection
             int             printer_id)	// I - Printer ID
 {
+  lprint_printer_t *printer;		// Printer
+  http_status_t	status;			// Authorization status
+  int		num_form = 0;		// Number of form variables
+  cups_option_t	*form = NULL;		// Form variables
+  const char	*session = NULL,	// Session key
+		*error = NULL;		// Error message, if any
+  char		title[1024];		// Title for page
+
+
+  if ((printer = lprintFindPrinter(client->system, NULL, printer_id)) == NULL)
+  {
+    // Printer not found...
+    return (lprintRespondHTTP(client, HTTP_STATUS_NOT_FOUND, NULL, NULL, 0));
+  }
+
+  if ((status = lprintIsAuthorized(client)) != HTTP_STATUS_CONTINUE)
+  {
+    // Need authentication...
+    return (lprintRespondHTTP(client, status, NULL, NULL, 0));
+  }
+
+  if (client->operation == HTTP_STATE_POST)
+  {
+    // Get form data...
+    int	valid = 1;
+
+    num_form       = get_form_data(client, &form);
+    session        = cupsGetOption("session-key", num_form, form);
+
+    if (!session || strcmp(session, client->system->session_key))
+    {
+      valid = 0;
+      error = "Bad or missing session key.";
+    }
+
+    if (valid)
+    {
+      // Delete printer...
+      if (!printer->processing_job)
+      {
+	lprintDeletePrinter(printer);
+	printer = NULL;
+      }
+      else
+	printer->is_deleted = 1;
+
+      if (!client->system->save_time)
+	client->system->save_time = time(NULL) + 1;
+
+      lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/html", 0);
+
+      html_header(client, printer ? "Deleting Printer" : "Printer Deleted", 0);
+      html_printf(client, "<p><button onclick=\"window.location.href='/';\">&lArr; Return to Printers</button></p>\n");
+      html_footer(client);
+      return (1);
+    }
+  }
+
+  lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/html", 0);
+
+  snprintf(title, sizeof(title), "Delete Printer '%s'", printer->printer_name);
+  html_header(client, title, 0);
+  html_printf(client, "<p><button onclick=\"window.location.href='/';\">&lArr; Return to Printers</button></p>\n");
+
+  if (error)
+    html_printf(client, "<blockquote><em>Error:</em> %s</blockquote>\n", error);
+
+  html_printf(client, "<form method=\"POST\" action=\"/delete/%d\">"
+                      "<input name=\"session-key\" type=\"hidden\" value=\"%s\">"
+		      "<table class=\"form\">\n"
+		      "<tr><th>Confirm:</th><td><input type=\"submit\" value=\"Delete Printer '%s'\"></td></tr>\n"
+		      "</table></form>\n", printer_id, client->system->session_key, printer->printer_name);
+  html_footer(client);
+
+  cupsFreeOptions(num_form, form);
+
   return (1);
 }
 
@@ -1250,9 +1445,7 @@ show_modify(lprint_client_t *client,	// I - Client connection
 		*longitude = NULL,	// Longitude
 		*organization = NULL,	// Organization
 		*org_unit = NULL,	// Organizational unit
-//		*ptr,			// Pointer into value
 		*error = NULL;		// Error message, if any
-//  int		i;			// Looping var
   char		title[1024];		// Title for page
   float		latval = 0.0f,		// Latitude in degrees
 		lonval = 0.0f;		// Longitude in degrees
@@ -1353,6 +1546,10 @@ show_modify(lprint_client_t *client,	// I - Client connection
         printer->org_unit = strdup(org_unit);
       }
 
+      media_parse("media-ready0", printer->driver->media_ready + 0, num_form, form);
+      if (printer->driver->num_source > 1)
+        media_parse("media-ready1", printer->driver->media_ready + 1, num_form, form);
+
       printer->config_time = time(NULL);
 
       pthread_rwlock_unlock(&printer->rwlock);
@@ -1363,7 +1560,7 @@ show_modify(lprint_client_t *client,	// I - Client connection
       lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/html", 0);
 
       html_header(client, "Printer Modified", 0);
-      html_printf(client, "<p><button onclick=\"window.location.href='/';\">Return to Printers</button></p>\n");
+      html_printf(client, "<p><button onclick=\"window.location.href='/';\">&lArr; Return to Printers</button></p>\n");
       html_footer(client);
       return (1);
     }
@@ -1388,7 +1585,7 @@ show_modify(lprint_client_t *client,	// I - Client connection
 
   lprintRespondHTTP(client, HTTP_STATUS_OK, NULL, "text/html", 0);
 
-  snprintf(title, sizeof(title), "Modify Printer %s", printer->printer_name);
+  snprintf(title, sizeof(title), "Modify Printer '%s'", printer->printer_name);
   html_header(client, title, 0);
   html_printf(client, "<p><button onclick=\"window.location.href='/';\">&lArr; Return to Printers</button></p>\n");
 
@@ -1464,18 +1661,28 @@ show_status(lprint_client_t  *client)	// I - Client connection
 
   for (printer = (lprint_printer_t *)cupsArrayFirst(system->printers); printer; printer = (lprint_printer_t *)cupsArrayNext(system->printers))
   {
-    html_printf(client, "<h2><img style=\"background: %s; border-radius: 10px; float: left; margin-right: 10px; padding: 5px;\" src=\"/lprint-large.png\" width=\"64\" height=\"64\">%s%s</h2>\n", state_colors[printer->state - IPP_PSTATE_IDLE], printer->printer_name, printer->printer_id == client->system->default_printer ? " (Default)" : "");
-    html_printf(client, "<p>%s, %d job(s).", printer->state == IPP_PSTATE_IDLE ? "Idle" : printer->state == IPP_PSTATE_PROCESSING ? "Printing" : "Stopped", cupsArrayCount(printer->jobs));
+    html_printf(client, "<h2 class=\"title\">%s%s</h2>\n"
+                        "<p><img style=\"background: %s; border-radius: 10px; float: left; margin-right: 10px; padding: 5px;\" src=\"/lprint-large.png\" width=\"64\" height=\"64\">%s", printer->printer_name, printer->printer_id == client->system->default_printer ? " (Default)" : "", state_colors[printer->state - IPP_PSTATE_IDLE], lprintGetMakeAndModel(printer->driver_name));
+    if (printer->location)
+      html_printf(client, ", %s", printer->location);
+    if (printer->organization)
+      html_printf(client, "<br>\n%s%s%s", printer->organization, printer->org_unit ? ", " : "", printer->org_unit ? printer->org_unit : "");
+    html_printf(client, "<br>\n"
+                        "%s, %d job(s)", printer->state == IPP_PSTATE_IDLE ? "Idle" : printer->state == IPP_PSTATE_PROCESSING ? "Printing" : "Stopped", cupsArrayCount(printer->jobs));
     for (i = 0, reason = 1; i < (int)(sizeof(reasons) / sizeof(reasons[0])); i ++, reason <<= 1)
+    {
       if (printer->state_reasons & reason)
-	html_printf(client, "\n<br>&nbsp;&nbsp;&nbsp;&nbsp;%s", reasons[i]);
+	html_printf(client, ",%s", reasons[i]);
+    }
+    html_printf(client, ".</p>\n");
+
     if (client->system->auth_service)
     {
-      html_printf(client, "\n<br><button onclick=\"window.location.href='/modify/%d';\">Modify</button> <button onclick=\"window.location.href='/delete/%d';\">Delete</button>", printer->printer_id, printer->printer_id);
+      html_printf(client, "<p><button onclick=\"window.location.href='/modify/%d';\">Modify</button> <button onclick=\"window.location.href='/delete/%d';\">Delete</button>", printer->printer_id, printer->printer_id);
       if (printer->printer_id != client->system->default_printer)
         html_printf(client, " <button onclick=\"window.location.href='/default/%d';\">Set As Default</button>", printer->printer_id);
+      html_printf(client, "</p>\n");
     }
-    html_printf(client, "</p>\n");
 
     if (cupsArrayCount(printer->jobs) > 0)
     {
