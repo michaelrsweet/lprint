@@ -30,6 +30,12 @@ if test "$temp" != "v$version"; then
 	exit 1
 fi
 
+temp=`grep '^Version:' lprint.spec | awk '{print $2}'`
+if test "$temp" != $version; then
+	echo "Still need to update version to $version in lprint.spec (saw $temp)"
+	exit 1
+fi
+
 temp=`grep '^version:' snap/snapcraft.yaml | awk '{print $2}'`
 if test "$temp" != $version; then
 	echo "Still need to update version to $version in snap/snapcraft.yaml (saw $temp)"
