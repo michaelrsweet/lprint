@@ -12,7 +12,7 @@ URL: https://www.msweet.org/lprint
 Packager: Anonymous <anonymous@example.com>
 Vendor: Example Corp
 # Note: Package names are as defined for Red Hat (and clone) distributions
-BuildRequires: avahi-devel, cups-devel >= 2.2, gnutls-devel, libusb-devel >= 1.0, pam-devel, png-devel >= 1.6
+BuildRequires: avahi-devel, cups-devel >= 2.2, gnutls-devel, libpng-devel >= 1.6, libusb-devel >= 1.0, pam-devel
 #BuildRoot: /tmp/%{name}-root
 
 %description
