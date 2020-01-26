@@ -21,7 +21,7 @@ description: |
 
 grade: stable
 confinement: strict
-icon: resources/lprint.png
+icon: static-resources/lprint.png
 
 apps:
     lprint:
