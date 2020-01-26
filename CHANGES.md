@@ -1,7 +1,7 @@
 LPrint Change History
 =====================
 
-v1.0b2 - January ??, 2020
+v1.0b2 - January 26, 2020
 -------------------------
 
 - Added support for authentication of remote administrative requests (Issue #1)
@@ -20,6 +20,7 @@ v1.0b2 - January ??, 2020
 - Fixed an issue in server mode - a failed IPv6 listener would prevent the
   server from starting (Issue #12)
 - Added a "spool-directory" option for the `server` sub-command.
+- Added a spec file for building RPMs.
 
 
 v1.0b1 - January 15, 2020

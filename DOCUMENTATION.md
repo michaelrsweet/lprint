@@ -1,7 +1,7 @@
 LPrint Documentation
 ====================
 
-LPrint v1.0b1 - January 13, 2020
+LPrint v1.0b2 - January 26, 2020
 Copyright 2019-2020 by Michael R Sweet
 
 LPrint is licensed under the Apache License Version 2.0 with an exception to
@@ -19,6 +19,7 @@ Table of Contents
 - [Printing Options](#printing-options)
 - [Setting Default Options](#setting-default-options)
 - [Running a Server](#running-a-server)
+- [Server Web Interface](#server-web-interface)
 - [Resources](#resources)
 
 
@@ -256,11 +257,31 @@ control the server operation:
 - "-o server-name=HOSTNAME": Sets the network hostname to advertise.
 - "-o server-port=NNN": Sets the network port number; the default is randomly
   assigned.
+- "-o auth-service=SERVICE": Specifies a PAM service for remote authentication.
+- "-o admin-group=GROUP": Specifies a group to use for remote authentication.
+- "-o spool-directory=DIRECTORY": Specifies the directory to store print files.
 - "-o log-file=FILENAME": Specifies a log file.
 - "-o log-file=-": Specifies that log entries are written to the standard error.
 - "-o log-file=syslog": Specifies that log entries are sent to the system log.
 - "-o log-level=LEVEL": Specifies the log level - "debug", "info", "warn",
   "error", or "fatal".
+
+
+Server Web Interface
+--------------------
+
+When you run a standalone spooler on a network hostname, a web interface can be
+enabled that allows you to add, modify, and delete printers, as well as setting
+the default printer.  Because all web interface operations require
+authentication, you need to set the PAM authentication service with the
+`-o auth-service=SERVICE` option.  For example, to use the "cups" PAM service
+with LPrint, run:
+
+    lprint -o server-name=HOSTNAME -o server-port=NNN -o auth-service=cups
+
+By default, any user can authenticate web interface operations.  To restrict
+access to a particular UNIX group, use the `-o admin-group=GROUP` option as
+well.
 
 
 Resources

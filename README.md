@@ -32,6 +32,8 @@ LPrint depends on:
 
 - A "make" program (both GNU and BSD make are known to work),
 - A C99 compiler (both Clang and GCC are known to work),
+- [Avahi](https://www.avahi.org) 0.7 or later or mDNSResponder to provide
+  DNS-SD support,
 - [CUPS](https://www.cups.org) 2.2.0 or later to provide HTTP, IPP, and
   Apple/PWG Raster support,
 - [libpng](https://www.libpng.org) 1.6.0 or later to provide PNG printing
