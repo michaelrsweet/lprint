@@ -199,7 +199,7 @@ lprint_authenticate_user(
     lprintLogClient(client, LPRINT_LOGLEVEL_ERROR, "pam_start() returned %d (%s)", pamerr, pam_strerror(pamh, pamerr));
   }
 #  ifdef PAM_RHOST
-  else if ((pamerr = pam_set_item(pamh, PAM_RHOST, client->remote_host)) != PAM_SUCCESS)
+  else if ((pamerr = pam_set_item(pamh, PAM_RHOST, client->hostname)) != PAM_SUCCESS)
   {
     lprintLogClient(client, LPRINT_LOGLEVEL_ERROR, "pam_set_item(PAM_RHOST) returned %d (%s)", pamerr, pam_strerror(pamh, pamerr));
   }
