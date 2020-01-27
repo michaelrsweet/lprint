@@ -1,6 +1,12 @@
 LPrint Change History
 =====================
 
+v1.0rc1 - February ??, 2020
+---------------00----------
+
+- Fixed some small memory leaks.
+
+
 v1.0b2 - January 26, 2020
 -------------------------
 

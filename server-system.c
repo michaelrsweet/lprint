@@ -249,6 +249,9 @@ lprintDeleteSystem(
   free(system->directory);
   free(system->logfile);
   free(system->subtypes);
+  free(system->auth_service);
+  free(system->admin_group);
+  free(system->session_key);
 
   if (system->logfd >= 0 && system->logfd != 2)
     close(system->logfd);

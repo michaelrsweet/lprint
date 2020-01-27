@@ -8,7 +8,7 @@
 //
 
 // Version number
-#define LPRINT_VERSION "1.0b2"
+#define LPRINT_VERSION "1.0rc1"
 
 
 // DNS-SD (mDNSResponder or Avahi)

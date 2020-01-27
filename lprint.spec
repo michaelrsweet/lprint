@@ -3,7 +3,7 @@
 #
 
 Name: lprint
-Version: 1.0b2
+Version: 1.0rc1
 Release: 0
 Summary: LPrint, A Label Printer Application
 License: ASL 2.0

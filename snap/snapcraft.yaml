@@ -1,6 +1,6 @@
 name: lprint
 base: core18
-version: 1.0b2
+version: 1.0rc1
 summary: A Label Printer Application
 description: |
    LPrint implements printing for a variety of common label and receipt printers

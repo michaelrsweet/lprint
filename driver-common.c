@@ -253,6 +253,8 @@ lprintDeleteDriver(
 {
   if (driver)
   {
+    free(driver->name);
+    ippDelete(driver->attrs);
     lprintCloseDevice(driver->device);
     free(driver);
   }
