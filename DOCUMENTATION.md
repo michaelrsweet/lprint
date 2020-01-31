@@ -1,7 +1,7 @@
 LPrint Documentation
 ====================
 
-LPrint v1.0b2 - January 26, 2020
+LPrint v1.0rc1 - January 31, 2020
 Copyright 2019-2020 by Michael R Sweet
 
 LPrint is licensed under the Apache License Version 2.0 with an exception to
@@ -220,6 +220,10 @@ respectively.  For example, a 4x6" shipping label uses the size name
 `na_4x6-index_4x6in` while a 1.25x3.5" address label uses
 `oe_address-label_1.25x3.5in` and a 50x200mm receipt uses
 `roll_receipt_50x200mm`.
+
+2-up labels (where two labels are placed side-by-side) use the combined sizes
+of both labels.  For example, a 2-up 0.5x1" multipurpose label uses the size
+name `oe_square-multipurpose-label_1x1in`.
 
 You can get a list of supported values for these options using the "options"
 sub-command:
