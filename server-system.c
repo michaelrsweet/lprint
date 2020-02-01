@@ -563,6 +563,18 @@ load_config(lprint_system_t *system)	// I - System
 	{
 	  lprintLog(system, LPRINT_LOGLEVEL_ERROR, "Missing value for '%s' on line %d of '%s'.", line, linenum, configfile);
 	}
+	else if (!strcmp(line, "ConfigTime"))
+	{
+	  printer->config_time = (time_t)strtol(value, NULL, 10);
+	}
+	else if (!strcmp(line, "ImpCompleted"))
+	{
+	  printer->impcompleted = atoi(value);
+        }
+        else if (!strcmp(line, "NextJobId"))
+        {
+          printer->next_job_id = atoi(value);
+	}
 	else
 	{
 	  // Delete any existing attribute...
@@ -742,6 +754,9 @@ save_config(lprint_system_t *system)	// I - System
   for (printer = (lprint_printer_t *)cupsArrayFirst(system->printers); printer; printer = (lprint_printer_t *)cupsArrayNext(system->printers))
   {
     cupsFilePrintf(fp, "Printer %s %d %s %s\n", printer->printer_name, printer->printer_id, printer->device_uri, printer->driver_name);
+    cupsFilePrintf(fp, "ConfigTime %ld\n", (long)printer->config_time);
+    cupsFilePrintf(fp, "ImpCompleted %d\n", printer->impcompleted);
+    cupsFilePrintf(fp, "NextJobId %d\n", printer->next_job_id);
     if (printer->driver->mode_supported)
       cupsFilePutConf(fp, "label-mode-configured", lprintLabelModeString(printer->driver->mode_configured));
     if (printer->driver->tear_offset_supported[0] != printer->driver->tear_offset_supported[1])

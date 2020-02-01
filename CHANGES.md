@@ -2,8 +2,11 @@ LPrint Change History
 =====================
 
 v1.0rc1 - February ??, 2020
----------------00----------
+---------------------------
 
+- Updated media documentation (Issue #13)
+- Now save and load next job-id value for each printer, along with the
+  printer-config-change-[date-]time and printer-impressions-completed values.
 - Fixed some small memory leaks.
 
 
