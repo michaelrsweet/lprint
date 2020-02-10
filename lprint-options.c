@@ -141,7 +141,22 @@ get_value(ipp_attribute_t *attr,	// I - Attribute
     default :
     case IPP_TAG_KEYWORD :
         if ((value = ippGetString(attr, element, NULL)) != NULL)
-          strlcpy(buffer, value, bufsize);
+        {
+          if (!strcmp(name, "media"))
+          {
+            pwg_media_t	*pwg = pwgMediaForPWG(value);
+					// Media size
+
+            if ((pwg->width % 100) == 0)
+              snprintf(buffer, bufsize, "%s (%dx%dmm or %.2gx%.2gin)", value, pwg->width / 100, pwg->length / 100, pwg->width / 2540.0, pwg->length / 2540.0);
+	    else
+              snprintf(buffer, bufsize, "%s (%.2gx%.2gin or %dx%dmm)", value, pwg->width / 2540.0, pwg->length / 2540.0, pwg->width / 100, pwg->length / 100);
+          }
+          else
+          {
+            strlcpy(buffer, value, bufsize);
+	  }
+	}
 	break;
 
     case IPP_TAG_ENUM :

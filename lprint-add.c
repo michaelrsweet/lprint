@@ -35,6 +35,11 @@ lprintAddOptions(
   ipp_tag_t	group_tag;		// Group to add to
   const char	*value;			// String value
   int		intvalue;		// Integer value
+  const char	*media_source = cupsGetOption("media-source", num_options, options),
+		*media_top_offset = cupsGetOption("media-top-offset", num_options, options),
+		*media_tracking = cupsGetOption("media-tracking", num_options, options),
+		*media_type = cupsGetOption("media-type", num_options, options);
+					// media-xxx member values
 
 
   group_tag  = ippGetOperation(request) == IPP_PRINT_JOB ? IPP_TAG_JOB : IPP_TAG_PRINTER;
@@ -50,11 +55,6 @@ lprintAddOptions(
 
     if ((value = cupsGetOption("label-tear-offset-configured", num_options, options)) != NULL)
       ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "label-tear-offset-configured", get_length(value));
-
-    if ((value = cupsGetOption("media-default", num_options, options)) == NULL)
-      value = cupsGetOption("media", num_options, options);
-    if (value)
-      ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-default", NULL, value);
 
     if ((value = cupsGetOption("media-ready", num_options, options)) != NULL)
     {
@@ -89,60 +89,51 @@ lprintAddOptions(
     if ((value = cupsGetOption("printer-organizational-unit", num_options, options)) != NULL)
       ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-organizational-unit", NULL, value);
   }
-  else
-  {
-    // Add Job Template attributes...
-    const char	*media_source = cupsGetOption("media-source", num_options, options),
-		*media_top_offset = cupsGetOption("media-top-offset", num_options, options),
-		*media_tracking = cupsGetOption("media-tracking", num_options, options),
-		*media_type = cupsGetOption("media-type", num_options, options);
-					// media-xxx member values
-
-    value = cupsGetOption("media", num_options, options);
-    if (value || media_source || media_top_offset || media_tracking || media_type)
-    {
-      // Add media-col
-      ipp_t 	*media_col = ippNew();	// media-col value
-      pwg_media_t *pwg = pwgMediaForPWG(value);
-					// Size
-
-      if (pwg)
-      {
-        ipp_t		*media_size = ippNew();
-					// media-size value
-
-        ippAddInteger(media_size, IPP_TAG_JOB, IPP_TAG_INTEGER, "x-dimension", pwg->width);
-        ippAddInteger(media_size, IPP_TAG_JOB, IPP_TAG_INTEGER, "y-dimension", pwg->length);
-        ippAddCollection(media_col, IPP_TAG_JOB, "media-size", media_size);
-        ippDelete(media_size);
-      }
-
-      if (media_source)
-        ippAddString(media_col, IPP_TAG_JOB, IPP_TAG_KEYWORD, "media-source", NULL, media_source);
-
-      if (media_top_offset)
-        ippAddInteger(media_col, IPP_TAG_JOB, IPP_TAG_INTEGER, "media-top-offset", get_length(media_top_offset));
-
-      if (media_tracking)
-        ippAddString(media_col, IPP_TAG_JOB, IPP_TAG_KEYWORD, "media-tracking", NULL, media_tracking);
-
-      if (media_type)
-        ippAddString(media_col, IPP_TAG_JOB, IPP_TAG_KEYWORD, "media-type", NULL, media_type);
-
-      ippAddCollection(request, IPP_TAG_JOB, "media-col", media_col);
-      ippDelete(media_col);
-    }
-    else if (value)
-    {
-      // Add media
-      ippAddString(request, IPP_TAG_JOB, IPP_TAG_KEYWORD, "media", NULL, value);
-    }
-  }
 
   if ((value = cupsGetOption("copies", num_options, options)) == NULL)
     value = cupsGetOption("copies-default", num_options, options);
   if (value)
     ippAddInteger(request, group_tag, IPP_TAG_INTEGER, is_default ? "copies-default" : "copies", atoi(value));
+
+  value = cupsGetOption("media", num_options, options);
+  if (media_source || media_top_offset || media_tracking || media_type)
+  {
+    // Add media-col
+    ipp_t 	*media_col = ippNew();	// media-col value
+    pwg_media_t *pwg = pwgMediaForPWG(value);
+				      // Size
+
+    if (pwg)
+    {
+      ipp_t		*media_size = ippNew();
+				      // media-size value
+
+      ippAddInteger(media_size, IPP_TAG_JOB, IPP_TAG_INTEGER, "x-dimension", pwg->width);
+      ippAddInteger(media_size, IPP_TAG_JOB, IPP_TAG_INTEGER, "y-dimension", pwg->length);
+      ippAddCollection(media_col, IPP_TAG_JOB, "media-size", media_size);
+      ippDelete(media_size);
+    }
+
+    if (media_source)
+      ippAddString(media_col, IPP_TAG_JOB, IPP_TAG_KEYWORD, "media-source", NULL, media_source);
+
+    if (media_top_offset)
+      ippAddInteger(media_col, IPP_TAG_JOB, IPP_TAG_INTEGER, "media-top-offset", get_length(media_top_offset));
+
+    if (media_tracking)
+      ippAddString(media_col, IPP_TAG_JOB, IPP_TAG_KEYWORD, "media-tracking", NULL, media_tracking);
+
+    if (media_type)
+      ippAddString(media_col, IPP_TAG_JOB, IPP_TAG_KEYWORD, "media-type", NULL, media_type);
+
+    ippAddCollection(request, IPP_TAG_JOB, is_default ? "media-col-default" : "media-col", media_col);
+    ippDelete(media_col);
+  }
+  else if (value)
+  {
+    // Add media
+    ippAddString(request, IPP_TAG_JOB, IPP_TAG_KEYWORD, is_default ? "media-default" : "media", NULL, value);
+  }
 
   if ((value = cupsGetOption("orientation-requested", num_options, options)) == NULL)
     value = cupsGetOption("orientation-requested-default", num_options, options);

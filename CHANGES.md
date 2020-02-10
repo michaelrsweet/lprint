@@ -1,10 +1,14 @@
 LPrint Change History
 =====================
 
-v1.0rc1 - February ??, 2020
+v1.0rc1 - February 10, 2020
 ---------------------------
 
 - Updated media documentation (Issue #13)
+- The `lprint options` command now reports both English and metric dimensions
+  for all supported sizes (Issue #14)
+- Now support setting the default media source, top offset, tracking, and type
+  values.
 - Now save and load next job-id value for each printer, along with the
   printer-config-change-[date-]time and printer-impressions-completed values.
 - Fixed some small memory leaks.
