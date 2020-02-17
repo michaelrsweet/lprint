@@ -1,6 +1,12 @@
 LPrint Change History
 =====================
 
+v1.0 - February 17, 2020
+------------------------
+
+- First production release.
+
+
 v1.0rc1 - February 10, 2020
 ---------------------------
 
