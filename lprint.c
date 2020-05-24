@@ -341,8 +341,11 @@ lprintConnect(int auto_start)		// I - 1 to start server if not running
     posix_spawnattr_destroy(&server_attrs);
 
     // Wait for it to start...
-    while (access(lprintGetServerPath(sockname, sizeof(sockname)), 0))
+    do
+    {
       usleep(250000);
+    }
+    while (access(lprintGetServerPath(sockname, sizeof(sockname)), 0));
 
     http = httpConnect2(sockname, 0, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL);
 

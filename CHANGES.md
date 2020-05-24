@@ -1,6 +1,12 @@
 LPrint Change History
 =====================
 
+v1.0.1 - May ??, 2020
+---------------------
+
+- `lprint default` and `lprint delete` did not work (Issue #17)
+
+
 v1.0 - February 17, 2020
 ------------------------
 

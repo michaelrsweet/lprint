@@ -34,7 +34,6 @@
 		27FBEEE92396988300BB195A /* lprint-jobs.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEECD2396988300BB195A /* lprint-jobs.c */; };
 		27FBEEEA2396988300BB195A /* server-client.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEECE2396988300BB195A /* server-client.c */; };
 		27FBEEEE2396994E00BB195A /* libcups.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEED2396994E00BB195A /* libcups.tbd */; };
-		27FBEEF02396995C00BB195A /* libpam.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEEF2396995C00BB195A /* libpam.tbd */; };
 		27FBEEF22396996600BB195A /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF12396996600BB195A /* IOKit.framework */; };
 		27FBEEF42396998300BB195A /* libusb-1.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF32396998300BB195A /* libusb-1.0.a */; };
 		27FBEEF823969AB700BB195A /* libdl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF723969AB700BB195A /* libdl.tbd */; };
@@ -152,7 +151,6 @@
 				27FE0EED23CBFDFD00FE1347 /* libpng16.a in Frameworks */,
 				277BC9BE23D88C930022AC4D /* libpam.tbd in Frameworks */,
 				27FE0EEB23CBFC6200FE1347 /* libz.tbd in Frameworks */,
-				27FBEEF02396995C00BB195A /* libpam.tbd in Frameworks */,
 				27FBEEF823969AB700BB195A /* libdl.tbd in Frameworks */,
 				27FBEEFE23969AD900BB195A /* libpthread.tbd in Frameworks */,
 				27FBEEEE2396994E00BB195A /* libcups.tbd in Frameworks */,
@@ -350,7 +348,7 @@
 		27155E9B239697D4000D0567 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1130;
+				LastUpgradeCheck = 1150;
 				ORGANIZATIONNAME = "Michael R Sweet";
 				TargetAttributes = {
 					27155EA2239697D4000D0567 = {

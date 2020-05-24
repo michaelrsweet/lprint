@@ -102,6 +102,8 @@ lprintProcessIPP(
   int			major, minor;	// Version number
   ipp_op_t		op;		// Operation code
   const char		*name;		// Name of attribute
+  bool			printer_op = true;
+					// Printer operation?
 
 
   lprintLogAttributes(client, "Request", client->request, 1);
@@ -209,6 +211,8 @@ lprintProcessIPP(
 	  }
 	  else if (!strcmp(name, "system-uri"))
 	  {
+	    printer_op = false;
+
 	    if (strcmp(resource, "/ipp/system"))
 	    {
 	      lprintRespondIPP(client, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES, "Bad %s value '%s'.", name, ippGetString(uri, 0, NULL));
@@ -234,7 +238,7 @@ lprintProcessIPP(
 
 	if (ippGetStatusCode(client->response) == IPP_STATUS_OK)
 	{
-	  if (client->printer)
+	  if (printer_op)
 	  {
 	    // Try processing the printer operation...
 	    switch (ippGetOperation(client->request))

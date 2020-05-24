@@ -412,6 +412,9 @@ lprintCreatePrinter(
 
   ippAddStrings(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-icons", 2, NULL, (const char * const *)uris);
 
+  // printer-id
+  ippAddInteger(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "printer-id", printer_id);
+
   // printer-info
   ippAddString(printer->attrs, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-info", NULL, printer_name);
 
@@ -492,12 +495,16 @@ lprintCreatePrinter(
 //
 
 void
-lprintDeletePrinter(lprint_printer_t *printer)	/* I - Printer */
+lprintDeletePrinter(
+    lprint_printer_t *printer)		// I - Printer
 {
+  lprint_system_t *system = printer->system;
+					// System
+
   // Remove the printer from the system object...
-  pthread_rwlock_wrlock(&printer->system->rwlock);
-  cupsArrayRemove(printer->system->printers, printer);
-  pthread_rwlock_unlock(&printer->system->rwlock);
+  pthread_rwlock_wrlock(&system->rwlock);
+  cupsArrayRemove(system->printers, printer);
+  pthread_rwlock_unlock(&system->rwlock);
 }
 
 
