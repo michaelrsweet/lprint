@@ -20,6 +20,7 @@
 
 #  include <limits.h>
 #  include <poll.h>
+#  include <stdbool.h>
 #  include <sys/fcntl.h>
 #  include <sys/stat.h>
 #  include <sys/wait.h>
