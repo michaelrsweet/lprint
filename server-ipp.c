@@ -235,6 +235,8 @@ lprintProcessIPP(
 	    lprintRespondIPP(client, IPP_STATUS_ERROR_NOT_FOUND, "%s %s not found.", name, ippGetString(uri, 0, NULL));
 	  }
         }
+        else
+          printer_op = false;
 
 	if (ippGetStatusCode(client->response) == IPP_STATUS_OK)
 	{
