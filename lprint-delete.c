@@ -41,7 +41,8 @@ lprintDoDelete(
   }
   else if ((http = lprintConnect(1)) == NULL)
     return (1);
-  else if ((printer_name = cupsGetOption("printer-name", num_options, options)) == NULL)
+
+  if ((printer_name = cupsGetOption("printer-name", num_options, options)) == NULL)
   {
     fputs("lprint: No printer specified.\n", stderr);
     httpClose(http);
