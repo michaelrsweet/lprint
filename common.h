@@ -66,7 +66,7 @@ static inline size_t lprint_strlcat(char *dst, const char *src, size_t dstsize)
     srclen = dstsize;
   memmove(dst + dstlen, src, srclen);
   dst[dstlen + srclen] = '\0';
-  return (dstlen = srclen);
+  return (dstlen + srclen);
 }
 #    define strlcpy(dst,src,dstsize) lprint_strlcpy(dst,src,dstsize)
 static inline size_t lprint_strlcpy(char *dst, const char *src, size_t dstsize)
