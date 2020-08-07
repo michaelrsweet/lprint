@@ -1193,6 +1193,12 @@ show_add(lprint_client_t *client)	// I - Client connection
       }
     }
 
+    if (!device_uri)
+    {
+      valid = 0;
+      error = "No device uri provided.";
+    }
+
     if (valid)
     {
       // Add the printer...
