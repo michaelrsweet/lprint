@@ -1557,6 +1557,12 @@ ipp_get_system_attributes(
         state_time = printer->state_time;
     }
 
+    /*
+     * If there are no printers, take the startup time
+     */
+    if (state_time == 0)
+      state_time = system->start_time;
+
     if (!ra || cupsArrayFind(ra, "system-state-change-date-time"))
       ippAddDate(client->response, IPP_TAG_SYSTEM, "system-state-change-date-time", ippTimeToDate(state_time));
 
