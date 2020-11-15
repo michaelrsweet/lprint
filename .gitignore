@@ -1,8 +1,9 @@
 *.o
-autom4te.cache
+/autom4te.cache
 /config.h
-config.log
-config.status
-lprint
-Makefile
+/config.log
+/config.status
+/lprint
+/Makefile
+/xcode/lprint.xcodeproj/xcshareddata
 xcuserdata
