@@ -9,29 +9,6 @@
 
 // Version number
 #define LPRINT_VERSION ""
-
-
-// DNS-SD (mDNSResponder or Avahi)
-#undef HAVE_DNSSD
-#undef HAVE_AVAHI
-
-
-// libpng
-#undef HAVE_LIBPNG
-
-
-// libusb
-#undef HAVE_LIBUSB
-
-
-// libpam
-#undef HAVE_LIBPAM
-#undef HAVE_SECURITY_PAM_APPL_H
-#undef HAVE_PAM_PAM_APPL_H
-
-
-// Random number support
-#undef HAVE_SYS_RANDOM_H
-#undef HAVE_ARC4RANDOM
-#undef HAVE_GETRANDOM
-#undef HAVE_GNUTLS_RND
+#define LPRINT_MAJOR_VERSION 1
+#define LPRINT_MINOR_VERSION 1
+#define LPRINT_PATCH_VERSION 0
