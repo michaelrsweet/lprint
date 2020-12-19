@@ -14,12 +14,12 @@
 
 #include "lprint.h"
 #include <ctype.h>
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__FreeBSD__)
 #  include <sys/param.h>
 #  include <sys/mount.h>
 #else
 #  include <sys/statfs.h>
-#endif // __APPLE__
+#endif // __APPLE__ | __FreeBSD__
 #ifdef HAVE_SYS_RANDOM_H
 #  include <sys/random.h>
 #endif // HAVE_SYS_RANDOM_H

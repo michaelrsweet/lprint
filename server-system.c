@@ -16,6 +16,9 @@
 #include <ctype.h>
 #include <grp.h>
 
+#ifdef __FreeBSD__
+#include <signal.h>
+#endif
 
 //
 // Local globals...
