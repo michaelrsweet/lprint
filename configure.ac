@@ -1,7 +1,7 @@
 dnl
 dnl Configuration script for LPrint, a Label Printer Application
 dnl
-dnl Copyright © 2019-2020 by Michael R Sweet
+dnl Copyright © 2019-2021 by Michael R Sweet
 dnl
 dnl Licensed under Apache License v2.0.  See the file "LICENSE" for more
 dnl information.
@@ -20,25 +20,31 @@ LPRINT_VERSION="AC_PACKAGE_VERSION"
 AC_SUBST([LPRINT_VERSION])
 AC_DEFINE_UNQUOTED([LPRINT_VERSION], "$LPRINT_VERSION", [Version number])
 
-LPRINT_MAJOR_VERSION="`echo AC_PACKAGE_VERSION | awk -F. '{print $1}'`"
-LPRINT_MINOR_VERSION="`echo AC_PACKAGE_VERSION | awk -F. '{print $2}'`"
-LPRINT_PATCH_VERSION="`echo AC_PACKAGE_VERSION | awk -F. '{print $3}'`"
+LPRINT_MAJOR_VERSION="$(echo AC_PACKAGE_VERSION | awk -F. '{print $1}')"
+LPRINT_MINOR_VERSION="$(echo AC_PACKAGE_VERSION | awk -F. '{print $2}')"
+LPRINT_PATCH_VERSION="$(echo AC_PACKAGE_VERSION | awk -F. '{print $3}')"
 
 AC_DEFINE_UNQUOTED([LPRINT_MAJOR_VERSION], $LPRINT_MAJOR_VERSION, [Major version number])
 AC_DEFINE_UNQUOTED([LPRINT_MINOR_VERSION], $LPRINT_MINOR_VERSION, [Minor version number])
 AC_DEFINE_UNQUOTED([LPRINT_PATCH_VERSION], $LPRINT_PATCH_VERSION, [Patch version number])
 
 
+dnl This line is provided to ensure that you don't run the autoheader program
+dnl against this project.  Doing so is completely unsupported and WILL cause
+dnl problems!
+AH_TOP([#error "Somebody ran autoheader on this project which is unsupported and WILL cause problems."])
+
+
 dnl Get the build and host platforms and split the host_os value
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 
-[host_os_name=`echo $host_os | sed -e '1,$s/[0-9.]*$//g'`]
-[host_os_version=`echo $host_os | sed -e '1,$s/^[^0-9.]*//g' | awk -F. '{print $1 $2}'`]
+[host_os_name=$(echo $host_os | sed -e '1,$s/[0-9.]*$//g')]
+[host_os_version=$(echo $host_os | sed -e '1,$s/^[^0-9.]*//g' | awk -F. '{print $1 $2}')]
 # Linux often does not yield an OS version we can use...
-if test "x$host_os_version" = x; then
-        host_os_version="0"
-fi
+AS_IF([test "x$host_os_version" = x], [
+    host_os_version="0"
+])
 
 
 dnl Compiler options...
@@ -49,99 +55,130 @@ LIBS="${LIBS:=}"
 
 
 dnl Standard programs...
-AC_PROG_CC(clang cc gcc)
+AC_PROG_CC
 AC_PROG_RANLIB
-AC_PATH_PROG(AR,ar)
-AC_PATH_PROG(MKDIR,mkdir)
-AC_PATH_PROG(RM,rm)
+AC_PATH_PROG([AR], [ar])
+AC_PATH_PROG([MKDIR], [mkdir])
+AC_PATH_PROG([RM], [rm])
 
 
 dnl Figure out the correct "ar" command flags...
-if test "$ac_cv_prog_ranlib" = ":"; then
+AS_IF([test "$ac_cv_prog_ranlib" = ":"], [
     ARFLAGS="crs"
-else
+], [
     ARFLAGS="cr"
-fi
-AC_SUBST(ARFLAGS)
+])
+AC_SUBST([ARFLAGS])
 
 
 dnl install-sh
 AC_MSG_CHECKING([for install-sh script])
-INSTALL="`pwd`/install-sh"
-AC_SUBST(INSTALL)
+INSTALL="$(pwd)/install-sh"
+AC_SUBST([INSTALL])
 AC_MSG_RESULT([using $INSTALL])
 
 
 dnl Check for pkg-config, which is used for some other tests later on...
-AC_PATH_TOOL(PKGCONFIG, pkg-config)
+AC_PATH_TOOL([PKGCONFIG], [pkg-config])
 
 
 dnl PAPPL library...
-if $PKGCONFIG --exists pappl; then
-	CFLAGS="$CFLAGS `$PKGCONFIG --cflags pappl`"
-	LIBS="$LIBS `$PKGCONFIG --libs pappl`"
-else
-	AC_MSG_ERROR([PAPPL is required for LPrint.])
-fi
+AS_IF([$PKGCONFIG --exists pappl], [
+    CFLAGS="$CFLAGS $($PKGCONFIG --cflags pappl)"
+    LIBS="$LIBS $($PKGCONFIG --libs pappl)"
+], [
+    AC_MSG_ERROR([PAPPL is required for LPrint.])
+])
 
 
 dnl Extra compiler options...
-AC_ARG_ENABLE(debug, [  --enable-debug          turn on debugging, default=no])
-AC_ARG_ENABLE(sanitizer, [  --enable-sanitizer      build with AddressSanitizer, default=no])
+AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [turn on debugging, default=no]))
+AC_ARG_ENABLE(maintainer, AS_HELP_STRING([--enable-maintainer], [turn on maintainer mode, default=no]))
+AC_ARG_ENABLE([sanitizer], AS_HELP_STRING([--enable-sanitizer], [build with AddressSanitizer, default=no]))
 
-if test x$enable_debug = xyes; then
-	OPTIM="-g"
-	CSFLAGS=""
-else
-	OPTIM="-g -Os"
-	CSFLAGS="-o runtime"
-fi
-AC_SUBST(CSFLAGS)
-AC_SUBST(OPTIM)
+AS_IF([test x$enable_debug = xyes], [
+    OPTIM="-g"
+    CSFLAGS=""
+], [
+    OPTIM="-g -Os"
+    CSFLAGS="-o runtime"
+])
+AC_SUBST([CSFLAGS])
+AC_SUBST([OPTIM])
 
-if test -n "$GCC"; then
-	if test x$enable_sanitizer = xyes; then
-		# Use -fsanitize=address with debugging...
-		OPTIM="-g -fsanitize=address"
-	else
-		# Otherwise use the Fortify enhancements to catch any unbounded
-		# string operations...
-		CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2"
-		CXXFLAGS="$CXXFLAGS -D_FORTIFY_SOURCE=2"
-	fi
+AS_IF([test -n "$GCC"], [
+    AS_IF([test x$enable_sanitizer = xyes], [
+	# Use -fsanitize=address with debugging...
+	OPTIM="-g -fsanitize=address"
+    ], [
+	# Otherwise use the Fortify enhancements to catch any unbounded
+	# string operations...
+	CPPFLAGS="$CPPFLAGS -D_FORTIFY_SOURCE=2"
+    ])
 
-	dnl Show all standard warnings + unused variables when compiling...
-	CFLAGS="-Wall -Wunused -Wno-unknown-warning-option -Wno-unused-result -Wno-char-subscripts -Wno-format-y2k -Wno-maybe-uninitialized -Wno-switch $CFLAGS"
+    dnl Show all standard warnings + unused variables when compiling...
+    WARNINGS="-Wall -Wunused"
 
-	dnl See if PIE options are supported...
-	AC_MSG_CHECKING(whether compiler supports -fPIE)
+    dnl Drop some not-useful/unreliable warnings...
+    for warning in char-subscripts format-truncation format-y2k switch unused-result; do
+	AC_MSG_CHECKING([whether compiler supports -Wno-$warning])
+
 	OLDCFLAGS="$CFLAGS"
-	case "$host_os_name" in
-		darwin*)
-			CFLAGS="$CFLAGS -fPIC -fPIE -Wl,-pie"
-			AC_TRY_COMPILE(,,[
-				OLDCFLAGS="-fPIC $OLDCFLAGS"
-				LDFLAGS="-fPIE -Wl,-pie $LDFLAGS"
-				AC_MSG_RESULT(yes)],
-				AC_MSG_RESULT(no))
-			;;
+	CFLAGS="$CFLAGS -Wno-$warning -Werror"
 
-		*)
-			CFLAGS="$CFLAGS -fPIC -fPIE -pie"
-			AC_TRY_COMPILE(,,[
-				OLDCFLAGS="-fPIC $OLDCFLAGS"
-				LDFLAGS="-fPIE -pie $LDFLAGS"
-				AC_MSG_RESULT(yes)],
-				AC_MSG_RESULT(no))
-			;;
-	esac
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM()], [
+	    AC_MSG_RESULT(yes)
+	    WARNINGS="$WARNINGS -Wno-$warning"
+        ], [
+	    AC_MSG_RESULT(no)
+	])
+
 	CFLAGS="$OLDCFLAGS"
-fi
+    done
+
+    dnl Maintainer mode enables -Werror...
+    AS_IF([test x$enable_maintainer = xyes], [
+	WARNINGS="$WARNINGS -Werror"
+    ])
+
+    dnl See if PIE options are supported...
+    AC_MSG_CHECKING(whether compiler supports -fPIE)
+    OLDCFLAGS="$CFLAGS"
+    AS_CASE(["$host_os_name"],
+    [darwin*], [
+	CFLAGS="$CFLAGS -fPIC -fPIE -Wl,-pie"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[]])],[
+	    OLDCFLAGS="-fPIC $OLDCFLAGS"
+	    LDFLAGS="-fPIE -Wl,-pie $LDFLAGS"
+	    AC_MSG_RESULT(yes)
+	],[
+	    AC_MSG_RESULT(no)
+	])
+    ], [*], [
+	CFLAGS="$CFLAGS -fPIC -fPIE -pie"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[]])],[
+	    OLDCFLAGS="-fPIC $OLDCFLAGS"
+	    LDFLAGS="-fPIE -pie $LDFLAGS"
+	    AC_MSG_RESULT(yes)
+	],[
+	    AC_MSG_RESULT(no)
+	])
+    ])
+    CFLAGS="$OLDCFLAGS"
+
+    dnl OS-specific compiler options...
+    AS_CASE(["$host_os_name"],
+    [linux*], [
+	CPPFLAGS="$CPPFLAGS -D__USE_MISC -D_TIME_BITS=64"
+    ])
+])
 
 
 dnl Extra linker options...
-AC_ARG_WITH(ldflags, [  --with-ldflags=...      Specify additional LDFLAGS ],
-	LDFLAGS="$withval $LDFLAGS")
+AC_ARG_WITH(ldflags, AS_HELP_STRING([--with-ldflags=...], [Specify additional LDFLAGS]), [
+    LDFLAGS="$withval $LDFLAGS"
+])
 
 dnl Generate the Makefile...
-AC_OUTPUT(Makefile)
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT

@@ -1,7 +1,7 @@
 #
 # Makefile for LPrint, a Label Printer Application
 #
-# Copyright © 2019-2020 by Michael R Sweet
+# Copyright © 2019-2021 by Michael R Sweet
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -25,7 +25,7 @@ ARFLAGS		=	@ARFLAGS@
 ASAN_OPTIONS	=	leak_check_at_exit=false
 CC		=	@CC@
 CFLAGS		=	-I.. @CFLAGS@ $(OPTIM)
-CODESIGN_IDENTITY =	Developer ID
+CODESIGN_IDENTITY =	-
 CSFLAGS		=	-s "$(CODESIGN_IDENTITY)" --timestamp @CSFLAGS@
 INSTALL		=	@INSTALL@
 LDFLAGS		=	@LDFLAGS@ $(OPTIM)
@@ -87,6 +87,7 @@ MAN5		=	\
 			man/lprint.conf.5
 
 OBJS		=	\
+			driver-common.o \
 			driver-dymo.o \
 			driver-pwg.o \
 			driver-zpl.o \
@@ -117,11 +118,11 @@ install:	all
 	$(INSTALL) -c -m 755 lprint $(BUILDROOT)$(bindir)
 	$(INSTALL) -d -m 755 $(BUILDROOT)$(mandir)/man1
 	for file in $(MAN1); do \
-		$(INSTALL) -c -m 644 $$file $(BUILDROOT)$(mandir)/man1; \
+	    $(INSTALL) -c -m 644 $$file $(BUILDROOT)$(mandir)/man1; \
 	done
 	$(INSTALL) -d -m 755 $(BUILDROOT)$(mandir)/man5
 	for file in $(MAN5); do \
-		$(INSTALL) -c -m 644 $$file $(BUILDROOT)$(mandir)/man5; \
+	    $(INSTALL) -c -m 644 $$file $(BUILDROOT)$(mandir)/man5; \
 	done
 
 
@@ -134,8 +135,8 @@ lprint:	$(OBJS)
 	echo Linking $@...
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 	if test `uname` = Darwin; then \
-		echo Code-signing $@...; \
-		codesign $(CSFLAGS) $@; \
+	    echo Code-signing $@...; \
+	    codesign $(CSFLAGS) $@; \
 	fi
 
 
