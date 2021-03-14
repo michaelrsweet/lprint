@@ -87,10 +87,9 @@ MAN5		=	\
 			man/lprint.conf.5
 
 OBJS		=	\
-			driver-common.o \
-			driver-dymo.o \
-			driver-pwg.o \
-			driver-zpl.o \
+			lprint-common.o \
+			lprint-dymo.o \
+			lprint-zpl.o \
 			lprint.o
 TARGETS		=	\
 			lprint
@@ -155,6 +154,8 @@ resheaders:
 # Dependencies...
 $(OBJS):	config.h lprint.h Makefile
 lprint.o:	\
+		lprint-dymo.h \
+		lprint-zpl.h \
 		static-resources/lprint-png.h \
 		static-resources/lprint-large-png.h \
 		static-resources/lprint-de-strings.h \

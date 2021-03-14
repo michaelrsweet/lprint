@@ -74,100 +74,104 @@ static const char * const lprint_dymo_media[] =
 // Local functions...
 //
 
-static int	lprint_dymo_print(lprint_job_t *job, lprint_options_t *options);
-static int	lprint_dymo_rendjob(lprint_job_t *job, lprint_options_t *options);
-static int	lprint_dymo_rendpage(lprint_job_t *job, lprint_options_t *options, unsigned page);
-static int	lprint_dymo_rstartjob(lprint_job_t *job, lprint_options_t *options);
-static int	lprint_dymo_rstartpage(lprint_job_t *job, lprint_options_t *options, unsigned page);
-static int	lprint_dymo_rwrite(lprint_job_t *job, lprint_options_t *options, unsigned y, const unsigned char *line);
+static int	lprint_dymo_print(pappl_job_t *job, pappl_pr_options_t *options);
+static int	lprint_dymo_rendjob(pappl_job_t *job, pappl_pr_options_t *options);
+static int	lprint_dymo_rendpage(pappl_job_t *job, pappl_pr_options_t *options, unsigned page);
+static int	lprint_dymo_rstartjob(pappl_job_t *job, pappl_pr_options_t *options);
+static int	lprint_dymo_rstartpage(pappl_job_t *job, pappl_pr_options_t *options, unsigned page);
+static int	lprint_dymo_rwrite(pappl_job_t *job, pappl_pr_options_t *options, unsigned y, const unsigned char *line);
 static int	lprint_dymo_status(lprint_printer_t *printer);
 
 
 //
-// 'lprintInitDymo()' - Initialize the driver.
+// 'lprintDYMO()' - Initialize the DYMO driver.
 //
 
-void
-lprintInitDYMO(
-    lprint_driver_t *driver)		// I - Driver
+bool					// O - `true` on success, `false` on error
+lprintDYMO(
+    pappl_system_t         *system,	// I - System
+    const char             *driver_name,// I - Driver name
+    const char             *device_uri,	// I - Device URI
+    const char             *device_id,	// I - 1284 device ID
+    pappl_pr_driver_data_t *data,	// I - Pointer to driver data
+    ipp_t                  **attrs,	// O - Pointer to driver attributes
+    void                   *cbdata)	// I - Callback data (not used)
 {
   int	i;				// Looping var
 
 
-  pthread_rwlock_wrlock(&driver->rwlock);
+  data->print      = lprint_dymo_print;
+  data->rendjob    = lprint_dymo_rendjob;
+  data->rendpage   = lprint_dymo_rendpage;
+  data->rstartjob  = lprint_dymo_rstartjob;
+  data->rstartpage = lprint_dymo_rstartpage;
+  data->rwrite     = lprint_dymo_rwrite;
+  data->status     = lprint_dymo_status;
+  data->format     = "application/vnd.dymo-lw";
 
-  driver->print      = lprint_dymo_print;
-  driver->rendjob    = lprint_dymo_rendjob;
-  driver->rendpage   = lprint_dymo_rendpage;
-  driver->rstartjob  = lprint_dymo_rstartjob;
-  driver->rstartpage = lprint_dymo_rstartpage;
-  driver->rwrite     = lprint_dymo_rwrite;
-  driver->status     = lprint_dymo_status;
-  driver->format     = "application/vnd.dymo-lw";
+  data->num_resolution  = 1;
+  data->x_resolution[0] = 300;
+  data->y_resolution[0] = 300;
 
-  driver->num_resolution  = 1;
-  driver->x_resolution[0] = 300;
-  driver->y_resolution[0] = 300;
+  data->left_right = 100;
+  data->bottom_top = 525;
 
-  driver->left_right = 100;
-  driver->bottom_top = 525;
+  data->num_media = (int)(sizeof(lprint_dymo_media) / sizeof(lprint_dymo_media[0]));
+  memcpy(data->media, lprint_dymo_media, sizeof(lprint_dymo_media));
 
-  driver->num_media = (int)(sizeof(lprint_dymo_media) / sizeof(lprint_dymo_media[0]));
-  memcpy(driver->media, lprint_dymo_media, sizeof(lprint_dymo_media));
-
-  if (strstr(driver->name, "-duo") || strstr(driver->name, "-twin"))
+  if (strstr(data->name, "-duo") || strstr(data->name, "-twin"))
   {
-    driver->num_source = 2;
-    driver->source[0]  = "main-roll";
-    driver->source[1]  = "alternate-roll";
+    data->num_source = 2;
+    data->source[0]  = "main-roll";
+    data->source[1]  = "alternate-roll";
 
-    strlcpy(driver->media_ready[0].size_name, "oe_multipurpose-label_2x2.3125in", sizeof(driver->media_ready[0].size_name));
-    strlcpy(driver->media_ready[1].size_name, "oe_address-label_1.25x3.5in", sizeof(driver->media_ready[1].size_name));
+    strlcpy(data->media_ready[0].size_name, "oe_multipurpose-label_2x2.3125in", sizeof(data->media_ready[0].size_name));
+    strlcpy(data->media_ready[1].size_name, "oe_address-label_1.25x3.5in", sizeof(data->media_ready[1].size_name));
   }
   else
   {
-    driver->num_source = 1;
-    driver->source[0]  = "main-roll";
-    strlcpy(driver->media_ready[0].size_name, "oe_address-label_1.25x3.5in", sizeof(driver->media_ready[0].size_name));
+    data->num_source = 1;
+    data->source[0]  = "main-roll";
+    strlcpy(data->media_ready[0].size_name, "oe_address-label_1.25x3.5in", sizeof(data->media_ready[0].size_name));
   }
 
-  driver->tracking_supported = LPRINT_MEDIA_TRACKING_WEB;
+  data->tracking_supported = PAPPL_MEDIA_TRACKING_WEB;
 
-  driver->num_type = 1;
-  driver->type[0]  = "labels";
+  data->num_type = 1;
+  data->type[0]  = "labels";
 
-  driver->media_default.bottom_margin = driver->bottom_top;
-  driver->media_default.left_margin   = driver->left_right;
-  driver->media_default.right_margin  = driver->left_right;
-  driver->media_default.size_width    = 3175;
-  driver->media_default.size_length   = 8890;
-  driver->media_default.top_margin    = driver->bottom_top;
-  driver->media_default.tracking      = LPRINT_MEDIA_TRACKING_WEB;
-  strlcpy(driver->media_default.size_name, "oe_address-label_1.25x3.5in", sizeof(driver->media_default.size_name));
-  strlcpy(driver->media_default.source, driver->source[0], sizeof(driver->media_default.source));
-  strlcpy(driver->media_default.type, driver->type[0], sizeof(driver->media_default.type));
+  data->media_default.bottom_margin = data->bottom_top;
+  data->media_default.left_margin   = data->left_right;
+  data->media_default.right_margin  = data->left_right;
+  data->media_default.size_width    = 3175;
+  data->media_default.size_length   = 8890;
+  data->media_default.top_margin    = data->bottom_top;
+  data->media_default.tracking      = PAPPL_MEDIA_TRACKING_WEB;
+  strlcpy(data->media_default.size_name, "oe_address-label_1.25x3.5in", sizeof(data->media_default.size_name));
+  strlcpy(data->media_default.source, data->source[0], sizeof(data->media_default.source));
+  strlcpy(data->media_default.type, data->type[0], sizeof(data->media_default.type));
 
-  for (i = 0; i < driver->num_source; i ++)
+  for (i = 0; i < data->num_source; i ++)
   {
-    pwg_media_t *pwg = pwgMediaForPWG(driver->media_ready[i].size_name);
+    pwg_media_t *pwg = pwgMediaForPWG(data->media_ready[i].size_name);
 
-    driver->media_ready[i].bottom_margin = driver->bottom_top;
-    driver->media_ready[i].left_margin   = driver->left_right;
-    driver->media_ready[i].right_margin  = driver->left_right;
-    driver->media_ready[i].size_width    = pwg->width;
-    driver->media_ready[i].size_length   = pwg->length;
-    driver->media_ready[i].top_margin    = driver->bottom_top;
-    driver->media_ready[i].tracking      = LPRINT_MEDIA_TRACKING_WEB;
-    strlcpy(driver->media_ready[i].source, driver->source[i], sizeof(driver->media_ready[i].source));
-    strlcpy(driver->media_ready[i].type, driver->type[0], sizeof(driver->media_ready[i].type));
+    data->media_ready[i].bottom_margin = data->bottom_top;
+    data->media_ready[i].left_margin   = data->left_right;
+    data->media_ready[i].right_margin  = data->left_right;
+    data->media_ready[i].size_width    = pwg->width;
+    data->media_ready[i].size_length   = pwg->length;
+    data->media_ready[i].top_margin    = data->bottom_top;
+    data->media_ready[i].tracking      = PAPPL_MEDIA_TRACKING_WEB;
+    strlcpy(data->media_ready[i].source, data->source[i], sizeof(data->media_ready[i].source));
+    strlcpy(data->media_ready[i].type, data->type[0], sizeof(data->media_ready[i].type));
   }
 
-  driver->darkness_configured = 50;
-  driver->darkness_supported  = 4;
+  data->darkness_configured = 50;
+  data->darkness_supported  = 4;
 
-  driver->num_supply = 0;
+  data->num_supply = 0;
 
-  pthread_rwlock_unlock(&driver->rwlock);
+  return (true);
 }
 
 
@@ -177,8 +181,8 @@ lprintInitDYMO(
 
 static int				// O - 1 on success, 0 on failure
 lprint_dymo_print(
-    lprint_job_t     *job,		// I - Job
-    lprint_options_t *options)		// I - Job options
+    pappl_job_t     *job,		// I - Job
+    pappl_pr_options_t *options)		// I - Job options
 {
   lprint_device_t *device = job->printer->driver->device;
 					// Output device
@@ -188,7 +192,7 @@ lprint_dymo_print(
 
 
   // Reset the printer...
-  lprintPutsDevice(device, "\033\033\033\033\033\033\033\033\033\033"
+  papplDevicePuts(device, "\033\033\033\033\033\033\033\033\033\033"
 			   "\033\033\033\033\033\033\033\033\033\033"
 			   "\033\033\033\033\033\033\033\033\033\033"
 			   "\033\033\033\033\033\033\033\033\033\033"
@@ -207,9 +211,9 @@ lprint_dymo_print(
 
   while ((bytes = read(infd, buffer, sizeof(buffer))) > 0)
   {
-    if (lprintWriteDevice(device, buffer, (size_t)bytes) < 0)
+    if (papplDeviceWrite(device, buffer, (size_t)bytes) < 0)
     {
-      lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to send %d bytes to printer.", (int)bytes);
+      papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to send %d bytes to printer.", (int)bytes);
       close(infd);
       return (0);
     }
@@ -228,8 +232,8 @@ lprint_dymo_print(
 
 static int				// O - 1 on success, 0 on failure
 lprint_dymo_rendjob(
-    lprint_job_t     *job,		// I - Job
-    lprint_options_t *options)		// I - Job options
+    pappl_job_t     *job,		// I - Job
+    pappl_pr_options_t *options)		// I - Job options
 {
   lprint_driver_t	*driver = job->printer->driver;
 					// Driver data
@@ -250,8 +254,8 @@ lprint_dymo_rendjob(
 
 static int				// O - 1 on success, 0 on failure
 lprint_dymo_rendpage(
-    lprint_job_t     *job,		// I - Job
-    lprint_options_t *options,		// I - Job options
+    pappl_job_t     *job,		// I - Job
+    pappl_pr_options_t *options,		// I - Job options
     unsigned         page)		// I - Page number
 {
   lprint_device_t	*device = job->printer->driver->device;
@@ -261,7 +265,7 @@ lprint_dymo_rendpage(
   (void)options;
   (void)page;
 
-  lprintPutsDevice(device, "\033E");
+  papplDevicePuts(device, "\033E");
 
   return (1);
 }
@@ -273,8 +277,8 @@ lprint_dymo_rendpage(
 
 static int				// O - 1 on success, 0 on failure
 lprint_dymo_rstartjob(
-    lprint_job_t     *job,		// I - Job
-    lprint_options_t *options)		// I - Job options
+    pappl_job_t     *job,		// I - Job
+    pappl_pr_options_t *options)		// I - Job options
 {
   lprint_device_t	*device = job->printer->driver->device;
 					// Output device
@@ -286,7 +290,7 @@ lprint_dymo_rstartjob(
 
   job->printer->driver->job_data = dymo;
 
-  lprintPutsDevice(device, "\033\033\033\033\033\033\033\033\033\033"
+  papplDevicePuts(device, "\033\033\033\033\033\033\033\033\033\033"
 			   "\033\033\033\033\033\033\033\033\033\033"
 			   "\033\033\033\033\033\033\033\033\033\033"
 			   "\033\033\033\033\033\033\033\033\033\033"
@@ -308,8 +312,8 @@ lprint_dymo_rstartjob(
 
 static int				// O - 1 on success, 0 on failure
 lprint_dymo_rstartpage(
-    lprint_job_t     *job,		// I - Job
-    lprint_options_t *options,		// I - Job options
+    pappl_job_t     *job,		// I - Job
+    pappl_pr_options_t *options,		// I - Job options
     unsigned         page)		// I - Page number
 {
   lprint_driver_t	*driver = job->printer->driver;
@@ -327,22 +331,22 @@ lprint_dymo_rstartpage(
 
   if (options->header.cupsBytesPerLine > 256)
   {
-    lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Raster data too large for printer.");
+    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Raster data too large for printer.");
     return (0);
   }
 
-  lprintPrintfDevice(device, "\033Q%c%c", 0, 0);
-  lprintPrintfDevice(device, "\033B%c", 0);
-  lprintPrintfDevice(device, "\033L%c%c", options->header.cupsHeight >> 8, options->header.cupsHeight);
-  lprintPrintfDevice(device, "\033D%c", options->header.cupsBytesPerLine - 1);
-  lprintPrintfDevice(device, "\033q%d", !strcmp(options->media.source, "alternate-roll") ? 2 : 1);
+  papplDevicePrintf(device, "\033Q%c%c", 0, 0);
+  papplDevicePrintf(device, "\033B%c", 0);
+  papplDevicePrintf(device, "\033L%c%c", options->header.cupsHeight >> 8, options->header.cupsHeight);
+  papplDevicePrintf(device, "\033D%c", options->header.cupsBytesPerLine - 1);
+  papplDevicePrintf(device, "\033q%d", !strcmp(options->media.source, "alternate-roll") ? 2 : 1);
 
   if (darkness < 0)
     darkness = 0;
   else if (darkness > 100)
     darkness = 100;
 
-  lprintPrintfDevice(device, "\033%c", density[3 * darkness / 100]);
+  papplDevicePrintf(device, "\033%c", density[3 * darkness / 100]);
 
   dymo->feed   = 0;
   dymo->ystart = driver->bottom_top * options->printer_resolution[1] / 2540;
@@ -358,8 +362,8 @@ lprint_dymo_rstartpage(
 
 static int				// O - 1 on success, 0 on failure
 lprint_dymo_rwrite(
-    lprint_job_t        *job,		// I - Job
-    lprint_options_t    *options,	// I - Job options
+    pappl_job_t        *job,		// I - Job
+    pappl_pr_options_t    *options,	// I - Job options
     unsigned            y,		// I - Line number
     const unsigned char *line)		// I - Line
 {
@@ -380,18 +384,18 @@ lprint_dymo_rwrite(
     {
       while (dymo->feed > 255)
       {
-	lprintPrintfDevice(device, "\033f\001%c", 255);
+	papplDevicePrintf(device, "\033f\001%c", 255);
 	dymo->feed -= 255;
       }
 
-      lprintPrintfDevice(device, "\033f\001%c", dymo->feed);
+      papplDevicePrintf(device, "\033f\001%c", dymo->feed);
       dymo->feed = 0;
     }
 
     // Then write the non-blank line...
     buffer[0] = 0x16;
     memcpy(buffer + 1, line + 1, options->header.cupsBytesPerLine - 1);
-    lprintWriteDevice(device, buffer, options->header.cupsBytesPerLine);
+    papplDeviceWrite(device, buffer, options->header.cupsBytesPerLine);
   }
   else
   {

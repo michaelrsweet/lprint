@@ -148,104 +148,108 @@ static const char * const lprint_zpl_4inch_media[] =
 #if ZPL_COMPRESSION
 static int	lprint_zpl_compress(lprint_device_t *device, unsigned char ch, unsigned count);
 #endif // ZPL_COMPRESSION
-static int	lprint_zpl_print(lprint_job_t *job, lprint_options_t *options);
-static int	lprint_zpl_rendjob(lprint_job_t *job, lprint_options_t *options);
-static int	lprint_zpl_rendpage(lprint_job_t *job, lprint_options_t *options, unsigned page);
-static int	lprint_zpl_rstartjob(lprint_job_t *job, lprint_options_t *options);
-static int	lprint_zpl_rstartpage(lprint_job_t *job, lprint_options_t *options, unsigned page);
-static int	lprint_zpl_rwrite(lprint_job_t *job, lprint_options_t *options, unsigned y, const unsigned char *line);
+static int	lprint_zpl_print(pappl_job_t *job, pappl_pr_options_t *options);
+static int	lprint_zpl_rendjob(pappl_job_t *job, pappl_pr_options_t *options);
+static int	lprint_zpl_rendpage(pappl_job_t *job, pappl_pr_options_t *options, unsigned page);
+static int	lprint_zpl_rstartjob(pappl_job_t *job, pappl_pr_options_t *options);
+static int	lprint_zpl_rstartpage(pappl_job_t *job, pappl_pr_options_t *options, unsigned page);
+static int	lprint_zpl_rwrite(pappl_job_t *job, pappl_pr_options_t *options, unsigned y, const unsigned char *line);
 static int	lprint_zpl_status(lprint_printer_t *printer);
 
 
 //
-// 'lprintInitZPL()' - Initialize the driver.
+// 'lprintZPL()' - Initialize the ZPL driver.
 //
 
-void
-lprintInitZPL(
-    lprint_driver_t *driver)		// I - Driver
+bool					// O - `true` on success, `false` on error
+lprintZPL(
+    pappl_system_t         *system,	// I - System
+    const char             *driver_name,// I - Driver name
+    const char             *device_uri,	// I - Device URI
+    const char             *device_id,	// I - 1284 device ID
+    pappl_pr_driver_data_t *data,	// I - Pointer to driver data
+    ipp_t                  **attrs,	// O - Pointer to driver attributes
+    void                   *cbdata)	// I - Callback data (not used)
 {
-  pthread_rwlock_wrlock(&driver->rwlock);
+  data->print      = lprint_zpl_print;
+  data->rendjob    = lprint_zpl_rendjob;
+  data->rendpage   = lprint_zpl_rendpage;
+  data->rstartjob  = lprint_zpl_rstartjob;
+  data->rstartpage = lprint_zpl_rstartpage;
+  data->rwrite     = lprint_zpl_rwrite;
+  data->status     = lprint_zpl_status;
+  data->format     = "application/vnd.zebra-zpl";
 
-  driver->print      = lprint_zpl_print;
-  driver->rendjob    = lprint_zpl_rendjob;
-  driver->rendpage   = lprint_zpl_rendpage;
-  driver->rstartjob  = lprint_zpl_rstartjob;
-  driver->rstartpage = lprint_zpl_rstartpage;
-  driver->rwrite     = lprint_zpl_rwrite;
-  driver->status     = lprint_zpl_status;
-  driver->format     = "application/vnd.zebra-zpl";
+  data->num_resolution = 1;
 
-  driver->num_resolution = 1;
-
-  if (strstr(driver->name, "-203dpi"))
+  if (strstr(data->name, "-203dpi"))
   {
-    driver->x_resolution[0] = 203;
-    driver->y_resolution[0] = 203;
+    data->x_resolution[0] = 203;
+    data->y_resolution[0] = 203;
   }
   else
   {
-    driver->x_resolution[0] = 300;
-    driver->y_resolution[0] = 300;
+    data->x_resolution[0] = 300;
+    data->y_resolution[0] = 300;
   }
 
-  if (!strncmp(driver->name, "zpl_2inch-", 16))
+  if (!strncmp(data->name, "zpl_2inch-", 16))
   {
     // 2 inch printer...
-    driver->num_media = (int)(sizeof(lprint_zpl_2inch_media) / sizeof(lprint_zpl_2inch_media[0]));
-    memcpy(driver->media, lprint_zpl_2inch_media, sizeof(lprint_zpl_2inch_media));
+    data->num_media = (int)(sizeof(lprint_zpl_2inch_media) / sizeof(lprint_zpl_2inch_media[0]));
+    memcpy(data->media, lprint_zpl_2inch_media, sizeof(lprint_zpl_2inch_media));
 
-    strlcpy(driver->media_default.size_name, "oe_2x3-label_2x3in", sizeof(driver->media_default.size_name));
+    strlcpy(data->media_default.size_name, "oe_2x3-label_2x3in", sizeof(data->media_default.size_name));
   }
   else
   {
     // 4 inch printer...
-    driver->num_media = (int)(sizeof(lprint_zpl_4inch_media) / sizeof(lprint_zpl_4inch_media[0]));
-    memcpy(driver->media, lprint_zpl_4inch_media, sizeof(lprint_zpl_4inch_media));
+    data->num_media = (int)(sizeof(lprint_zpl_4inch_media) / sizeof(lprint_zpl_4inch_media[0]));
+    memcpy(data->media, lprint_zpl_4inch_media, sizeof(lprint_zpl_4inch_media));
 
-    strlcpy(driver->media_default.size_name, "oe_4x6-label_4x6in", sizeof(driver->media_default.size_name));
+    strlcpy(data->media_default.size_name, "oe_4x6-label_4x6in", sizeof(data->media_default.size_name));
   }
 
-  driver->num_source = 1;
-  driver->source[0]  = "main-roll";
+  data->num_source = 1;
+  data->source[0]  = "main-roll";
 
-  driver->top_offset_supported[0] = -1500;
-  driver->top_offset_supported[1] = 1500;
-  driver->tracking_supported      = LPRINT_MEDIA_TRACKING_MARK | LPRINT_MEDIA_TRACKING_WEB | LPRINT_MEDIA_TRACKING_CONTINUOUS;
+  data->top_offset_supported[0] = -1500;
+  data->top_offset_supported[1] = 1500;
+  data->tracking_supported      = PAPPL_MEDIA_TRACKING_MARK | PAPPL_MEDIA_TRACKING_WEB | PAPPL_MEDIA_TRACKING_CONTINUOUS;
 
-  driver->num_type = 3;
-  driver->type[0]  = "continuous";
-  driver->type[1]  = "labels";
-  driver->type[2]  = "labels-continuous";
+  data->num_type = 3;
+  data->type[0]  = "continuous";
+  data->type[1]  = "labels";
+  data->type[2]  = "labels-continuous";
 
-  driver->media_default.bottom_margin = driver->bottom_top;
-  driver->media_default.left_margin   = driver->left_right;
-  driver->media_default.right_margin  = driver->left_right;
-  strlcpy(driver->media_default.source, "main-roll", sizeof(driver->media_default.source));
-  driver->media_default.top_margin = driver->bottom_top;
-  driver->media_default.top_offset = 0;
-  driver->media_default.tracking   = LPRINT_MEDIA_TRACKING_MARK;
-  strlcpy(driver->media_default.type, "labels", sizeof(driver->media_default.type));
+  data->media_default.bottom_margin = data->bottom_top;
+  data->media_default.left_margin   = data->left_right;
+  data->media_default.right_margin  = data->left_right;
+  strlcpy(data->media_default.source, "main-roll", sizeof(data->media_default.source));
+  data->media_default.top_margin = data->bottom_top;
+  data->media_default.top_offset = 0;
+  data->media_default.tracking   = PAPPL_MEDIA_TRACKING_MARK;
+  strlcpy(data->media_default.type, "labels", sizeof(data->media_default.type));
 
-  driver->media_ready[0] = driver->media_default;
+  data->media_ready[0] = data->media_default;
 
-  driver->mode_configured = LPRINT_LABEL_MODE_TEAR_OFF;
-  driver->mode_configured = LPRINT_LABEL_MODE_APPLICATOR | LPRINT_LABEL_MODE_CUTTER | LPRINT_LABEL_MODE_CUTTER_DELAYED | LPRINT_LABEL_MODE_KIOSK | LPRINT_LABEL_MODE_PEEL_OFF | LPRINT_LABEL_MODE_PEEL_OFF_PREPEEL | LPRINT_LABEL_MODE_REWIND | LPRINT_LABEL_MODE_RFID | LPRINT_LABEL_MODE_TEAR_OFF;
+  data->mode_configured = PAPPL_LABEL_MODE_TEAR_OFF;
+  data->mode_configured = PAPPL_LABEL_MODE_APPLICATOR | PAPPL_LABEL_MODE_CUTTER | PAPPL_LABEL_MODE_CUTTER_DELAYED | PAPPL_LABEL_MODE_KIOSK | PAPPL_LABEL_MODE_PEEL_OFF | PAPPL_LABEL_MODE_PEEL_OFF_PREPEEL | PAPPL_LABEL_MODE_REWIND | PAPPL_LABEL_MODE_RFID | PAPPL_LABEL_MODE_TEAR_OFF;
 
-  driver->tear_offset_configured   = 0;
-  driver->tear_offset_supported[0] = -1500;
-  driver->tear_offset_supported[1] = 1500;
+  data->tear_offset_configured   = 0;
+  data->tear_offset_supported[0] = -1500;
+  data->tear_offset_supported[1] = 1500;
 
-  driver->speed_default      = 0;
-  driver->speed_supported[0] = 2540;
-  driver->speed_supported[1] = 12 * 2540;
+  data->speed_default      = 0;
+  data->speed_supported[0] = 2540;
+  data->speed_supported[1] = 12 * 2540;
 
-  driver->darkness_configured = 50;
-  driver->darkness_supported  = 30;
+  data->darkness_configured = 50;
+  data->darkness_supported  = 30;
 
-  driver->num_supply = 0;
+  data->num_supply = 0;
 
-  pthread_rwlock_unlock(&driver->rwlock);
+  return (true);
 }
 
 
@@ -275,7 +279,7 @@ lprint_zpl_compress(
 
       if (bufptr >= (buffer + sizeof(buffer)))
       {
-        if (lprintWriteDevice(device, buffer, sizeof(buffer)) < 0)
+        if (papplDeviceWrite(device, buffer, sizeof(buffer)) < 0)
           return (0);
 
 	bufptr = buffer;
@@ -297,7 +301,7 @@ lprint_zpl_compress(
   // Then the character to be repeated...
   *bufptr++ = ch;
 
-  return (lprintWriteDevice(device, buffer, bufptr - buffer) > 0);
+  return (papplDeviceWrite(device, buffer, bufptr - buffer) > 0);
 }
 #endif // ZPL_COMPRESSION
 
@@ -308,8 +312,8 @@ lprint_zpl_compress(
 
 static int				// O - 1 on success, 0 on failure
 lprint_zpl_print(
-    lprint_job_t     *job,		// I - Job
-    lprint_options_t *options)		// I - Job options
+    pappl_job_t     *job,		// I - Job
+    pappl_pr_options_t *options)		// I - Job options
 {
   lprint_device_t *device = job->printer->driver->device;
 					// Output device
@@ -325,9 +329,9 @@ lprint_zpl_print(
 
   while ((bytes = read(infd, buffer, sizeof(buffer))) > 0)
   {
-    if (lprintWriteDevice(device, buffer, (size_t)bytes) < 0)
+    if (papplDeviceWrite(device, buffer, (size_t)bytes) < 0)
     {
-      lprintLogJob(job, LPRINT_LOGLEVEL_ERROR, "Unable to send %d bytes to printer.", (int)bytes);
+      papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to send %d bytes to printer.", (int)bytes);
       close(infd);
       return (0);
     }
@@ -346,8 +350,8 @@ lprint_zpl_print(
 
 static int				// O - 1 on success, 0 on failure
 lprint_zpl_rendjob(
-    lprint_job_t     *job,		// I - Job
-    lprint_options_t *options)		// I - Job options
+    pappl_job_t     *job,		// I - Job
+    pappl_pr_options_t *options)		// I - Job options
 {
   lprint_zpl_t	*zpl = job->printer->driver->job_data;
 					// ZPL driver data
@@ -368,8 +372,8 @@ lprint_zpl_rendjob(
 
 static int				// O - 1 on success, 0 on failure
 lprint_zpl_rendpage(
-    lprint_job_t     *job,		// I - Job
-    lprint_options_t *options,		// I - Job options
+    pappl_job_t     *job,		// I - Job
+    pappl_pr_options_t *options,		// I - Job options
     unsigned         page)		// I - Page number
 {
   lprint_driver_t *driver = job->printer->driver;
@@ -382,32 +386,32 @@ lprint_zpl_rendpage(
 
   (void)page;
 
-  lprintPrintfDevice(device, "^XA\n^POI\n^PW%u\n^LH0,0\n^LT%d\n", options->header.cupsWidth, options->media.top_offset * options->printer_resolution[1] / 2540);
+  papplDevicePrintf(device, "^XA\n^POI\n^PW%u\n^LH0,0\n^LT%d\n", options->header.cupsWidth, options->media.top_offset * options->printer_resolution[1] / 2540);
 
   if (options->media.type[0] && strcmp(options->media.type, "labels"))
   {
     // Continuous media, so always set tracking to continuous...
-    options->media.tracking = LPRINT_MEDIA_TRACKING_CONTINUOUS;
+    options->media.tracking = PAPPL_MEDIA_TRACKING_CONTINUOUS;
   }
 
   if (options->media.tracking)
   {
-    if (options->media.tracking == LPRINT_MEDIA_TRACKING_CONTINUOUS)
-      lprintPrintfDevice(device, "^LL%d\n^MNN\n", options->header.cupsHeight);
-    else if (options->media.tracking == LPRINT_MEDIA_TRACKING_WEB)
-      lprintPutsDevice(device, "^MNY\n");
+    if (options->media.tracking == PAPPL_MEDIA_TRACKING_CONTINUOUS)
+      papplDevicePrintf(device, "^LL%d\n^MNN\n", options->header.cupsHeight);
+    else if (options->media.tracking == PAPPL_MEDIA_TRACKING_WEB)
+      papplDevicePuts(device, "^MNY\n");
     else
-      lprintPutsDevice(device, "^MNM\n");
+      papplDevicePuts(device, "^MNM\n");
   }
 
   if (strstr(driver->name, "-tt"))
-    lprintPutsDevice(device, "^MTT\n");	// Thermal transfer
+    papplDevicePuts(device, "^MTT\n");	// Thermal transfer
   else
-    lprintPutsDevice(device, "^MTD\n");	// Direct thermal
+    papplDevicePuts(device, "^MTD\n");	// Direct thermal
 
-  lprintPrintfDevice(device, "^PQ%d, 0, 0, N\n", options->copies);
-  lprintPutsDevice(device, "^FO0,0^XGR:LPRINT.GRF,1,1^FS\n^XZ\n");
-  lprintPutsDevice(device, "^XA\n^IDR:LPRINT.GRF^FS\n^XZ\n");
+  papplDevicePrintf(device, "^PQ%d, 0, 0, N\n", options->copies);
+  papplDevicePuts(device, "^FO0,0^XGR:LPRINT.GRF,1,1^FS\n^XZ\n");
+  papplDevicePuts(device, "^XA\n^IDR:LPRINT.GRF^FS\n^XZ\n");
 
   free(zpl->comp_buffer);
   free(zpl->last_buffer);
@@ -422,8 +426,8 @@ lprint_zpl_rendpage(
 
 static int				// O - 1 on success, 0 on failure
 lprint_zpl_rstartjob(
-    lprint_job_t     *job,		// I - Job
-    lprint_options_t *options)		// I - Job options
+    pappl_job_t     *job,		// I - Job
+    pappl_pr_options_t *options)		// I - Job options
 {
   lprint_driver_t *driver = job->printer->driver;
 					// Driver
@@ -438,44 +442,44 @@ lprint_zpl_rstartjob(
   // label-mode-configured
   switch (driver->mode_configured)
   {
-    case LPRINT_LABEL_MODE_APPLICATOR :
-        lprintPutsDevice(device, "^MMA,Y\n");
+    case PAPPL_LABEL_MODE_APPLICATOR :
+        papplDevicePuts(device, "^MMA,Y\n");
         break;
-    case LPRINT_LABEL_MODE_CUTTER :
-        lprintPutsDevice(device, "^MMC,Y\n");
+    case PAPPL_LABEL_MODE_CUTTER :
+        papplDevicePuts(device, "^MMC,Y\n");
         break;
-    case LPRINT_LABEL_MODE_CUTTER_DELAYED :
-        lprintPutsDevice(device, "^MMD,Y\n");
+    case PAPPL_LABEL_MODE_CUTTER_DELAYED :
+        papplDevicePuts(device, "^MMD,Y\n");
         break;
-    case LPRINT_LABEL_MODE_KIOSK :
-        lprintPutsDevice(device, "^MMK,Y\n");
+    case PAPPL_LABEL_MODE_KIOSK :
+        papplDevicePuts(device, "^MMK,Y\n");
         break;
-    case LPRINT_LABEL_MODE_PEEL_OFF :
-        lprintPutsDevice(device, "^MMP,N\n");
+    case PAPPL_LABEL_MODE_PEEL_OFF :
+        papplDevicePuts(device, "^MMP,N\n");
         break;
-    case LPRINT_LABEL_MODE_PEEL_OFF_PREPEEL :
-        lprintPutsDevice(device, "^MMP,Y\n");
+    case PAPPL_LABEL_MODE_PEEL_OFF_PREPEEL :
+        papplDevicePuts(device, "^MMP,Y\n");
         break;
-    case LPRINT_LABEL_MODE_REWIND :
-        lprintPutsDevice(device, "^MMR,Y\n");
+    case PAPPL_LABEL_MODE_REWIND :
+        papplDevicePuts(device, "^MMR,Y\n");
         break;
-    case LPRINT_LABEL_MODE_RFID :
-        lprintPutsDevice(device, "^MMF,Y\n");
+    case PAPPL_LABEL_MODE_RFID :
+        papplDevicePuts(device, "^MMF,Y\n");
         break;
-    case LPRINT_LABEL_MODE_TEAR_OFF :
+    case PAPPL_LABEL_MODE_TEAR_OFF :
     default :
-        lprintPutsDevice(device, "^MMT,Y\n");
+        papplDevicePuts(device, "^MMT,Y\n");
         break;
   }
 
   // label-tear-offset-configured
   if (driver->tear_offset_configured < 0)
-    lprintPrintfDevice(device, "~TA%04d\n", driver->tear_offset_configured);
+    papplDevicePrintf(device, "~TA%04d\n", driver->tear_offset_configured);
   else if (driver->tear_offset_configured > 0)
-    lprintPrintfDevice(device, "~TA%03d\n", driver->tear_offset_configured);
+    papplDevicePrintf(device, "~TA%03d\n", driver->tear_offset_configured);
 
   // printer-darkness
-  lprintPrintfDevice(device, "~SD%02u\n", 30 * driver->darkness_configured / 100);
+  papplDevicePrintf(device, "~SD%02u\n", 30 * driver->darkness_configured / 100);
 
   return (1);
 }
@@ -487,8 +491,8 @@ lprint_zpl_rstartjob(
 
 static int				// O - 1 on success, 0 on failure
 lprint_zpl_rstartpage(
-    lprint_job_t     *job,		// I - Job
-    lprint_options_t *options,		// I - Job options
+    pappl_job_t     *job,		// I - Job
+    pappl_pr_options_t *options,		// I - Job options
     unsigned         page)		// I - Page number
 {
   lprint_device_t *device = job->printer->driver->device;
@@ -501,14 +505,14 @@ lprint_zpl_rstartpage(
   (void)page;
 
   // print-darkness
-  lprintPrintfDevice(device, "~MD%d\n", 30 * options->print_darkness / 100);
+  papplDevicePrintf(device, "~MD%d\n", 30 * options->print_darkness / 100);
 
   // print-speed
   if ((ips = options->print_speed / 2540) > 0)
-    lprintPrintfDevice(device, "^PR%d,%d,%d\n", ips, ips, ips);
+    papplDevicePrintf(device, "^PR%d,%d,%d\n", ips, ips, ips);
 
   // Download bitmap...
-  lprintPrintfDevice(device, "~DGR:LPRINT.GRF,%u,%u,\n", options->header.cupsHeight * options->header.cupsBytesPerLine, options->header.cupsBytesPerLine);
+  papplDevicePrintf(device, "~DGR:LPRINT.GRF,%u,%u,\n", options->header.cupsHeight * options->header.cupsBytesPerLine, options->header.cupsBytesPerLine);
 
   // Allocate memory for writing the bitmap...
   zpl->comp_buffer     = malloc(2 * options->header.cupsBytesPerLine + 1);
@@ -525,8 +529,8 @@ lprint_zpl_rstartpage(
 
 static int				// O - 1 on success, 0 on failure
 lprint_zpl_rwrite(
-    lprint_job_t        *job,		// I - Job
-    lprint_options_t    *options,	// I - Job options
+    pappl_job_t        *job,		// I - Job
+    pappl_pr_options_t    *options,	// I - Job options
     unsigned            y,		// I - Line number
     const unsigned char *line)		// I - Line
 {
@@ -550,7 +554,7 @@ lprint_zpl_rwrite(
   // If so, output a ':' and return...
   if (zpl->last_buffer_set && !memcmp(line, zpl->last_buffer, options->header.cupsBytesPerLine))
   {
-    lprintWriteDevice(device, ":", 1);
+    papplDeviceWrite(device, ":", 1);
     return (1);
   }
 
@@ -586,18 +590,18 @@ lprint_zpl_rwrite(
     if (repeat_count & 1)
     {
       repeat_count --;
-      lprintPutsDevice(device, "0");
+      papplDevicePuts(device, "0");
     }
 
     if (repeat_count > 0)
-      lprintPutsDevice(device, ",");
+      papplDevicePuts(device, ",");
   }
   else
     lprint_zpl_compress(device, repeat_char, repeat_count);
 
 #else
   // Send uncompressed HEX data...
-  lprintWriteDevice(device, zpl->comp_buffer, compptr - zpl->comp_buffer);
+  papplDeviceWrite(device, zpl->comp_buffer, compptr - zpl->comp_buffer);
 #endif // ZPL_COMPRESSION
 
   // Save this line for the next round...
