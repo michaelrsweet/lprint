@@ -1,7 +1,7 @@
 //
 // ZPL driver for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2020 by Michael R Sweet.
+// Copyright © 2019-2021 by Michael R Sweet.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 2001-2007 by Easy Software Products.
 //
@@ -146,15 +146,15 @@ static const char * const lprint_zpl_4inch_media[] =
 //
 
 #if ZPL_COMPRESSION
-static int	lprint_zpl_compress(lprint_device_t *device, unsigned char ch, unsigned count);
+static bool	lprint_zpl_compress(pappl_device_t *device, unsigned char ch, unsigned count);
 #endif // ZPL_COMPRESSION
-static int	lprint_zpl_print(pappl_job_t *job, pappl_pr_options_t *options);
-static int	lprint_zpl_rendjob(pappl_job_t *job, pappl_pr_options_t *options);
-static int	lprint_zpl_rendpage(pappl_job_t *job, pappl_pr_options_t *options, unsigned page);
-static int	lprint_zpl_rstartjob(pappl_job_t *job, pappl_pr_options_t *options);
-static int	lprint_zpl_rstartpage(pappl_job_t *job, pappl_pr_options_t *options, unsigned page);
-static int	lprint_zpl_rwrite(pappl_job_t *job, pappl_pr_options_t *options, unsigned y, const unsigned char *line);
-static int	lprint_zpl_status(lprint_printer_t *printer);
+static bool	lprint_zpl_printfile(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
+static bool	lprint_zpl_rendjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
+static bool	lprint_zpl_rendpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page);
+static bool	lprint_zpl_rstartjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
+static bool	lprint_zpl_rstartpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page);
+static bool	lprint_zpl_rwriteline(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned y, const unsigned char *line);
+static bool	lprint_zpl_status(pappl_printer_t *printer);
 
 
 //
@@ -171,18 +171,18 @@ lprintZPL(
     ipp_t                  **attrs,	// O - Pointer to driver attributes
     void                   *cbdata)	// I - Callback data (not used)
 {
-  data->print      = lprint_zpl_print;
-  data->rendjob    = lprint_zpl_rendjob;
-  data->rendpage   = lprint_zpl_rendpage;
-  data->rstartjob  = lprint_zpl_rstartjob;
-  data->rstartpage = lprint_zpl_rstartpage;
-  data->rwrite     = lprint_zpl_rwrite;
-  data->status     = lprint_zpl_status;
-  data->format     = "application/vnd.zebra-zpl";
+  data->printfile_cb  = lprint_zpl_printfile;
+  data->rendjob_cb    = lprint_zpl_rendjob;
+  data->rendpage_cb   = lprint_zpl_rendpage;
+  data->rstartjob_cb  = lprint_zpl_rstartjob;
+  data->rstartpage_cb = lprint_zpl_rstartpage;
+  data->rwriteline_cb = lprint_zpl_rwriteline;
+  data->status_cb     = lprint_zpl_status;
+  data->format        = "application/vnd.zebra-zpl";
 
   data->num_resolution = 1;
 
-  if (strstr(data->name, "-203dpi"))
+  if (strstr(driver_name, "-203dpi"))
   {
     data->x_resolution[0] = 203;
     data->y_resolution[0] = 203;
@@ -193,7 +193,7 @@ lprintZPL(
     data->y_resolution[0] = 300;
   }
 
-  if (!strncmp(data->name, "zpl_2inch-", 16))
+  if (!strncmp(driver_name, "zpl_2inch-", 16))
   {
     // 2 inch printer...
     data->num_media = (int)(sizeof(lprint_zpl_2inch_media) / sizeof(lprint_zpl_2inch_media[0]));
@@ -247,8 +247,6 @@ lprintZPL(
   data->darkness_configured = 50;
   data->darkness_supported  = 30;
 
-  data->num_supply = 0;
-
   return (true);
 }
 
@@ -258,11 +256,11 @@ lprintZPL(
 // 'lprint_zpl_compress()' - Output a RLE run...
 //
 
-static int				// O - 1 on success, 0 on failure
+static bool				// O - `true` on success, `false` on failure
 lprint_zpl_compress(
-    lprint_device_t *device,		// I - Output device
-    unsigned char   ch,			// I - Repeat character
-    unsigned        count)		// I - Repeat count
+    pappl_device_t *device,		// I - Output device
+    unsigned char  ch,			// I - Repeat character
+    unsigned       count)		// I - Repeat count
 {
   unsigned char	buffer[8192],		// Output buffer
 		*bufptr = buffer;	// Pointer into buffer
@@ -310,37 +308,40 @@ lprint_zpl_compress(
 // 'lprint_zpl_print()' - Print a file.
 //
 
-static int				// O - 1 on success, 0 on failure
-lprint_zpl_print(
-    pappl_job_t     *job,		// I - Job
-    pappl_pr_options_t *options)		// I - Job options
+static bool				// O - `true` on success, `false` on failure
+lprint_zpl_printfile(
+    pappl_job_t        *job,		// I - Job
+    pappl_pr_options_t *options,	// I - Job options
+    pappl_device_t     *device)		// I - Output device
 {
-  lprint_device_t *device = job->printer->driver->device;
-					// Output device
-  int		infd;			// Input file
+  int		fd;			// Input file
   ssize_t	bytes;			// Bytes read/written
   char		buffer[65536];		// Read/write buffer
 
 
   // Copy the raw file...
-  job->impressions = 1;
+  papplJobSetImpressions(job, 1);
 
-  infd  = open(job->filename, O_RDONLY);
+  if ((fd  = open(papplJobGetFilename(job), O_RDONLY)) < 0)
+  {
+    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to open print file '%s': %s", papplJobGetFilename(job), strerror(errno));
+    return (false);
+  }
 
-  while ((bytes = read(infd, buffer, sizeof(buffer))) > 0)
+  while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
   {
     if (papplDeviceWrite(device, buffer, (size_t)bytes) < 0)
     {
       papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to send %d bytes to printer.", (int)bytes);
-      close(infd);
-      return (0);
+      close(fd);
+      return (false);
     }
   }
-  close(infd);
+  close(fd);
 
-  job->impcompleted = 1;
+  papplJobSetImpressionsCompleted(job, 1);
 
-  return (1);
+  return (true);
 }
 
 
@@ -348,21 +349,22 @@ lprint_zpl_print(
 // 'lprint_zpl_rendjob()' - End a job.
 //
 
-static int				// O - 1 on success, 0 on failure
+static bool				// O - `true` on success, `false` on failure
 lprint_zpl_rendjob(
-    pappl_job_t     *job,		// I - Job
-    pappl_pr_options_t *options)		// I - Job options
+    pappl_job_t        *job,		// I - Job
+    pappl_pr_options_t *options,	// I - Job options
+    pappl_device_t     *device)		// I - Output device
 {
-  lprint_zpl_t	*zpl = job->printer->driver->job_data;
+  lprint_zpl_t	*zpl = (lprint_zpl_t *)papplJobGetData(job);
 					// ZPL driver data
 
 
   (void)options;
 
   free(zpl);
-  job->printer->driver->job_data = NULL;
+  papplJobSetData(job, NULL);
 
-  return (1);
+  return (true);
 }
 
 
@@ -370,17 +372,14 @@ lprint_zpl_rendjob(
 // 'lprint_zpl_rendpage()' - End a page.
 //
 
-static int				// O - 1 on success, 0 on failure
+static bool				// O - `true` on success, `false` on failure
 lprint_zpl_rendpage(
-    pappl_job_t     *job,		// I - Job
-    pappl_pr_options_t *options,		// I - Job options
-    unsigned         page)		// I - Page number
+    pappl_job_t        *job,		// I - Job
+    pappl_pr_options_t *options,	// I - Job options
+    pappl_device_t     *device,		// I - Output device
+    unsigned           page)		// I - Page number
 {
-  lprint_driver_t *driver = job->printer->driver;
-					// Driver
-  lprint_device_t *device = job->printer->driver->device;
-					// Output device
-  lprint_zpl_t	*zpl = job->printer->driver->job_data;
+  lprint_zpl_t	*zpl = (lprint_zpl_t *)papplJobGetData(job);
 					// ZPL driver data
 
 
@@ -404,7 +403,7 @@ lprint_zpl_rendpage(
       papplDevicePuts(device, "^MNM\n");
   }
 
-  if (strstr(driver->name, "-tt"))
+  if (strstr(papplPrinterGetDriverName(papplJobGetPrinter(job)), "-tt"))
     papplDevicePuts(device, "^MTT\n");	// Thermal transfer
   else
     papplDevicePuts(device, "^MTD\n");	// Direct thermal
@@ -416,7 +415,7 @@ lprint_zpl_rendpage(
   free(zpl->comp_buffer);
   free(zpl->last_buffer);
 
-  return (1);
+  return (true);
 }
 
 
@@ -424,23 +423,23 @@ lprint_zpl_rendpage(
 // 'lprint_zpl_rstartjob()' - Start a job.
 //
 
-static int				// O - 1 on success, 0 on failure
+static bool				// O - `true` on success, `false` on failure
 lprint_zpl_rstartjob(
-    pappl_job_t     *job,		// I - Job
-    pappl_pr_options_t *options)		// I - Job options
+    pappl_job_t        *job,		// I - Job
+    pappl_pr_options_t *options,	// I - Job options
+    pappl_device_t     *device)		// I - Output device
 {
-  lprint_driver_t *driver = job->printer->driver;
-					// Driver
-  lprint_device_t *device = driver->device;
-					// Output device
+  pappl_pr_driver_data_t data;		// Driver data
   lprint_zpl_t	*zpl = (lprint_zpl_t *)calloc(1, sizeof(lprint_zpl_t));
 					// ZPL driver data
 
 
-  driver->job_data = zpl;
+  papplJobSetData(job, zpl);
+
+  papplPrinterGetDriverData(papplJobGetPrinter(job), &data);
 
   // label-mode-configured
-  switch (driver->mode_configured)
+  switch (data.mode_configured)
   {
     case PAPPL_LABEL_MODE_APPLICATOR :
         papplDevicePuts(device, "^MMA,Y\n");
@@ -473,15 +472,15 @@ lprint_zpl_rstartjob(
   }
 
   // label-tear-offset-configured
-  if (driver->tear_offset_configured < 0)
-    papplDevicePrintf(device, "~TA%04d\n", driver->tear_offset_configured);
-  else if (driver->tear_offset_configured > 0)
-    papplDevicePrintf(device, "~TA%03d\n", driver->tear_offset_configured);
+  if (data.tear_offset_configured < 0)
+    papplDevicePrintf(device, "~TA%04d\n", data.tear_offset_configured);
+  else if (data.tear_offset_configured > 0)
+    papplDevicePrintf(device, "~TA%03d\n", data.tear_offset_configured);
 
   // printer-darkness
-  papplDevicePrintf(device, "~SD%02u\n", 30 * driver->darkness_configured / 100);
+  papplDevicePrintf(device, "~SD%02u\n", 30 * data.darkness_configured / 100);
 
-  return (1);
+  return (true);
 }
 
 
@@ -489,15 +488,14 @@ lprint_zpl_rstartjob(
 // 'lprint_zpl_rstartpage()' - Start a page.
 //
 
-static int				// O - 1 on success, 0 on failure
+static bool				// O - `true` on success, `false` on failure
 lprint_zpl_rstartpage(
-    pappl_job_t     *job,		// I - Job
-    pappl_pr_options_t *options,		// I - Job options
-    unsigned         page)		// I - Page number
+    pappl_job_t        *job,		// I - Job
+    pappl_pr_options_t *options,	// I - Job options
+    pappl_device_t     *device,		// I - Output device
+    unsigned           page)		// I - Page number
 {
-  lprint_device_t *device = job->printer->driver->device;
-					// Output device
-  lprint_zpl_t	*zpl = job->printer->driver->job_data;
+  lprint_zpl_t	*zpl = (lprint_zpl_t *)papplJobGetData(job);
 					// ZPL driver data
   int		ips;			// Inches per second
 
@@ -519,24 +517,23 @@ lprint_zpl_rstartpage(
   zpl->last_buffer     = malloc(options->header.cupsBytesPerLine);
   zpl->last_buffer_set = 0;
 
-  return (1);
+  return (true);
 }
 
 
 //
-// 'lprint_zpl_rwrite()' - Write a raster line.
+// 'lprint_zpl_rwriteline()' - Write a raster line.
 //
 
-static int				// O - 1 on success, 0 on failure
-lprint_zpl_rwrite(
-    pappl_job_t        *job,		// I - Job
-    pappl_pr_options_t    *options,	// I - Job options
+static bool				// O - `true` on success, `false` on failure
+lprint_zpl_rwriteline(
+    pappl_job_t         *job,		// I - Job
+    pappl_pr_options_t  *options,	// I - Job options
+    pappl_device_t      *device,	// I - Output device
     unsigned            y,		// I - Line number
     const unsigned char *line)		// I - Line
 {
-  lprint_device_t *device = job->printer->driver->device;
-					// Output device
-  lprint_zpl_t	*zpl = job->printer->driver->job_data;
+  lprint_zpl_t	*zpl = (lprint_zpl_t *)papplJobGetData(job);
 					// ZPL driver data
   unsigned		i;		// Looping var
   const unsigned char	*ptr;		// Pointer into buffer
@@ -555,7 +552,7 @@ lprint_zpl_rwrite(
   if (zpl->last_buffer_set && !memcmp(line, zpl->last_buffer, options->header.cupsBytesPerLine))
   {
     papplDeviceWrite(device, ":", 1);
-    return (1);
+    return (true);
   }
 
   // Convert the line to hex digits...
@@ -608,7 +605,7 @@ lprint_zpl_rwrite(
   memcpy(zpl->last_buffer, line, options->header.cupsBytesPerLine);
   zpl->last_buffer_set = 1;
 
-  return (1);
+  return (true);
 }
 
 
@@ -616,22 +613,17 @@ lprint_zpl_rwrite(
 // 'lprint_zpl_status()' - Get current printer status.
 //
 
-static int				// O - 1 on success, 0 on failure
+static bool				// O - `true` on success, `false` on failure
 lprint_zpl_status(
-    lprint_printer_t *printer)		// I - Printer
+    pappl_printer_t *printer)		// I - Printer
 {
   (void)printer;
 
-// ZPL commands:
-//
-// print-darkness: Map 0 to 100 to ^MD command with values from -30 to 30;
-//                 print-darkness-supported=61, -default=50
-//
 // ZPL Auto-configuration:
 //
 // ~HI returns model, firmware version, and dots-per-millimeter
 // ~HQES returns status information
 // ~HS returns other status and mode information
 
-  return (1);
+  return (true);
 }

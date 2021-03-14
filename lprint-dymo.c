@@ -1,7 +1,7 @@
 //
 // Dymo driver for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2020 by Michael R Sweet.
+// Copyright © 2019-2021 by Michael R Sweet.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 2001-2007 by Easy Software Products.
 //
@@ -74,13 +74,13 @@ static const char * const lprint_dymo_media[] =
 // Local functions...
 //
 
-static int	lprint_dymo_print(pappl_job_t *job, pappl_pr_options_t *options);
-static int	lprint_dymo_rendjob(pappl_job_t *job, pappl_pr_options_t *options);
-static int	lprint_dymo_rendpage(pappl_job_t *job, pappl_pr_options_t *options, unsigned page);
-static int	lprint_dymo_rstartjob(pappl_job_t *job, pappl_pr_options_t *options);
-static int	lprint_dymo_rstartpage(pappl_job_t *job, pappl_pr_options_t *options, unsigned page);
-static int	lprint_dymo_rwrite(pappl_job_t *job, pappl_pr_options_t *options, unsigned y, const unsigned char *line);
-static int	lprint_dymo_status(lprint_printer_t *printer);
+static bool	lprint_dymo_printfile(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
+static bool	lprint_dymo_rendjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
+static bool	lprint_dymo_rendpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page);
+static bool	lprint_dymo_rstartjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
+static bool	lprint_dymo_rstartpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page);
+static bool	lprint_dymo_rwriteline(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned y, const unsigned char *line);
+static bool	lprint_dymo_status(pappl_printer_t *printer);
 
 
 //
@@ -100,14 +100,14 @@ lprintDYMO(
   int	i;				// Looping var
 
 
-  data->print      = lprint_dymo_print;
-  data->rendjob    = lprint_dymo_rendjob;
-  data->rendpage   = lprint_dymo_rendpage;
-  data->rstartjob  = lprint_dymo_rstartjob;
-  data->rstartpage = lprint_dymo_rstartpage;
-  data->rwrite     = lprint_dymo_rwrite;
-  data->status     = lprint_dymo_status;
-  data->format     = "application/vnd.dymo-lw";
+  data->printfile_cb  = lprint_dymo_printfile;
+  data->rendjob_cb    = lprint_dymo_rendjob;
+  data->rendpage_cb   = lprint_dymo_rendpage;
+  data->rstartjob_cb  = lprint_dymo_rstartjob;
+  data->rstartpage_cb = lprint_dymo_rstartpage;
+  data->rwriteline_cb = lprint_dymo_rwriteline;
+  data->status_cb     = lprint_dymo_status;
+  data->format        = "application/vnd.dymo-lw";
 
   data->num_resolution  = 1;
   data->x_resolution[0] = 300;
@@ -119,7 +119,7 @@ lprintDYMO(
   data->num_media = (int)(sizeof(lprint_dymo_media) / sizeof(lprint_dymo_media[0]));
   memcpy(data->media, lprint_dymo_media, sizeof(lprint_dymo_media));
 
-  if (strstr(data->name, "-duo") || strstr(data->name, "-twin"))
+  if (strstr(driver_name, "-duo") || strstr(driver_name, "-twin"))
   {
     data->num_source = 2;
     data->source[0]  = "main-roll";
@@ -169,60 +169,61 @@ lprintDYMO(
   data->darkness_configured = 50;
   data->darkness_supported  = 4;
 
-  data->num_supply = 0;
-
   return (true);
 }
 
 
 //
-// 'lprint_dymo_print()' - Print a file.
+// 'lprint_dymo_printfile()' - Print a file.
 //
 
-static int				// O - 1 on success, 0 on failure
-lprint_dymo_print(
-    pappl_job_t     *job,		// I - Job
-    pappl_pr_options_t *options)		// I - Job options
+static bool				// O - `true` on success, `false` on failure
+lprint_dymo_printfile(
+    pappl_job_t        *job,		// I - Job
+    pappl_pr_options_t *options,	// I - Job options
+    pappl_device_t     *device)		// I - Output device
 {
-  lprint_device_t *device = job->printer->driver->device;
-					// Output device
-  int		infd;			// Input file
+  int		fd;			// Input file
   ssize_t	bytes;			// Bytes read/written
   char		buffer[65536];		// Read/write buffer
 
 
   // Reset the printer...
   papplDevicePuts(device, "\033\033\033\033\033\033\033\033\033\033"
-			   "\033\033\033\033\033\033\033\033\033\033"
-			   "\033\033\033\033\033\033\033\033\033\033"
-			   "\033\033\033\033\033\033\033\033\033\033"
-			   "\033\033\033\033\033\033\033\033\033\033"
-			   "\033\033\033\033\033\033\033\033\033\033"
-			   "\033\033\033\033\033\033\033\033\033\033"
-			   "\033\033\033\033\033\033\033\033\033\033"
-			   "\033\033\033\033\033\033\033\033\033\033"
-			   "\033\033\033\033\033\033\033\033\033\033"
-			   "\033@");
+			  "\033\033\033\033\033\033\033\033\033\033"
+			  "\033\033\033\033\033\033\033\033\033\033"
+			  "\033\033\033\033\033\033\033\033\033\033"
+			  "\033\033\033\033\033\033\033\033\033\033"
+			  "\033\033\033\033\033\033\033\033\033\033"
+			  "\033\033\033\033\033\033\033\033\033\033"
+			  "\033\033\033\033\033\033\033\033\033\033"
+			  "\033\033\033\033\033\033\033\033\033\033"
+			  "\033\033\033\033\033\033\033\033\033\033"
+			  "\033@");
 
   // Copy the raw file...
-  job->impressions = 1;
+  papplJobSetImpressions(job, 1);
 
-  infd  = open(job->filename, O_RDONLY);
+  if ((fd  = open(papplJobGetFilename(job), O_RDONLY)) < 0)
+  {
+    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to open print file '%s': %s", papplJobGetFilename(job), strerror(errno));
+    return (false);
+  }
 
-  while ((bytes = read(infd, buffer, sizeof(buffer))) > 0)
+  while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
   {
     if (papplDeviceWrite(device, buffer, (size_t)bytes) < 0)
     {
       papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to send %d bytes to printer.", (int)bytes);
-      close(infd);
-      return (0);
+      close(fd);
+      return (false);
     }
   }
-  close(infd);
+  close(fd);
 
-  job->impcompleted = 1;
+  papplJobSetImpressionsCompleted(job, 1);
 
-  return (1);
+  return (true);
 }
 
 
@@ -230,21 +231,21 @@ lprint_dymo_print(
 // 'lprint_dymo_rend()' - End a job.
 //
 
-static int				// O - 1 on success, 0 on failure
+static bool				// O - `true` on success, `false` on failure
 lprint_dymo_rendjob(
-    pappl_job_t     *job,		// I - Job
-    pappl_pr_options_t *options)		// I - Job options
+    pappl_job_t        *job,		// I - Job
+    pappl_pr_options_t *options,	// I - Job options
+    pappl_device_t     *device)		// I - Output device
 {
-  lprint_driver_t	*driver = job->printer->driver;
-					// Driver data
-
+  lprint_dymo_t		*dymo = (lprint_dymo_t *)papplJobGetData(job);
+					// DYMO driver data
 
   (void)options;
 
-  free(driver->job_data);
-  driver->job_data = NULL;
+  free(dymo);
+  papplJobSetData(job, NULL);
 
-  return (1);
+  return (true);
 }
 
 
@@ -252,22 +253,20 @@ lprint_dymo_rendjob(
 // 'lprint_dymo_rendpage()' - End a page.
 //
 
-static int				// O - 1 on success, 0 on failure
+static bool				// O - `true` on success, `false` on failure
 lprint_dymo_rendpage(
-    pappl_job_t     *job,		// I - Job
-    pappl_pr_options_t *options,		// I - Job options
-    unsigned         page)		// I - Page number
+    pappl_job_t        *job,		// I - Job
+    pappl_pr_options_t *options,	// I - Job options
+    pappl_device_t     *device,		// I - Output device
+    unsigned           page)		// I - Page number
 {
-  lprint_device_t	*device = job->printer->driver->device;
-					// Output device
-
-
+  (void)job;
   (void)options;
   (void)page;
 
   papplDevicePuts(device, "\033E");
 
-  return (1);
+  return (true);
 }
 
 
@@ -275,20 +274,19 @@ lprint_dymo_rendpage(
 // 'lprint_dymo_rstartjob()' - Start a job.
 //
 
-static int				// O - 1 on success, 0 on failure
+static bool				// O - `true` on success, `false` on failure
 lprint_dymo_rstartjob(
-    pappl_job_t     *job,		// I - Job
-    pappl_pr_options_t *options)		// I - Job options
+    pappl_job_t        *job,		// I - Job
+    pappl_pr_options_t *options,	// I - Job options
+    pappl_device_t     *device)		// I - Output device
 {
-  lprint_device_t	*device = job->printer->driver->device;
-					// Output device
   lprint_dymo_t		*dymo = (lprint_dymo_t *)calloc(1, sizeof(lprint_dymo_t));
 					// DYMO driver data
 
 
   (void)options;
 
-  job->printer->driver->job_data = dymo;
+  papplJobSetData(job, dymo);
 
   papplDevicePuts(device, "\033\033\033\033\033\033\033\033\033\033"
 			   "\033\033\033\033\033\033\033\033\033\033"
@@ -302,7 +300,7 @@ lprint_dymo_rstartjob(
 			   "\033\033\033\033\033\033\033\033\033\033"
 			   "\033@");
 
-  return (1);
+  return (true);
 }
 
 
@@ -310,19 +308,17 @@ lprint_dymo_rstartjob(
 // 'lprint_dymo_rstartpage()' - Start a page.
 //
 
-static int				// O - 1 on success, 0 on failure
+static bool				// O - `true` on success, `false` on failure
 lprint_dymo_rstartpage(
-    pappl_job_t     *job,		// I - Job
-    pappl_pr_options_t *options,		// I - Job options
-    unsigned         page)		// I - Page number
+    pappl_job_t        *job,		// I - Job
+    pappl_pr_options_t *options,	// I - Job options
+    pappl_device_t     *device,		// I - Output device
+    unsigned           page)		// I - Page number
 {
-  lprint_driver_t	*driver = job->printer->driver;
-					// Driver
-  lprint_device_t	*device = job->printer->driver->device;
-					// Output device
-  lprint_dymo_t		*dymo = (lprint_dymo_t *)job->printer->driver->job_data;
+  lprint_dymo_t		*dymo = (lprint_dymo_t *)papplJobGetData(job);
 					// DYMO driver data
-  int			darkness = job->printer->driver->darkness_configured + options->print_darkness;
+  int			darkness = options->darkness_configured + options->print_darkness;
+					// Combined density
   const char		*density = "cdeg";
 					// Density codes
 
@@ -332,7 +328,7 @@ lprint_dymo_rstartpage(
   if (options->header.cupsBytesPerLine > 256)
   {
     papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Raster data too large for printer.");
-    return (0);
+    return (false);
   }
 
   papplDevicePrintf(device, "\033Q%c%c", 0, 0);
@@ -349,33 +345,32 @@ lprint_dymo_rstartpage(
   papplDevicePrintf(device, "\033%c", density[3 * darkness / 100]);
 
   dymo->feed   = 0;
-  dymo->ystart = driver->bottom_top * options->printer_resolution[1] / 2540;
+  dymo->ystart = options->media.top_margin * options->printer_resolution[1] / 2540;
   dymo->yend   = options->header.cupsHeight - dymo->ystart;
 
-  return (1);
+  return (true);
 }
 
 
 //
-// 'lprint_dymo_rwrite()' - Write a raster line.
+// 'lprint_dymo_rwriteline()' - Write a raster line.
 //
 
-static int				// O - 1 on success, 0 on failure
-lprint_dymo_rwrite(
-    pappl_job_t        *job,		// I - Job
-    pappl_pr_options_t    *options,	// I - Job options
+static bool				// O - `true` on success, `false` on failure
+lprint_dymo_rwriteline(
+    pappl_job_t         *job,		// I - Job
+    pappl_pr_options_t  *options,	// I - Job options
+    pappl_device_t      *device,	// I - Output device
     unsigned            y,		// I - Line number
     const unsigned char *line)		// I - Line
 {
-  lprint_device_t	*device = job->printer->driver->device;
-					// Output device
-  lprint_dymo_t		*dymo = (lprint_dymo_t *)job->printer->driver->job_data;
+  lprint_dymo_t		*dymo = (lprint_dymo_t *)papplJobGetData(job);
 					// DYMO driver data
   unsigned char		buffer[256];	// Write buffer
 
 
   if (y < dymo->ystart || y >= dymo->yend)
-    return (1);
+    return (true);
 
   if (line[0] || memcmp(line, line + 1, options->header.cupsBytesPerLine - 1))
   {
@@ -403,7 +398,7 @@ lprint_dymo_rwrite(
     dymo->feed ++;
   }
 
-  return (1);
+  return (true);
 }
 
 
@@ -411,11 +406,11 @@ lprint_dymo_rwrite(
 // 'lprint_dymo_status()' - Get current printer status.
 //
 
-static int				// O - 1 on success, 0 on failure
+static bool				// O - `true` on success, `false` on failure
 lprint_dymo_status(
-    lprint_printer_t *printer)		// I - Printer
+    pappl_printer_t *printer)		// I - Printer
 {
   (void)printer;
 
-  return (1);
+  return (true);
 }

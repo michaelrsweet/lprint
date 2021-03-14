@@ -43,3 +43,38 @@ main(int  argc,				// I - Number of command-line arguments
                         /*usage_cb*/NULL,
                         /*data*/NULL));
 }
+
+
+//
+// 'lprintDriverCallback()' - Main driver callback.
+//
+
+bool					// O - `true` on success, `false` on error
+lprintDriverCallback(
+    pappl_system_t         *system,	// I - System
+    const char             *driver_name,// I - Driver name
+    const char             *device_uri,	// I - Device URI
+    const char             *device_id,	// I - 1284 device ID
+    pappl_pr_driver_data_t *data,	// I - Pointer to driver data
+    ipp_t                  **attrs,	// O - Pointer to driver attributes
+    void                   *cbdata)	// I - Callback data (not used)
+{
+  int	i;				// Looping var
+
+
+  for (i = 0; i < (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])); i ++)
+  {
+    if (!strcmp(driver_name, lprint_drivers[i].name))
+    {
+      strncpy(data->make_and_model, lprint_drivers[i].description, sizeof(data->make_and_model) - 1);
+      break;
+    }
+  }
+
+  if (!strncmp(driver_name, "dymo_", 5))
+    return (lprintDYMO(system, driver_name, device_uri, device_id, data, attrs, cbdata));
+  else if (!strncmp(driver_name, "zpl_", 4))
+    return (lprintZPL(system, driver_name, device_uri, device_id, data, attrs, cbdata));
+  else
+    return (false);
+}
