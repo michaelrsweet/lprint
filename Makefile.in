@@ -1,7 +1,7 @@
 #
 # Makefile for LPrint, a Label Printer Application
 #
-# Copyright © 2019-2020 by Michael R Sweet
+# Copyright © 2019-2021 by Michael R Sweet
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -25,11 +25,12 @@ ARFLAGS		=	@ARFLAGS@
 ASAN_OPTIONS	=	leak_check_at_exit=false
 CC		=	@CC@
 CFLAGS		=	-I.. @CFLAGS@ $(OPTIM)
-CODESIGN_IDENTITY =	Developer ID
+CODESIGN_IDENTITY =	-
+CSFLAGS		=	-s "$(CODESIGN_IDENTITY)" --timestamp @CSFLAGS@
 INSTALL		=	@INSTALL@
 LDFLAGS		=	@LDFLAGS@ $(OPTIM)
 LIBS		=	@LIBS@
-MKDIR           =       @MKDIR@ -p
+MKDIR		=	@MKDIR@ -p
 OPTIM		=	@OPTIM@
 RANLIB		=	@RANLIB@
 RM		=	@RM@ -f
@@ -86,35 +87,10 @@ MAN5		=	\
 			man/lprint.conf.5
 
 OBJS		=	\
-			device.o \
-			driver-common.o \
-			driver-dymo.o \
-			driver-pwg.o \
-			driver-zpl.o \
-			lprint.o \
-			lprint-add.o \
-			lprint-cancel.o \
-			lprint-default.o \
-			lprint-delete.o \
-			lprint-devices.o \
-			lprint-drivers.o \
-			lprint-jobs.o \
-			lprint-modify.o \
-			lprint-options.o \
-			lprint-printers.o \
-			lprint-server.o \
-			lprint-shutdown.o \
-			lprint-status.o \
-			lprint-submit.o \
-			server-auth.o \
-			server-client.o \
-			server-dnssd.o \
-			server-ipp.o \
-			server-job.o \
-			server-log.o \
-			server-print.o \
-			server-printer.o \
-			server-system.o
+			lprint-common.o \
+			lprint-dymo.o \
+			lprint-zpl.o \
+			lprint.o
 TARGETS		=	\
 			lprint
 
@@ -141,11 +117,11 @@ install:	all
 	$(INSTALL) -c -m 755 lprint $(BUILDROOT)$(bindir)
 	$(INSTALL) -d -m 755 $(BUILDROOT)$(mandir)/man1
 	for file in $(MAN1); do \
-		$(INSTALL) -c -m 644 $$file $(BUILDROOT)$(mandir)/man1; \
+	    $(INSTALL) -c -m 644 $$file $(BUILDROOT)$(mandir)/man1; \
 	done
 	$(INSTALL) -d -m 755 $(BUILDROOT)$(mandir)/man5
 	for file in $(MAN5); do \
-		$(INSTALL) -c -m 644 $$file $(BUILDROOT)$(mandir)/man5; \
+	    $(INSTALL) -c -m 644 $$file $(BUILDROOT)$(mandir)/man5; \
 	done
 
 
@@ -158,8 +134,8 @@ lprint:	$(OBJS)
 	echo Linking $@...
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 	if test `uname` = Darwin; then \
-		echo Code-signing $@...; \
-		codesign -s "$(CODESIGN_IDENTITY)" $@; \
+	    echo Code-signing $@...; \
+	    codesign $(CSFLAGS) $@; \
 	fi
 
 
@@ -167,26 +143,19 @@ lprint:	$(OBJS)
 # directory...
 resheaders:
 	echo "Generating lprint-png.h from lprint.png..."
-	echo "static const unsigned char lprint_png[] =" >static-resources/lprint-png.h
-	echo "{" >>static-resources/lprint-png.h
-	od -t x1 -A n -v static-resources/lprint.png | awk '{printf("  "); for (i = 1; i <= NF; i ++) printf("0x%s,", $$i); print "";}' >>static-resources/lprint-png.h
-	echo "};" >>static-resources/lprint-png.h
-	echo "Generating lprint-large-png.h from lprint-large.png..."
-	echo "static const unsigned char lprint_large_png[] =" >static-resources/lprint-large-png.h
-	echo "{" >>static-resources/lprint-large-png.h
-	od -t x1 -A n -v static-resources/lprint-large.png | awk '{printf("  "); for (i = 1; i <= NF; i ++) printf("0x%s,", $$i); print "";}' >>static-resources/lprint-large-png.h
-	echo "};" >>static-resources/lprint-large-png.h
+	pappl-makeresheader static-resources/lprint.png >static-resources/lprint-png.h
+	pappl-makeresheader static-resources/lprint-large.png >static-resources/lprint-large-png.h
 	for lang in $(LANGUAGES); do \
 		echo "Generating lprint-$$lang-strings.h from lprint-$$lang.strings..."; \
-		echo "static const char *lprint_$${lang}_strings =" >static-resources/lprint-$$lang-strings.h; \
-		sed -e '1,$$s/"/\\"/g' static-resources/lprint-$$lang.strings | awk '{print "\"" $$0 "\\n\""}' >>static-resources/lprint-$$lang-strings.h; \
-		echo ";" >>static-resources/lprint-$$lang-strings.h; \
+		pappl-makeresheader static-resources/lprint-$$lang.strings >static-resources/lprint-$$lang-strings.h; \
 	done
 
 
 # Dependencies...
-$(OBJS):	common.h config.h device.h driver.h lprint.h Makefile
-server-client.o: \
+$(OBJS):	config.h lprint.h Makefile
+lprint.o:	\
+		lprint-dymo.h \
+		lprint-zpl.h \
 		static-resources/lprint-png.h \
 		static-resources/lprint-large-png.h \
 		static-resources/lprint-de-strings.h \
@@ -194,5 +163,3 @@ server-client.o: \
 		static-resources/lprint-es-strings.h \
 		static-resources/lprint-fr-strings.h \
 		static-resources/lprint-it-strings.h
-server-print.o: dither.h
-
