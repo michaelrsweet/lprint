@@ -33,7 +33,8 @@ LPrint depends on:
 
 - A POSIX-compliant "make" program (both GNU and BSD make are known to work),
 - A C99 compiler (both Clang and GCC are known to work),
-- [PAPPL](https://www.msweet.org/pappl) 1.1 or later.
+- [PAPPL](https://www.msweet.org/pappl) 1.0 or later.
+- [CUPS](https://openprinting.github.io/cups) 2.2 or later (for libcups).
 
 
 Supported Printers

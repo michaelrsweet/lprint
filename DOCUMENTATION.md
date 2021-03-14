@@ -1,12 +1,11 @@
 LPrint Documentation
 ====================
 
-LPrint v1.0 - February 17, 2020
-Copyright 2019-2020 by Michael R Sweet
+LPrint v1.1 - March 14, 2021
+Copyright 2019-2021 by Michael R Sweet
 
-LPrint is licensed under the Apache License Version 2.0 with an exception to
-allow linking against GPL2/LGPL2 software (like older versions of CUPS).  See
-the files "LICENSE" and "NOTICE" for more information.
+LPrint is licensed under the Apache License Version 2.0.  See the files
+"LICENSE" and "NOTICE" for more information.
 
 
 Table of Contents
@@ -28,7 +27,7 @@ Overview
 
 LPrint is a label printer application for macOS® and Linux®.  I wrote it in
 response to criticism that coming changes in CUPS will leave users of label
-printers in the cold - see CUPS Github issue #5271.
+printers in the cold - see Apple CUPS Github issue #5271.
 
 Basically, LPrint is a print spooler optimized for label printing.  It accepts
 "raw" print data as well as PNG images (like those used for shipping labels by
@@ -45,9 +44,10 @@ installed capabilities.  And you can configure the default values of all
 options as well as manually configure the media that is loaded in each printer.
 
 LPrint also offers a simple network server mode that makes any label printers
-appear as IPP Everywhere™/AirPrint™ printers on your network.  Thus, any macOS,
-iOS®, or Linux client can use any label printer supported by LPrint.  And you
-can, of course, send jobs from LPrint to an LPrint server on the network.
+appear as IPP Everywhere™/AirPrint™/Mopria™ printers on your network.  Thus, any
+Android™, Chrome OS™, iOS®, Linux, macOS, or Windows 10 client can use any label
+printer supported by LPrint.  And you can, of course, send jobs from LPrint to
+an LPrint server on the network.
 
 Finally, LPrint offers command-line and web-based monitoring of printer and
 job status.
@@ -65,10 +65,9 @@ A disk image is included with all source releases on Github for use on macOS
 10.14 and higher.
 
 If you need to install LPrint from source, you'll need a "make" program, a C99
-compiler (Clang and GCC work), the CUPS developer files, the PNG library and
-headers, and the LIBUSB library and headers.  Once the prerequisites are
-installed on your system, use the following commands to install LPrint to
-"/usr/local/bin":
+compiler (Clang and GCC work), the CUPS developer files, and the PAPPL developer
+files.  Once the prerequisites are installed on your system, use the following
+commands to install LPrint to "/usr/local/bin":
 
     ./configure
     make

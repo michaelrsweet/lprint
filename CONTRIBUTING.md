@@ -8,5 +8,4 @@ are reported on Github.
 
 Contributions should be submitted as pull requests on the
 [LPrint Github project](https://github.com/michaelrsweet/lprint).  New code
-MUST be supplied under the existing LPrint license (Apache 2.0 with the GPL2
-exception).
+MUST be supplied under the existing LPrint license (Apache 2.0).
