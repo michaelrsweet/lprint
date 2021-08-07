@@ -187,10 +187,15 @@ lprintZPL(
     data->x_resolution[0] = 203;
     data->y_resolution[0] = 203;
   }
-  else
+  else if (strstr(driver_name, "-300dpi"))
   {
     data->x_resolution[0] = 300;
     data->y_resolution[0] = 300;
+  }
+  else
+  {
+    data->x_resolution[0] = 600;
+    data->y_resolution[0] = 600;
   }
 
   if (!strncmp(driver_name, "zpl_2inch-", 16))

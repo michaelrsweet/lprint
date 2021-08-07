@@ -6,6 +6,7 @@ v1.1 - Pending
 
 - Switched to PAPPL (Issue #20, #35)
 - `lprint default` and `lprint delete` did not work (Issue #17)
+- Added support for 600dpi ZPL thermal transfer printers
 
 
 v1.0 - February 17, 2020
