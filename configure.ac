@@ -97,11 +97,11 @@ AS_IF([$PKGCONFIG --exists cups], [
 
 
 dnl PAPPL library...
-AS_IF([$PKGCONFIG --exists pappl], [
+AS_IF([$PKGCONFIG --exists pappl --atleast-version=1.1], [
     CFLAGS="$CFLAGS $($PKGCONFIG --cflags pappl)"
     LIBS="$LIBS $($PKGCONFIG --libs pappl)"
 ], [
-    AC_MSG_ERROR([PAPPL is required for LPrint.])
+    AC_MSG_ERROR([PAPPL 1,1 or later is required for LPrint.])
 ])
 
 

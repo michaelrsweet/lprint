@@ -3842,7 +3842,7 @@ else $as_nop
 fi
 
 
-if $PKGCONFIG --exists pappl
+if $PKGCONFIG --exists pappl --atleast-version=1.1
 then :
 
     CFLAGS="$CFLAGS $($PKGCONFIG --cflags pappl)"
@@ -3850,7 +3850,7 @@ then :
 
 else $as_nop
 
-    as_fn_error $? "PAPPL is required for LPrint." "$LINENO" 5
+    as_fn_error $? "PAPPL 1,1 or later is required for LPrint." "$LINENO" 5
 
 fi
 
