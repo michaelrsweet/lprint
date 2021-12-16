@@ -21,6 +21,7 @@
 static pappl_pr_driver_t	lprint_drivers[] =
 {
 #include "lprint-dymo.h"
+#include "lprint-epl2.h"
 #include "lprint-zpl.h"
 };
 
@@ -66,13 +67,15 @@ lprintDriverCallback(
   {
     if (!strcmp(driver_name, lprint_drivers[i].name))
     {
-      strncpy(data->make_and_model, lprint_drivers[i].description, sizeof(data->make_and_model) - 1);
+      papplCopyString(data->make_and_model, lprint_drivers[i].description, sizeof(data->make_and_model));
       break;
     }
   }
 
   if (!strncmp(driver_name, "dymo_", 5))
     return (lprintDYMO(system, driver_name, device_uri, device_id, data, attrs, cbdata));
+  else if (!strncmp(driver_name, "epl2_", 5))
+    return (lprintEPL2(system, driver_name, device_uri, device_id, data, attrs, cbdata));
   else if (!strncmp(driver_name, "zpl_", 4))
     return (lprintZPL(system, driver_name, device_uri, device_id, data, attrs, cbdata));
   else

@@ -198,6 +198,9 @@ lprintZPL(
     data->y_resolution[0] = 600;
   }
 
+  if (strstr(driver_name, "-cutter"))
+    data->finishings |= PAPPL_FINISHINGS_TRIM;
+
   if (!strncmp(driver_name, "zpl_2inch-", 16))
   {
     // 2 inch printer...
@@ -416,6 +419,9 @@ lprint_zpl_rendpage(
   papplDevicePrintf(device, "^PQ%d, 0, 0, N\n", options->copies);
   papplDevicePuts(device, "^FO0,0^XGR:LPRINT.GRF,1,1^FS\n^XZ\n");
   papplDevicePuts(device, "^XA\n^IDR:LPRINT.GRF^FS\n^XZ\n");
+
+  if (options->finishings & PAPPL_FINISHINGS_TRIM)
+    papplDevicePuts(device, "^CN1\n");
 
   free(zpl->comp_buffer);
   free(zpl->last_buffer);

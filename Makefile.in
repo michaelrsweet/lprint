@@ -89,6 +89,7 @@ MAN5		=	\
 OBJS		=	\
 			lprint-common.o \
 			lprint-dymo.o \
+			lprint-epl2.o \
 			lprint-zpl.o \
 			lprint.o
 TARGETS		=	\
