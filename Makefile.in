@@ -159,8 +159,23 @@ lprint.o:	\
 		lprint-zpl.h \
 		static-resources/lprint-png.h \
 		static-resources/lprint-large-png.h \
+		static-resources/lprint-small-png.h \
 		static-resources/lprint-de-strings.h \
 		static-resources/lprint-en-strings.h \
 		static-resources/lprint-es-strings.h \
 		static-resources/lprint-fr-strings.h \
 		static-resources/lprint-it-strings.h
+
+
+# Sign the LPrint binary and make a ZIP file...  Set the CODESIGN_IDENTITY,
+# APPLEID, and TEAMID environment variables from the Apple developer pages.
+macos:
+	echo Creating archive for notarization
+	rm -f lprint-$(LPRINT_VERSION)-macos.zip
+	zip -v9 lprint-$(LPRINT_VERSION)-macos.zip lprint README.md man/lprint*.[1-9]
+	echo Notarizing application
+	xcrun altool --notarize-app -f lprint-$(LPRINT_VERSION)-macos.zip \
+		--primary-bundle-id org.msweet.lprint \
+		--username "$(APPLEID)" \
+		--password "@keychain:AC_$(TEAMID)" \
+		--asc-provider "$(TEAMID)"
