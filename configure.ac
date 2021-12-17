@@ -101,13 +101,13 @@ AS_IF([$PKGCONFIG --exists pappl --atleast-version=1.1], [
     CFLAGS="$CFLAGS $($PKGCONFIG --cflags pappl)"
     LIBS="$LIBS $($PKGCONFIG --libs pappl)"
 ], [
-    AC_MSG_ERROR([PAPPL 1,1 or later is required for LPrint.])
+    AC_MSG_ERROR([PAPPL 1.1 or later is required for LPrint.])
 ])
 
 
 dnl Extra compiler options...
 AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [turn on debugging, default=no]))
-AC_ARG_ENABLE(maintainer, AS_HELP_STRING([--enable-maintainer], [turn on maintainer mode, default=no]))
+AC_ARG_ENABLE([maintainer], AS_HELP_STRING([--enable-maintainer], [turn on maintainer mode, default=no]))
 AC_ARG_ENABLE([sanitizer], AS_HELP_STRING([--enable-sanitizer], [build with AddressSanitizer, default=no]))
 
 AS_IF([test x$enable_debug = xyes], [

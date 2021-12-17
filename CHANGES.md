@@ -6,8 +6,12 @@ v1.1 - Pending
 
 - Switched to PAPPL (Issue #20, #35)
 - `lprint default` and `lprint delete` did not work (Issue #17)
-- Added support for 600dpi ZPL thermal transfer printers
+- The server no longer crashes on `SIGINT` (Issue #18)
+- Temporarily removed support for DYMO LabelWriter Wireless printer (Issue #23)
+- The server now correctly reports date and time information to IPP clients when
+  no printers are added (Issue #26)
 - Added support for ZPL2 printers (Issue #38)
+- Added support for 600dpi ZPL thermal transfer printers
 
 
 v1.0 - February 17, 2020

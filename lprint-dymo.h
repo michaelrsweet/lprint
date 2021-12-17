@@ -31,5 +31,7 @@
 { "dymo_lw-duo-tape",        "Dymo LabelWriter DUO Tape", "", NULL },
 { "dymo_lw-duo-tape-128",    "Dymo LabelWriter DUO Tape 128", "", NULL },
 { "dymo_lw-se450",           "Dymo LabelWriter SE450", "", NULL },
-{ "dymo_lw-wireless",        "Dymo LabelWriter Wireless", "", NULL },
-
+//{ "dymo_lw-wireless",        "Dymo LabelWriter Wireless", "", NULL },
+//{ "dymo_lw-550",             "Dymo LabelWriter 550", "", NULL },
+//{ "dymo_lw-550-turbo",       "Dymo LabelWriter 550 Turbo", "", NULL },
+//{ "dymo_lw-5xl",             "Dymo LabelWriter 5XL", "", NULL },
