@@ -25,7 +25,7 @@ icon: static-resources/lprint.png
 
 apps:
     lprint:
-        command: bin/lprint
+        command: usr/local/bin/lprint
         plugs: [avahi-control, home, network, network-bind, network-manager, raw-usb]
 
 parts:
