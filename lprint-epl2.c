@@ -178,7 +178,7 @@ lprintEPL2(
     data->num_media = (int)(sizeof(lprint_epl2_2inch_media) / sizeof(lprint_epl2_2inch_media[0]));
     memcpy(data->media, lprint_epl2_2inch_media, sizeof(lprint_epl2_2inch_media));
 
-    strlcpy(data->media_default.size_name, "oe_2x3-label_2x3in", sizeof(data->media_default.size_name));
+    papplCopyString(data->media_default.size_name, "oe_2x3-label_2x3in", sizeof(data->media_default.size_name));
   }
   else
   {
@@ -186,7 +186,7 @@ lprintEPL2(
     data->num_media = (int)(sizeof(lprint_epl2_4inch_media) / sizeof(lprint_epl2_4inch_media[0]));
     memcpy(data->media, lprint_epl2_4inch_media, sizeof(lprint_epl2_4inch_media));
 
-    strlcpy(data->media_default.size_name, "oe_4x6-label_4x6in", sizeof(data->media_default.size_name));
+    papplCopyString(data->media_default.size_name, "oe_4x6-label_4x6in", sizeof(data->media_default.size_name));
   }
 
   data->num_source = 1;
@@ -200,11 +200,11 @@ lprintEPL2(
   data->media_default.bottom_margin = data->bottom_top;
   data->media_default.left_margin   = data->left_right;
   data->media_default.right_margin  = data->left_right;
-  strlcpy(data->media_default.source, "main-roll", sizeof(data->media_default.source));
+  papplCopyString(data->media_default.source, "main-roll", sizeof(data->media_default.source));
   data->media_default.top_margin = data->bottom_top;
   data->media_default.top_offset = 0;
   data->media_default.tracking   = PAPPL_MEDIA_TRACKING_MARK;
-  strlcpy(data->media_default.type, "labels", sizeof(data->media_default.type));
+  papplCopyString(data->media_default.type, "labels", sizeof(data->media_default.type));
 
   data->media_ready[0] = data->media_default;
 

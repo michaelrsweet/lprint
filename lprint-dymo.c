@@ -125,14 +125,14 @@ lprintDYMO(
     data->source[0]  = "main-roll";
     data->source[1]  = "alternate-roll";
 
-    strlcpy(data->media_ready[0].size_name, "oe_multipurpose-label_2x2.3125in", sizeof(data->media_ready[0].size_name));
-    strlcpy(data->media_ready[1].size_name, "oe_address-label_1.25x3.5in", sizeof(data->media_ready[1].size_name));
+    papplCopyString(data->media_ready[0].size_name, "oe_multipurpose-label_2x2.3125in", sizeof(data->media_ready[0].size_name));
+    papplCopyString(data->media_ready[1].size_name, "oe_address-label_1.25x3.5in", sizeof(data->media_ready[1].size_name));
   }
   else
   {
     data->num_source = 1;
     data->source[0]  = "main-roll";
-    strlcpy(data->media_ready[0].size_name, "oe_address-label_1.25x3.5in", sizeof(data->media_ready[0].size_name));
+    papplCopyString(data->media_ready[0].size_name, "oe_address-label_1.25x3.5in", sizeof(data->media_ready[0].size_name));
   }
 
   data->tracking_supported = PAPPL_MEDIA_TRACKING_WEB;
@@ -147,9 +147,9 @@ lprintDYMO(
   data->media_default.size_length   = 8890;
   data->media_default.top_margin    = data->bottom_top;
   data->media_default.tracking      = PAPPL_MEDIA_TRACKING_WEB;
-  strlcpy(data->media_default.size_name, "oe_address-label_1.25x3.5in", sizeof(data->media_default.size_name));
-  strlcpy(data->media_default.source, data->source[0], sizeof(data->media_default.source));
-  strlcpy(data->media_default.type, data->type[0], sizeof(data->media_default.type));
+  papplCopyString(data->media_default.size_name, "oe_address-label_1.25x3.5in", sizeof(data->media_default.size_name));
+  papplCopyString(data->media_default.source, data->source[0], sizeof(data->media_default.source));
+  papplCopyString(data->media_default.type, data->type[0], sizeof(data->media_default.type));
 
   for (i = 0; i < data->num_source; i ++)
   {
@@ -162,8 +162,8 @@ lprintDYMO(
     data->media_ready[i].size_length   = pwg->length;
     data->media_ready[i].top_margin    = data->bottom_top;
     data->media_ready[i].tracking      = PAPPL_MEDIA_TRACKING_WEB;
-    strlcpy(data->media_ready[i].source, data->source[i], sizeof(data->media_ready[i].source));
-    strlcpy(data->media_ready[i].type, data->type[0], sizeof(data->media_ready[i].type));
+    papplCopyString(data->media_ready[i].source, data->source[i], sizeof(data->media_ready[i].source));
+    papplCopyString(data->media_ready[i].type, data->type[0], sizeof(data->media_ready[i].type));
   }
 
   data->darkness_configured = 50;
