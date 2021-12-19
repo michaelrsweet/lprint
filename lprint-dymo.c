@@ -113,6 +113,8 @@ lprintDYMO(
   data->x_resolution[0] = 300;
   data->y_resolution[0] = 300;
 
+  data->x_default = data->y_default = 300;
+
   data->left_right = 100;
   data->bottom_top = 525;
 

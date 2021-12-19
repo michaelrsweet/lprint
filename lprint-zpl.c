@@ -75,8 +75,8 @@ static const char * const lprint_zpl_4inch_media[] =
   "oe_2x4-label_2x4in",
   "oe_2x5.5-label_2x5.5in",
 
-  "oe_2.25x0.5-label_2.25xin",
-  "oe_2.25x1.25-label_2.25xin",
+  "oe_2.25x0.5-label_2.25x0.5in",
+  "oe_2.25x1.25-label_2.25x1.25in",
   "oe_30859-paint-can-label_2.25x3.125in",
   "oe_2.25x4-label_2.25x4in",
   "oe_2.25x5.5-label_2.25x5.5in",
@@ -198,6 +198,8 @@ lprintZPL(
     data->y_resolution[0] = 600;
   }
 
+  data->x_default = data->y_default = data->x_resolution[0];
+
   if (strstr(driver_name, "-cutter"))
     data->finishings |= PAPPL_FINISHINGS_TRIM;
 
@@ -208,6 +210,8 @@ lprintZPL(
     memcpy(data->media, lprint_zpl_2inch_media, sizeof(lprint_zpl_2inch_media));
 
     papplCopyString(data->media_default.size_name, "oe_2x3-label_2x3in", sizeof(data->media_default.size_name));
+    data->media_default.size_width  = 2 * 2540;
+    data->media_default.size_length = 3 * 2540;
   }
   else
   {
@@ -215,7 +219,9 @@ lprintZPL(
     data->num_media = (int)(sizeof(lprint_zpl_4inch_media) / sizeof(lprint_zpl_4inch_media[0]));
     memcpy(data->media, lprint_zpl_4inch_media, sizeof(lprint_zpl_4inch_media));
 
-    papplCopyString(data->media_default.size_name, "oe_4x6-label_4x6in", sizeof(data->media_default.size_name));
+    papplCopyString(data->media_default.size_name, "na_index-4x6_4x6in", sizeof(data->media_default.size_name));
+    data->media_default.size_width  = 4 * 2540;
+    data->media_default.size_length = 6 * 2540;
   }
 
   data->num_source = 1;

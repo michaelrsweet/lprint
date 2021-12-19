@@ -91,6 +91,36 @@ driver_cb(
     }
   }
 
+  // AirPrint version...
+  data->num_features = 1;
+  data->features[0]  = "airprint-2.1";
+
+  // Pages per minute (interpret as "labels per minute")
+  data->ppm = 60;
+
+  // "printer-kind" values...
+  data->kind = PAPPL_KIND_LABEL;
+
+  // Color values...
+  data->color_supported   = PAPPL_COLOR_MODE_AUTO | PAPPL_COLOR_MODE_MONOCHROME;
+  data->color_default     = PAPPL_COLOR_MODE_MONOCHROME;
+  data->raster_types      = PAPPL_PWG_RASTER_TYPE_BLACK_1 | PAPPL_PWG_RASTER_TYPE_BLACK_8 | PAPPL_PWG_RASTER_TYPE_SGRAY_8;
+  data->force_raster_type = PAPPL_PWG_RASTER_TYPE_BLACK_1;
+
+  // "print-quality-default" value...
+  data->quality_default = IPP_QUALITY_NORMAL;
+
+  // "sides" values...
+  data->sides_supported = PAPPL_SIDES_ONE_SIDED;
+  data->sides_default   = PAPPL_SIDES_ONE_SIDED;
+
+  // "orientation-requested-default" value...
+  data->orient_default = IPP_ORIENT_NONE;
+
+  // Media capabilities...
+  data->input_face_up  = true;
+  data->output_face_up = true;
+
   // Standard icons...
   data->icons[0].data    = lprint_small_png;
   data->icons[0].datalen = sizeof(lprint_small_png);
@@ -180,7 +210,11 @@ system_cb(
   }
 
   // State file...
-  if ((val = getenv("XDG_DATA_HOME")) != NULL)
+  if ((val = getenv("SNAP_DATA")) != NULL)
+  {
+    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/lprintrc", val);
+  }
+  else if ((val = getenv("XDG_DATA_HOME")) != NULL)
   {
     snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/.lprintrc", val);
   }
@@ -189,10 +223,18 @@ system_cb(
   {
     snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/AppData/Local/lprint.ini", val);
   }
+  else
+  {
+    papplCopyString(lprint_statefile, "/lprint.ini", sizeof(lprint_statefile));
+  }
 #else
   else if ((val = getenv("HOME")) != NULL)
   {
     snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/.lprintrc", val);
+  }
+  else
+  {
+    papplCopyString(lprint_statefile, "/etc/lprintrc", sizeof(lprint_statefile));
   }
 #endif // _WIN32
 
