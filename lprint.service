@@ -1,0 +1,13 @@
+[Unit]
+Description=LPrint Service
+After=network.target nss-lookup.target
+Requires=avahi-daemon.socket
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+ExecStart=/usr/local/bin/lprint server -o log-file=- -o log-level=debug
+Type=simple
+Restart=on-failure
+
