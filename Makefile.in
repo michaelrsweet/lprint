@@ -25,8 +25,7 @@ ARFLAGS		=	@ARFLAGS@
 ASAN_OPTIONS	=	leak_check_at_exit=false
 CC		=	@CC@
 CFLAGS		=	-I.. @CFLAGS@ $(OPTIM)
-CODESIGN_IDENTITY =	-
-CSFLAGS		=	-s "$(CODESIGN_IDENTITY)" --timestamp @CSFLAGS@
+CSFLAGS		=	-s "$${CODESIGN_IDENTITY:=-}" --timestamp @CSFLAGS@
 INSTALL		=	@INSTALL@
 LDFLAGS		=	@LDFLAGS@ $(OPTIM)
 LIBS		=	@LIBS@
@@ -138,7 +137,7 @@ lprint:	$(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 	if test `uname` = Darwin; then \
 	    echo "Code-signing $@..."; \
-	    codesign $(CSFLAGS) $@; \
+	    codesign $(CSFLAGS) -i org.msweet.lprint $@; \
 	fi
 
 
@@ -180,9 +179,9 @@ macos:
 	zip -v9 lprint.zip lprint
 	echo Notarizing application
 	xcrun notarytool submit lprint.zip \
-	    --apple-id "$(APPLEID)" \
-	    --keychain-profile "AC_$(TEAMID)" \
-	    --team-id "$(TEAMID)" \
+	    --apple-id "$${APPLEID}" \
+	    --keychain-profile "AC_$${TEAMID}" \
+	    --team-id "$${TEAMID}" \
 	    --wait
 	rm -f lprint.zip
 	echo "Creating the macOS package..."
@@ -192,5 +191,5 @@ macos:
 	    --identifier org.msweet.lprint \
 	    --version $(LPRINT_VERSION) \
 	    --min-os-version 10.14 \
-	    --sign "$(PKGSIGN_IDENTITY)" --timestamp \
+	    --sign "$${PKGSIGN_IDENTITY}" --timestamp \
 	    lprint-$(LPRINT_VERSION)-macos.pkg
