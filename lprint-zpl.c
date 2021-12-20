@@ -224,6 +224,8 @@ lprintZPL(
     data->media_default.size_length = 6 * 2540;
   }
 
+  data->bottom_top = data->left_right = 1;
+
   data->num_source = 1;
   data->source[0]  = "main-roll";
 
@@ -519,6 +521,9 @@ lprint_zpl_rstartpage(
 
   (void)page;
 
+  // media
+  papplDevicePrintf(device, "~LL%u\n~PW%u\n", options->header.cupsHeight, options->header.cupsWidth);
+
   // print-darkness
   papplDevicePrintf(device, "~MD%d\n", 30 * options->print_darkness / 100);
 
@@ -640,7 +645,7 @@ lprint_zpl_status(
 //
 // ~HI returns model, firmware version, and dots-per-millimeter
 // ~HQES returns status information
-// ~HS returns other status and mode information
+// ~HS returns label length and other status/mode information
 
   return (true);
 }

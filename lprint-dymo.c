@@ -317,12 +317,14 @@ lprint_dymo_rstartpage(
     pappl_device_t     *device,		// I - Output device
     unsigned           page)		// I - Page number
 {
+  pappl_pr_driver_data_t data;		// Generic driver data
   lprint_dymo_t		*dymo = (lprint_dymo_t *)papplJobGetData(job);
 					// DYMO driver data
   int			darkness = options->darkness_configured + options->print_darkness;
 					// Combined density
   const char		*density = "cdeg";
 					// Density codes
+  int			i;		// Looping var
 
 
   (void)page;
@@ -337,7 +339,23 @@ lprint_dymo_rstartpage(
   papplDevicePrintf(device, "\033B%c", 0);
   papplDevicePrintf(device, "\033L%c%c", options->header.cupsHeight >> 8, options->header.cupsHeight);
   papplDevicePrintf(device, "\033D%c", options->header.cupsBytesPerLine - 1);
-  papplDevicePrintf(device, "\033q%d", !strcmp(options->media.source, "alternate-roll") ? 2 : 1);
+
+  papplPrinterGetDriverData(papplJobGetPrinter(job), &data);
+
+  // Match roll number to loaded media...
+  for (i = 0; i < data.num_source; i ++)
+  {
+    if (data.media_ready[i].size_width == options->media.size_width && data.media_ready[i].size_length == options->media.size_length)
+      break;
+  }
+
+  if (i >= data.num_source)
+  {
+    // No match, so use what the client sent...
+    i = !strcmp(options->media.source, "alternate-roll");
+  }
+
+  papplDevicePrintf(device, "\033q%d", i + 1);
 
   if (darkness < 0)
     darkness = 0;

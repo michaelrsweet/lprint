@@ -195,6 +195,8 @@ lprintEPL2(
     data->media_default.size_length = 6 * 2540;
   }
 
+  data->bottom_top = data->left_right = 1;
+
   data->num_source = 1;
   data->source[0]  = "main-roll";
 
