@@ -177,13 +177,13 @@ lprint.o:	\
 macos:
 	echo "Creating archive for notarization..."
 	rm -f lprint.zip
-	zip -v9 lprint.zip lprint README.md man/lprint*.[1-9]
+	zip -v9 lprint.zip lprint
 	echo Notarizing application
-	xcrun altool --notarize-app -f lprint.zip \
-	    --primary-bundle-id org.msweet.lprint \
-	    --username "$(APPLEID)" \
-	    --password "@keychain:AC_$(TEAMID)" \
-	    --asc-provider "$(TEAMID)"
+	xcrun notarytool submit lprint.zip \
+	    --apple-id "$(APPLEID)" \
+	    --keychain-profile "AC_$(TEAMID)" \
+	    --team-id "$(TEAMID)" \
+	    --wait
 	rm -f lprint.zip
 	echo "Creating the macOS package..."
 	rm -rf /private/tmp/lprint-$(LPRINT_VERSION)
@@ -193,4 +193,4 @@ macos:
 	    --version $(LPRINT_VERSION) \
 	    --min-os-version 10.14 \
 	    --sign "$(PKGSIGN_IDENTITY)" --timestamp \
-	    lprint-$(LPRINT_VERSION).pkg
+	    lprint-$(LPRINT_VERSION)-macos.pkg
