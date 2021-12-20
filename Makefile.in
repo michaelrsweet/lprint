@@ -114,8 +114,10 @@ distclean:	clean
 
 # Install everything...
 install:	all
+	echo "Installing lprint to $(BUILDROOT)$(bindir)..."
 	$(INSTALL) -d -m 755 $(BUILDROOT)$(bindir)
 	$(INSTALL) -c -m 755 lprint $(BUILDROOT)$(bindir)
+	echo "Installing man pages to $(BUILDROOT)$(mandir)..."
 	$(INSTALL) -d -m 755 $(BUILDROOT)$(mandir)/man1
 	for file in $(MAN1); do \
 	    $(INSTALL) -c -m 644 $$file $(BUILDROOT)$(mandir)/man1; \
@@ -135,7 +137,7 @@ lprint:	$(OBJS)
 	echo Linking $@...
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 	if test `uname` = Darwin; then \
-	    echo Code-signing $@...; \
+	    echo "Code-signing $@..."; \
 	    codesign $(CSFLAGS) $@; \
 	fi
 
@@ -143,12 +145,13 @@ lprint:	$(OBJS)
 # Generate resource headers from the corresponding files in the resource
 # directory...
 resheaders:
-	echo "Generating lprint-png.h from lprint.png..."
-	pappl-makeresheader static-resources/lprint.png >static-resources/lprint-png.h
-	pappl-makeresheader static-resources/lprint-large.png >static-resources/lprint-large-png.h
+	for file in lprint lprint-large lprint-small; do \
+	    echo "Generating $$file-png.h from $$file.png..."; \
+	    pappl-makeresheader static-resources/$$file.png >static-resources/$$file-png.h; \
+	done
 	for lang in $(LANGUAGES); do \
-		echo "Generating lprint-$$lang-strings.h from lprint-$$lang.strings..."; \
-		pappl-makeresheader static-resources/lprint-$$lang.strings >static-resources/lprint-$$lang-strings.h; \
+	    echo "Generating lprint-$$lang-strings.h from lprint-$$lang.strings..."; \
+	    pappl-makeresheader static-resources/lprint-$$lang.strings >static-resources/lprint-$$lang-strings.h; \
 	done
 
 
@@ -167,15 +170,27 @@ lprint.o:	\
 		static-resources/lprint-it-strings.h
 
 
-# Sign the LPrint binary and make a ZIP file...  Set the CODESIGN_IDENTITY,
-# APPLEID, and TEAMID environment variables from the Apple developer pages.
+# Notarize the lprint executable and make the macOS package...
+#
+# Set the APPLEID, CODESIGN_IDENTITY, PKGSIGN_IDENTITY, and TEAMID environment
+# variables from the Apple developer pages.
 macos:
-	echo Creating archive for notarization
-	rm -f lprint-$(LPRINT_VERSION)-macos.zip
-	zip -v9 lprint-$(LPRINT_VERSION)-macos.zip lprint README.md man/lprint*.[1-9]
+	echo "Creating archive for notarization..."
+	rm -f lprint.zip
+	zip -v9 lprint.zip lprint README.md man/lprint*.[1-9]
 	echo Notarizing application
-	xcrun altool --notarize-app -f lprint-$(LPRINT_VERSION)-macos.zip \
-		--primary-bundle-id org.msweet.lprint \
-		--username "$(APPLEID)" \
-		--password "@keychain:AC_$(TEAMID)" \
-		--asc-provider "$(TEAMID)"
+	xcrun altool --notarize-app -f lprint.zip \
+	    --primary-bundle-id org.msweet.lprint \
+	    --username "$(APPLEID)" \
+	    --password "@keychain:AC_$(TEAMID)" \
+	    --asc-provider "$(TEAMID)"
+	rm -f lprint.zip
+	echo "Creating the macOS package..."
+	rm -rf /private/tmp/lprint-$(LPRINT_VERSION)
+	make BUILDROOT="/private/tmp/lprint-$(LPRINT_VERSION)" install
+	pkgbuild --root /private/tmp/lprint-$(LPRINT_VERSION) \
+	    --identifier org.msweet.lprint \
+	    --version $(LPRINT_VERSION) \
+	    --min-os-version 10.14 \
+	    --sign "$(PKGSIGN_IDENTITY)" --timestamp \
+	    lprint-$(LPRINT_VERSION).pkg
