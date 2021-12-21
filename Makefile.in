@@ -89,6 +89,7 @@ OBJS		=	\
 			lprint-common.o \
 			lprint-dymo.o \
 			lprint-epl2.o \
+			lprint-testpage.o \
 			lprint-zpl.o \
 			lprint.o
 TARGETS		=	\
