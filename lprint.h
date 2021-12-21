@@ -46,11 +46,21 @@
 
 
 //
+// Constants...
+//
+
+#  define LPRINT_TESTPAGE_MIMETYPE	"application/vnd.lprint-test"
+#  define LPRINT_TESTPAGE_HEADER	"T*E*S*T*P*A*G*E*"
+
+
+//
 // Functions...
 //
 
 extern bool	lprintDYMO(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern bool	lprintEPL2(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
+extern bool	lprintTestFilterCB(pappl_job_t *job, pappl_device_t *device, void *data);
+extern const char *lprintTestPageCB(pappl_printer_t *printer, char *buffer, size_t bufsize);
 extern bool	lprintZPL(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 
 // Future planned drivers that are not yet implemented

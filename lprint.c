@@ -27,6 +27,7 @@
 //
 
 static bool	driver_cb(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
+static const char *mime_cb(const unsigned char *header, size_t headersize, void *data);
 static pappl_system_t *system_cb(int num_options, cups_option_t *options, void *data);
 
 
@@ -129,6 +130,9 @@ driver_cb(
   data->icons[2].data    = lprint_large_png;
   data->icons[2].datalen = sizeof(lprint_large_png);
 
+  // Test page callback...
+  data->testpage_cb = lprintTestPageCB;
+
   // Use the corresponding sub-driver callback to set things up...
   if (!strncmp(driver_name, "dymo_", 5))
     return (lprintDYMO(system, driver_name, device_uri, device_id, data, attrs, cbdata));
@@ -139,6 +143,27 @@ driver_cb(
   else
     return (false);
 }
+
+
+//
+// 'mime_cb()' - MIME typing callback...
+//
+
+static const char *			// O - MIME media type or `NULL` if none
+mime_cb(const unsigned char *header,	// I - Header data
+        size_t              headersize,	// I - Size of header data
+        void                *cbdata)	// I - Callback data (not used)
+{
+  char	testpage[] = LPRINT_TESTPAGE_HEADER;
+					// Test page file header
+
+
+  if (headersize >= sizeof(testpage) && !memcmp(header, testpage, sizeof(testpage)))
+    return (LPRINT_TESTPAGE_MIMETYPE);
+  else
+    return (NULL);
+}
+
 
 
 //
@@ -244,6 +269,9 @@ system_cb(
 
   papplSystemAddListeners(system, NULL);
   papplSystemSetHostName(system, hostname);
+
+  papplSystemSetMIMECallback(system, mime_cb, NULL);
+  papplSystemAddMIMEFilter(system, LPRINT_TESTPAGE_MIMETYPE, "image/pwg-raster", lprintTestFilterCB, NULL);
 
   papplSystemSetPrinterDrivers(system, (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])), lprint_drivers, /*autoadd_cb*/NULL, /*create_cb*/NULL, driver_cb, NULL);
 

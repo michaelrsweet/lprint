@@ -18,6 +18,7 @@
 
 #define ZPL_COMPRESSION 1
 
+
 //
 // Local types...
 //
@@ -403,6 +404,8 @@ lprint_zpl_rendpage(
 
   papplDevicePrintf(device, "^XA\n^POI\n^PW%u\n^LH0,0\n^LT%d\n", options->header.cupsWidth, options->media.top_offset * options->printer_resolution[1] / 2540);
 
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "^XA<LF>^POI<LF>^PW%u<LF>^LH0,0<LF>^LT%d<LF>", options->header.cupsWidth, options->media.top_offset * options->printer_resolution[1] / 2540);
+
   if (options->media.type[0] && strcmp(options->media.type, "labels"))
   {
     // Continuous media, so always set tracking to continuous...
@@ -412,7 +415,7 @@ lprint_zpl_rendpage(
   if (options->media.tracking)
   {
     if (options->media.tracking == PAPPL_MEDIA_TRACKING_CONTINUOUS)
-      papplDevicePrintf(device, "^LL%d\n^MNN\n", options->header.cupsHeight);
+      papplDevicePrintf(device, "^LL%u\n^MNN\n", options->header.cupsHeight);
     else if (options->media.tracking == PAPPL_MEDIA_TRACKING_WEB)
       papplDevicePuts(device, "^MNY\n");
     else
@@ -520,9 +523,6 @@ lprint_zpl_rstartpage(
 
 
   (void)page;
-
-  // media
-  papplDevicePrintf(device, "~LL%u\n~PW%u\n", options->header.cupsHeight, options->header.cupsWidth);
 
   // print-darkness
   papplDevicePrintf(device, "~MD%d\n", 30 * options->print_darkness / 100);
