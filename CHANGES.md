@@ -11,7 +11,8 @@ v1.1 - Pending
   (Issue #26)
 - Fixed a startup bug on macOS (Issue #34)
 - Added support for Zebra/Eltron EPL2 printers (Issue #38)
-- Added support for 600dpi ZPL thermal transfer printers
+- Added support for 600dpi ZPL thermal transfer printers.
+- Added support for ZPL status/ready media updates.
 - Added support for test pages.
 - Temporarily removed support for DYMO LabelWriter Wireless printer (Issue #23)
 
