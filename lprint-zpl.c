@@ -404,8 +404,6 @@ lprint_zpl_rendpage(
 
   papplDevicePrintf(device, "^XA\n^POI\n^PW%u\n^LH0,0\n^LT%d\n", options->header.cupsWidth, options->media.top_offset * options->printer_resolution[1] / 2540);
 
-  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "^XA<LF>^POI<LF>^PW%u<LF>^LH0,0<LF>^LT%d<LF>", options->header.cupsWidth, options->media.top_offset * options->printer_resolution[1] / 2540);
-
   if (options->media.type[0] && strcmp(options->media.type, "labels"))
   {
     // Continuous media, so always set tracking to continuous...
