@@ -16,7 +16,35 @@
 #include "lprint.h"
 
 
+// Define to 1 to use run-length encoding, 0 for uncompressed
 #define ZPL_COMPRESSION 1
+
+// Error and warning bits
+#define ZPL_ERROR_MEDIA_OUT		0x00000001
+#define ZPL_ERROR_RIBBON_OUT		0x00000002
+#define ZPL_ERROR_HEAD_OPEN		0x00000004
+#define ZPL_ERROR_CUTTER_FAULT		0x00000008
+#define ZPL_ERROR_CLEAR_PP_FAILED	0x00008000
+#define ZPL_ERROR_PAPER_FEED		0x00004000
+#define ZPL_ERROR_PRESENTER		0x00002000
+#define ZPL_ERROR_PAPER_JAM		0x00001000
+#define ZPL_ERROR_MARK_NOT_FOUND	0x00080000
+#define ZPL_ERROR_MARK_CALIBRATE	0x00040000
+#define ZPL_ERROR_RETRACT_TIMEOUT	0x00020000
+#define ZPL_ERROR_PAUSED		0x00010000
+
+#define ZPL_WARNING_PAPER_ALMOST_OUT	0x00000008
+#define ZPL_WARNING_REPLACE_PRINTHEAD	0x00000004
+#define ZPL_WARNING_CLEAN_PRINTHEAD	0x00000002
+#define ZPL_WARNING_CALIBRATE_MEDIA	0x00000001
+#define ZPL_WARNING_PAPER_BEFORE_HEAD	0x00000010
+#define ZPL_WARNING_BLACK_MARK		0x00000020
+#define ZPL_WARNING_PAPER_AFTER_HEAD	0x00000040
+#define ZPL_WARNING_LOOP_READY		0x00000080
+#define ZPL_WARNING_PRESENTER		0x00000100
+#define ZPL_WARNING_RETRACT_READY	0x00000200
+#define ZPL_WARNING_IN_RETRACT		0x00000400
+#define ZPL_WARNING_AT_BIN		0x00000800
 
 
 //
@@ -112,6 +140,7 @@ static const char * const lprint_zpl_4inch_media[] =
   "oe_4x5-label_4x5in",
   "na_index-4x6_4x6in",
   "oe_4x6.5-label_4x6.5in",
+  "oe_4x8-label_4x8in",
   "oe_4x13-label_4x13in",
 
   "roll_max_4x39.6in",
@@ -637,13 +666,190 @@ static bool				// O - `true` on success, `false` on failure
 lprint_zpl_status(
     pappl_printer_t *printer)		// I - Printer
 {
-  (void)printer;
+  pappl_device_t	*device;	// Connection to printer
+  char			line[1025],	// Line from printer
+			*lineptr;	// Pointer into line
+  ssize_t		bytes;		// Bytes read
+  unsigned		errors = 0,	// Detected errors
+			warnings = 0;	// Detected warnings
+  pappl_preason_t	reasons;	// "printer-state-reasons" values
+  int			length = 0;	// Label length
+  bool			ret = false;	// Return value
+
+
+  if ((device = papplPrinterOpenDevice(printer)) == NULL)
+  {
+    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to open device for status.");
+    return (false);
+  }
+
+  // Get the printer status...
+  if (papplDevicePuts(device, "~HQES\n") < 0)
+  {
+    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to send HQES status command.");
+    goto done;
+  }
+
+  if ((bytes = papplDeviceRead(device, line, sizeof(line) - 1)) < 0)
+  {
+    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to read HQES status response.");
+    goto done;
+  }
+
+  line[bytes] = '\0';
+
+  papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "HQES returned '%s'.", line);
+
+  if ((lineptr = strstr(line, "ERRORS:")) != NULL)
+    sscanf(lineptr + 7, "%*d%*x%x", &errors);
+  if ((lineptr = strstr(line, "WARNINGS:")) != NULL)
+    sscanf(lineptr + 9, "%*d%*x%x", &warnings);
+
+  reasons = PAPPL_PREASON_NONE;
+
+  if (errors & ZPL_ERROR_MEDIA_OUT)
+    reasons |= PAPPL_PREASON_MEDIA_EMPTY;
+
+  if (errors & ZPL_ERROR_PAPER_JAM)
+    reasons |= PAPPL_PREASON_MEDIA_JAM;
+
+  if (errors & ZPL_ERROR_PAUSED)
+    reasons |= PAPPL_PREASON_OFFLINE;
+
+  if (errors & ZPL_ERROR_RIBBON_OUT)
+    reasons |= PAPPL_PREASON_MARKER_SUPPLY_EMPTY;
+
+  if (errors & ~(ZPL_ERROR_MEDIA_OUT | ZPL_ERROR_PAPER_JAM | ZPL_ERROR_PAUSED))
+  {
+    reasons |= PAPPL_PREASON_OTHER;
+
+    if (errors & ZPL_ERROR_HEAD_OPEN)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_ERROR, "Print head open.");
+    if (errors & ZPL_ERROR_CUTTER_FAULT)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_ERROR, "Cutter fault.");
+    if (errors & ZPL_ERROR_CLEAR_PP_FAILED)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_ERROR, "Clear paper path failed.");
+    if (errors & ZPL_ERROR_PAPER_FEED)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_ERROR, "Paper feed error.");
+    if (errors & ZPL_ERROR_PRESENTER)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_ERROR, "Presenter error.");
+    if (errors & ZPL_ERROR_MARK_NOT_FOUND)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_ERROR, "Mark not found.");
+    if (errors & ZPL_ERROR_MARK_CALIBRATE)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_ERROR, "Mark calibration error.");
+    if (errors & ZPL_ERROR_RETRACT_TIMEOUT)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_ERROR, "Retraction timeout.");
+  }
+
+  if (warnings & ZPL_WARNING_PAPER_ALMOST_OUT)
+    reasons |= PAPPL_PREASON_MEDIA_LOW;
+
+  if (warnings & ~ZPL_WARNING_PAPER_ALMOST_OUT)
+  {
+    reasons |= PAPPL_PREASON_OTHER;
+
+    if (errors & ZPL_WARNING_REPLACE_PRINTHEAD)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_WARN, "Replace print head.");
+
+    if (errors & ZPL_WARNING_CLEAN_PRINTHEAD)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_WARN, "Clean print head.");
+
+    if (errors & ZPL_WARNING_CALIBRATE_MEDIA)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_WARN, "Calibrate media.");
+
+    if (errors & ZPL_WARNING_PAPER_BEFORE_HEAD)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_WARN, "Paper before head.");
+
+    if (errors & ZPL_WARNING_BLACK_MARK)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_WARN, "Black mark.");
+
+    if (errors & ZPL_WARNING_PAPER_AFTER_HEAD)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_WARN, "Paper after head.");
+
+    if (errors & ZPL_WARNING_LOOP_READY)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_WARN, "Loop ready.");
+
+    if (errors & ZPL_WARNING_PRESENTER)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_WARN, "Presenter.");
+
+    if (errors & ZPL_WARNING_RETRACT_READY)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_WARN, "Retract ready.");
+
+    if (errors & ZPL_WARNING_IN_RETRACT)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_WARN, "In retract.");
+
+    if (errors & ZPL_WARNING_AT_BIN)
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_WARN, "At bin.");
+  }
+
+  papplPrinterSetReasons(printer, reasons, ~reasons);
+
+  // Query host status...
+  if (papplDevicePuts(device, "~HS\n") < 0)
+  {
+    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to send HS status command.");
+    goto done;
+  }
+
+  if ((bytes = papplDeviceRead(device, line, sizeof(line) - 1)) < 0)
+  {
+    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to read HS status response.");
+    goto done;
+  }
+
+  line[bytes] = '\0';
+
+  papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "HS returned '%s'.", line);
+
+  sscanf(line + 1, "%*d,%*d,%*d,%d", &length);
+  if (length > 11)
+  {
+    // Auto-detect label length for ready media...
+    pappl_pr_driver_data_t	data;	// Driver data
+
+    papplPrinterGetDriverData(printer, &data);
+
+    // 11 dots for the space between labels
+    length = 2540 * (length - 11) / data.y_resolution[0];
+
+    if (abs(length - 15240) <= 100)
+    {
+      // 4x6 label
+      papplCopyString(data.media_default.size_name, "na_index-4x6_4x6in", sizeof(data.media_default.size_name));
+      data.media_default.size_width  = 10160;
+      data.media_default.size_length = 15240;
+    }
+    else if (abs(length - 20320) <= 100)
+    {
+      // 4x8 label
+      papplCopyString(data.media_default.size_name, "oe_4x8-label_4x8in", sizeof(data.media_default.size_name));
+      data.media_default.size_width  = 10160;
+      data.media_default.size_length = 20320;
+    }
+    else
+    {
+      // *xN label
+      data.media_default.size_length = length;
+      snprintf(data.media_default.size_name, sizeof(data.media_default.size_name), "oe_%gx%g-label_%gx%gin", data.media_default.size_width / 2540.0, data.media_default.size_length / 2540.0, data.media_default.size_width / 2540.0, data.media_default.size_length / 2540.0);
+    }
+
+    if (data.media_default.size_width != data.media_ready[0].size_width || data.media_default.size_length != data.media_ready[0].size_length)
+    {
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_INFO, "Label size changed to '%s'.", data.media_default.size_name);
+      papplPrinterSetDriverDefaults(printer, &data, 0, NULL);
+      papplPrinterSetReadyMedia(printer, 1, &data.media_default);
+    }
+  }
+
+  ret = true;
 
 // ZPL Auto-configuration:
 //
 // ~HI returns model, firmware version, and dots-per-millimeter
-// ~HQES returns status information
-// ~HS returns label length and other status/mode information
 
-  return (true);
+  done:
+
+  papplPrinterCloseDevice(printer);
+
+  return (ret);
 }
