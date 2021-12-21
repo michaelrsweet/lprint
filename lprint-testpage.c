@@ -31,8 +31,8 @@ lprintTestFilterCB(
 		*lineptr,		// Pointer into line
 		white = 0x00,		// White pixel
 		black = 0xff,		// Black pixel
-	        gray0 = 0x88,		// Gray pixel for even lines
-	        gray1 = 0x22;		// Gray pixel for odd lines
+	        gray0 = 0xaa,		// Gray pixel for even lines
+	        gray1 = 0x55;		// Gray pixel for odd lines
   unsigned	y,			// Current position in page
 		ytop, yend, ybottom,	// Top/end-of-image/bottom lines in page
 		x1mm, y1mm,		// Number of bytes/rows for 2mm
