@@ -1,12 +1,12 @@
 .\"
 .\" lprint-modify man page for LPrint, a Label Printer Utility
 .\"
-.\" Copyright © 2019-2020 by Michael R Sweet.
+.\" Copyright © 2019-2021 by Michael R Sweet.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint-modify 1 "LPrint" "January 24, 2020" "Michael R Sweet"
+.TH lprint-modify 1 "LPrint" "2021-12-21" "Michael R Sweet"
 .SH NAME
 lprint-modify \- modify a printer queue.
 .SH SYNOPSIS
@@ -89,7 +89,7 @@ Specifies an "ipp:" or "ipps:" URI for a remote printer.
 .TP 5
 \fB\-v \fIDEVICE-URI\fR
 Specifies the device for the print queue.
-The value can be a socket: URI such as "socket://11.22.33.44" or a usb: URI as listed by the
+The value can be a socket: URI such as "socket://11.22.33.44" or an snmp: or usb: URI as listed by the
 .BR lprint-devices (1)
 command.
 .SH SEE ALSO
@@ -101,4 +101,4 @@ command.
 .BR lprint-options (1),
 .BR lprint-submit (1)
 .SH COPYRIGHT
-Copyright \[co] 2019-2020 by Michael R Sweet.
+Copyright \[co] 2019-2021 by Michael R Sweet.

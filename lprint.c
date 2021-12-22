@@ -237,16 +237,16 @@ system_cb(
   // State file...
   if ((val = getenv("SNAP_DATA")) != NULL)
   {
-    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/lprintrc", val);
+    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/lprint.conf", val);
   }
   else if ((val = getenv("XDG_DATA_HOME")) != NULL)
   {
-    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/.lprintrc", val);
+    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/.lprint.conf", val);
   }
 #ifdef _WIN32
   else if ((val = getenv("USERPROFILE")) != NULL)
   {
-    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/AppData/Local/lprint.ini", val);
+    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/AppData/Local/lprint.conf", val);
   }
   else
   {
@@ -255,11 +255,11 @@ system_cb(
 #else
   else if ((val = getenv("HOME")) != NULL)
   {
-    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/.lprintrc", val);
+    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/.lprint.conf", val);
   }
   else
   {
-    papplCopyString(lprint_statefile, "/etc/lprintrc", sizeof(lprint_statefile));
+    papplCopyString(lprint_statefile, "/etc/lprint.conf", sizeof(lprint_statefile));
   }
 #endif // _WIN32
 

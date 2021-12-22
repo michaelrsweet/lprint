@@ -1,12 +1,12 @@
 .\"
 .\" lprint-devices man page for LPrint, a Label Printer Utility
 .\"
-.\" Copyright © 2019-2020 by Michael R Sweet.
+.\" Copyright © 2019-2021 by Michael R Sweet.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint-devices 1 "LPrint" "January 4, 2020" "Michael R Sweet"
+.TH lprint-devices 1 "LPrint" "2021-12-21" "Michael R Sweet"
 .SH NAME
 lprint-devices \- list connected label printer devices.
 .SH SYNOPSIS
@@ -14,10 +14,13 @@ lprint-devices \- list connected label printer devices.
 .B devices
 .SH DESCRIPTION
 This command lists connected label printer devices.
+.SH OPTIONS
+The \fB-o verbose\fR option produces a verbose list including the detected make,
+model, and IEEE-1284 device ID strings.
 .SH SEE ALSO
 .BR lprint (1),
 .BR lprint-add (1),
 .BR lprint-drivers (1),
 .BR lprint-modify (1).
 .SH COPYRIGHT
-Copyright \[co] 2019-2020 by Michael R Sweet.
+Copyright \[co] 2019-2021 by Michael R Sweet.

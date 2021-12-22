@@ -1,30 +1,39 @@
 .\"
 .\" lprint.conf man page for LPrint, a Label Printer Utility
 .\"
-.\" Copyright © 2019 by Michael R Sweet.
+.\" Copyright © 2019-2021 by Michael R Sweet.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint.conf 5 "LPrint" "December 13, 2019" "Michael R Sweet"
+.TH lprint.conf 5 "LPrint" "2021-12-21" "Michael R Sweet"
 .SH NAME
-~/lprint.conf \- printer configuration file.
+lprint.conf \- printer configuration file.
 .SH DESCRIPTION
 The
 .B ~/.lprint.conf
-file contains a list of the printer queues configured using the
+(per-user server) and
+.B /etc/lprint.conf
+(root server) files contain a list of the printer queues configured using the
 .BR lprint-add (1),
 .BR lprint-default (1),
 .BR lprint-delete (1),
 and
 .BR lprint-modify (1)
-commands.
+commands along with a history of print jobs submitted using the
+.BR lprint-submit (1)
+command.
+The files are not intended to be hand-edited and
+.B cannot
+be changed while the server is running as those changes will be lost.
 .SH SEE ALSO
 .BR lprint (1),
 .BR lprint-add (1),
 .BR lprint-default (1),
 .BR lprint-delete (1),
 .BR lprint-modify (1),
-.BR lprint-server (1).
+.BR lprint-server (1),
+and
+.BR lprint-submit (1).
 .SH COPYRIGHT
-Copyright \[co] 2019 by Michael R Sweet.
+Copyright \[co] 2019-2021 by Michael R Sweet.

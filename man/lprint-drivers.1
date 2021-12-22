@@ -1,12 +1,12 @@
 .\"
 .\" lprint-drivers man page for LPrint, a Label Printer Utility
 .\"
-.\" Copyright © 2019-2020 by Michael R Sweet.
+.\" Copyright © 2019-2021 by Michael R Sweet.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint-drivers 1 "LPrint" "January 4, 2020" "Michael R Sweet"
+.TH lprint-drivers 1 "LPrint" "2021-12-21" "Michael R Sweet"
 .SH NAME
 lprint-drivers \- list drivers supported by the print server.
 .SH SYNOPSIS
@@ -14,10 +14,13 @@ lprint-drivers \- list drivers supported by the print server.
 .B drivers
 .SH DESCRIPTION
 This command lists the supported printer drivers.
+.SH OPTIONS
+The \fB\-o device-id=\fIDEVICE-ID\fR option will limit the list to drivers
+matching the specified IEEE-1284 device ID.
 .SH SEE ALSO
 .BR lprint (1),
 .BR lprint-add (1),
 .BR lprint-devices (1),
 .BR lprint-modify (1).
 .SH COPYRIGHT
-Copyright \[co] 2019-2020 by Michael R Sweet.
+Copyright \[co] 2019-2021 by Michael R Sweet.

@@ -1,7 +1,7 @@
 LPrint Documentation
 ====================
 
-LPrint v1.1 - March 14, 2021
+LPrint v1.1 - December 21, 2021
 Copyright 2019-2021 by Michael R Sweet
 
 LPrint is licensed under the Apache License Version 2.0.  See the files
@@ -38,16 +38,16 @@ rather than starting and stopping like CUPS does to support a wider variety of
 printers.
 
 LPrint supports the full range of options and features supported by the
-embedded drivers - currently all Dymo and Zebra ZPL label printers.  Whenever
-possible, LPrint will auto-detect the make and model of your printer and its
-installed capabilities.  And you can configure the default values of all
+embedded drivers - currently all DYMO and Zebra EPL2/ZPL label printers.
+Whenever possible, LPrint will auto-detect the make and model of your printer
+and its installed capabilities.  And you can configure the default values of all
 options as well as manually configure the media that is loaded in each printer.
 
 LPrint also offers a simple network server mode that makes any label printers
 appear as IPP Everywhere™/AirPrint™/Mopria™ printers on your network.  Thus, any
-Android™, Chrome OS™, iOS®, Linux, macOS, or Windows 10 client can use any label
-printer supported by LPrint.  And you can, of course, send jobs from LPrint to
-an LPrint server on the network.
+Android™, Chrome OS™, iOS®, Linux, macOS, or Windows 10/11 client can use any
+label printer supported by LPrint.  And you can, of course, send jobs from
+LPrint to an LPrint server on the network.
 
 Finally, LPrint offers command-line and web-based monitoring of printer and
 job status.
@@ -61,8 +61,8 @@ it:
 
     sudo snap install lprint
 
-A disk image is included with all source releases on Github for use on macOS
-10.14 and higher.
+A package file is included with all source releases on Github for use on macOS
+10.14 and higher for both Intel and Apple Silicon.
 
 If you need to install LPrint from source, you'll need a "make" program, a C99
 compiler (Clang and GCC work), the CUPS developer files, and the PAPPL developer
@@ -114,7 +114,7 @@ specify a printer and "-o" to specify a named option with a value, for example:
 
 - `lprint -d myprinter labels.zpl`: Print a file to the printer named
   "myprinter".
-- `lprint -o media=oe_xl-shipping-label_4x6in label.png`: Print a shipping label
+- `lprint -o media=na_index-4x6_4x6in label.png`: Print a shipping label
   image to a 4x6 label.
 - `lprint default -d myprinter`: Set "myprinter" as the default printer.
 
@@ -136,8 +136,9 @@ The "add" sub-command adds a new printer:
 contain spaces and special characters, but if you do any printing from scripts
 you probably want to limit yourself to ASCII letters, numbers, and punctuation.
 
-"DEVICE-URI" is a "usb:" or "socket:" URI for the printer.  For USB-connected
-label printers, use the "devices" sub-command to discover the URI to use:
+"DEVICE-URI" is a "usb:", "snmp:", or "socket:" URI for the printer.  For
+USB-connected label printers, use the "devices" sub-command to discover the URI
+to use:
 
     lprint devices
 
@@ -145,6 +146,9 @@ For network-connected printers, print the configuration summary on your label
 printer to discover its IP address.  The device URI will then be "socket://"
 followed by the IP address.  For example, a printer at address 192.168.0.42
 will use the device URI "socket://192.168.0.42".
+
+Many network-connected label printers also support discovery via SNMP - use the
+"devices" sub-command to discover these printers' device URIs.
 
 Finally, the "DRIVER-NAME" is the name of the internal LPrint driver for the
 printer.  Use the "drivers" sub-command to list the available drivers:
@@ -257,6 +261,8 @@ Running a Server
 The "server" sub-command runs a standalone spooler.  The following options
 control the server operation:
 
+- "-o listen-name=HOSTNAME": Sets the network hostname to resolve for listen
+  addresses - "*" for the wildcard addresses.
 - "-o server-name=HOSTNAME": Sets the network hostname to advertise.
 - "-o server-port=NNN": Sets the network port number; the default is randomly
   assigned.
@@ -269,14 +275,20 @@ control the server operation:
 - "-o log-level=LEVEL": Specifies the log level - "debug", "info", "warn",
   "error", or "fatal".
 
+> *Note:* When you install the LPrint snap on Linux or the package on macOS, the
+> server is automatically run as root.  When you install from source, a
+> `launchd` (macOS) or `systemd` (all others) service file is installed but not
+> activated - they can be used to automatically start LPrint when the system
+> boots.
+
 
 Server Web Interface
 --------------------
 
 When you run a standalone spooler on a network hostname, a web interface can be
 enabled that allows you to add, modify, and delete printers, as well as setting
-the default printer.  Because all web interface operations require
-authentication, you need to set the PAM authentication service with the
+the default printer.  To require authentication for the various web interface
+operations, you set the PAM authentication service with the
 `-o auth-service=SERVICE` option.  For example, to use the "cups" PAM service
 with LPrint, run:
 
