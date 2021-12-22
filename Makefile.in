@@ -126,6 +126,15 @@ install:	all
 	for file in $(MAN5); do \
 	    $(INSTALL) -c -m 644 $$file $(BUILDROOT)$(mandir)/man5; \
 	done
+	if test `uname` = Darwin; then \
+	    echo "Installing launchd service to $(BUILDROOT)/Library/LaunchDaemons..."; \
+	    $(INSTALL) -d -m 755 $(BUILDROOT)/Library/LaunchDaemons; \
+	    $(INSTALL) -c -m 644 org.msweet.lprint.plist $(BUILDROOT)/Library/LaunchDaemons; \
+	else \
+	    echo "Installing systemd service to $(BUILDROOT)$(sysconfdir)/systemd/system..."; \
+	    $(INSTALL) -d -m 755 $(BUILDROOT)$(sysconfdir)/systemd/system; \
+	    $(INSTALL) -c -m 644 lprint.service $(BUILDROOT)$(sysconfdir)/systemd/system; \
+	fi
 
 
 # Test everything...

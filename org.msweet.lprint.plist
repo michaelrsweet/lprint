@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>LPrint, a Label Printer Application</string>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/usr/local/bin/lprint</string>
+		<string>server</string>
+		<string>-o</string>
+		<string>log-file=/Library/Logs/lprint.log</string>
+		<string>-o</string>
+		<string>log-level=info</string>
+	</array>
+</dict>
+</plist>
