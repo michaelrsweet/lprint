@@ -26,8 +26,11 @@
 // Local functions...
 //
 
+static const char *autoadd_cb(const char *device_info, const char *device_uri, const char *device_id, void *cbdata);
 static bool	driver_cb(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
+static int	match_id(int num_did, cups_option_t *did, const char *match_id);
 static const char *mime_cb(const unsigned char *header, size_t headersize, void *data);
+static bool	printer_cb(const char *device_info, const char *device_uri, const char *device_id, pappl_system_t *system);
 static pappl_system_t *system_cb(int num_options, cups_option_t *options, void *data);
 
 
@@ -57,12 +60,74 @@ main(int  argc,				// I - Number of command-line arguments
                         LPRINT_VERSION,
                         "Copyright &copy; 2019-2021 by Michael R Sweet. All Rights Reserved.",
                         (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])),
-                        lprint_drivers, /*autoadd_cb*/NULL, driver_cb,
+                        lprint_drivers, autoadd_cb, driver_cb,
                         /*subcmd_name*/NULL, /*subcmd_cb*/NULL,
                         system_cb,
                         /*usage_cb*/NULL,
                         /*data*/NULL));
 }
+
+
+//
+// 'autoadd_cb()' - Determine the proper driver for a given printer.
+//
+
+static const char *			// O - Driver name or `NULL` for none
+autoadd_cb(const char *device_info,	// I - Device information/name (not used)
+           const char *device_uri,	// I - Device URI
+           const char *device_id,	// I - IEEE-1284 device ID
+           void       *cbdata)		// I - Callback data (System)
+{
+  int		i,			// Looping var
+		score,			// Current driver match score
+	    	best_score = 0,		// Best score
+		num_did;		// Number of device ID key/value pairs
+  cups_option_t	*did;			// Device ID key/value pairs
+  const char	*make,			// Manufacturer name
+		*best_name = NULL;	// Best driver
+  char		name[1024] = "";	// Driver name to match
+
+
+  (void)device_info;
+
+  // First parse the device ID and get any potential driver name to match...
+  num_did = papplDeviceParseID(device_id, &did);
+
+  if ((make = cupsGetOption("MANUFACTURER", num_did, did)) == NULL)
+    if ((make = cupsGetOption("MANU", num_did, did)) == NULL)
+      make = cupsGetOption("MFG", num_did, did);
+
+  if (make && !strncasecmp(make, "Zebra", 5))
+    lprintZPLQueryDriver((pappl_system_t *)cbdata, device_uri, name, sizeof(name));
+
+  // Then loop through the driver list to find the best match...
+  for (i = 0; i < (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])); i ++)
+  {
+    if (!strcmp(name, lprint_drivers[i].name))
+    {
+      // Matching driver name always the best match...
+      best_name = lprint_drivers[i].name;
+      break;
+    }
+
+    if (lprint_drivers[i].device_id)
+    {
+      // See if we have a matching device ID...
+      score = match_id(num_did, did, lprint_drivers[i].device_id);
+      if (score > best_score)
+      {
+        best_score = score;
+        best_name  = lprint_drivers[i].name;
+      }
+    }
+  }
+
+  // Clean up and return...
+  cupsFreeOptions(num_did, did);
+
+  return (best_name);
+}
+
 
 
 //
@@ -146,6 +211,77 @@ driver_cb(
 
 
 //
+// 'match_id()' - Compare two IEEE-1284 device IDs and return a score.
+//
+// The score is 2 for each exact match and 1 for a partial match in a comma-
+// delimited field.  Any non-match results in a score of 0.
+//
+
+static int				// O - Score
+match_id(int           num_did,		// I - Number of device ID key/value pairs
+         cups_option_t *did,		// I - Device ID key/value pairs
+         const char    *match_id)	// I - Driver's device ID match string
+{
+  int		i,			// Looping var
+		score = 0,		// Score
+		num_mid;		// Number of match ID key/value pairs
+  cups_option_t	*mid,			// Match ID key/value pairs
+		*current;		// Current key/value pair
+  const char	*value,			// Device ID value
+		*valptr;		// Pointer into value
+
+
+  // Parse the matching device ID into key/value pairs...
+  if ((num_mid = papplDeviceParseID(match_id, &mid)) == 0)
+    return (0);
+
+  // Loop through the match pairs to find matches (or not)
+  for (i = num_mid, current = mid; i > 0; i --, current ++)
+  {
+    if ((value = cupsGetOption(current->name, num_did, did)) == NULL)
+    {
+      // No match
+      score = 0;
+      break;
+    }
+
+    if (!strcasecmp(current->value, value))
+    {
+      // Full match!
+      score += 2;
+    }
+    else if ((valptr = strstr(value, current->value)) != NULL)
+    {
+      // Possible substring match, check
+      size_t mlen = strlen(current->value);
+					// Length of match value
+      if ((valptr == value || valptr[-1] == ',') && (!valptr[mlen] || valptr[mlen] == ','))
+      {
+        // Partial match!
+        score ++;
+      }
+      else
+      {
+        // No match
+        score = 0;
+        break;
+      }
+    }
+    else
+    {
+      // No match
+      score = 0;
+      break;
+    }
+  }
+
+  cupsFreeOptions(num_mid, mid);
+
+  return (score);
+}
+
+
+//
 // 'mime_cb()' - MIME typing callback...
 //
 
@@ -164,6 +300,55 @@ mime_cb(const unsigned char *header,	// I - Header data
     return (NULL);
 }
 
+
+//
+// 'printer_cb()' - Try auto-adding printers.
+//
+
+static bool				// O - `false` to continue
+printer_cb(const char     *device_info,	// I - Device information
+	   const char     *device_uri,	// I - Device URI
+	   const char     *device_id,	// I - IEEE-1284 device ID
+	   pappl_system_t *system)	// I - System
+{
+  const char *driver_name = autoadd_cb(device_info, device_uri, device_id, system);
+					// Driver name, if any
+
+  if (driver_name)
+  {
+    char	name[1024],		// Printer name
+		*nameptr;		// Pointer in name
+
+
+    // Zebra puts "Zebra Technologies ZTC" on the front of their printer names,
+    // which is a bit, um, wordy.  Clean up the device info string to use as a
+    // printer name and drop any trailing "(ID)" nonsense if we don't need it.
+    if (!strncasecmp(device_info, "Zebra Technologies ZTC ", 23))
+      snprintf(name, sizeof(name), "Zebra %s", device_info + 23);
+    else
+      papplCopyString(name, device_info, sizeof(name));
+
+    if ((nameptr = strstr(name, " (")) != NULL)
+      *nameptr = '\0';
+
+    if (!papplPrinterCreate(system, 0, name, driver_name, device_id, device_uri))
+    {
+      // Printer already exists with this name, so try adding a number to the
+      // name...
+      int	i;			// Looping var
+      char	newname[1024];		// New name
+
+      for (i = 2; i < 100; i ++)
+      {
+        snprintf(newname, sizeof(newname), "%s %d", name, i);
+        if (papplPrinterCreate(system, 0, name, driver_name, device_id, device_uri))
+          break;
+      }
+    }
+  }
+
+  return (false);
+}
 
 
 //
@@ -273,7 +458,7 @@ system_cb(
   papplSystemSetMIMECallback(system, mime_cb, NULL);
   papplSystemAddMIMEFilter(system, LPRINT_TESTPAGE_MIMETYPE, "image/pwg-raster", lprintTestFilterCB, NULL);
 
-  papplSystemSetPrinterDrivers(system, (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])), lprint_drivers, /*autoadd_cb*/NULL, /*create_cb*/NULL, driver_cb, NULL);
+  papplSystemSetPrinterDrivers(system, (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])), lprint_drivers, autoadd_cb, /*create_cb*/NULL, driver_cb, system);
 
   papplSystemAddResourceData(system, "/favicon.png", "image/png", lprint_small_png, sizeof(lprint_small_png));
   papplSystemAddResourceData(system, "/navicon.png", "image/png", lprint_png, sizeof(lprint_png));
@@ -287,8 +472,16 @@ system_cb(
   papplSystemSetSaveCallback(system, (pappl_save_cb_t)papplSystemSaveState, (void *)lprint_statefile);
   papplSystemSetVersions(system, (int)(sizeof(versions) / sizeof(versions[0])), versions);
 
+  fprintf(stderr, "lprint: statefile='%s'\n", lprint_statefile);
+
   if (!papplSystemLoadState(system, lprint_statefile))
+  {
+    // No old state, use defaults and auto-add printers...
     papplSystemSetDNSSDName(system, system_name ? system_name : "LPrint");
+
+    papplLog(system, PAPPL_LOGLEVEL_INFO, "Auto-adding printers...");
+    papplDeviceList(PAPPL_DEVTYPE_USB, (pappl_device_cb_t)printer_cb, system, papplLogDevice, system);
+  }
 
   return (system);
 }

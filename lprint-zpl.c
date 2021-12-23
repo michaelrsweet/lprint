@@ -297,6 +297,78 @@ lprintZPL(
 }
 
 
+//
+// 'lprintZPLQueryDriver()' - Query the printer to determine the proper driver.
+//
+
+void
+lprintZPLQueryDriver(
+    pappl_system_t *system,		// I - System
+    const char     *device_uri,		// I - Device URI
+    char           *name,		// I - Name buffer
+    size_t         namesize)		// I - Size of name buffer
+{
+  pappl_device_t	*device;	// Device connection
+  char			line[1025];	// Line from device
+  ssize_t		bytes;		// Bytes read
+  char			model[256],	// Model name
+			*modelptr;	// Pointer into model name
+  int			dpmm = 0;	// Dots per millimeter
+
+
+  // Make sure name buffer is initialized...
+  *name = '\0';
+
+  // Connect and send Host Information command...
+  if ((device = papplDeviceOpen(device_uri, "query", papplLogDevice, system)) == NULL)
+    return;
+
+  if (papplDevicePuts(device, "~HI\n") < 0)
+    goto done;
+
+  // Read and parse response:
+  //
+  // <stx>MODEL,VERSION,DPMM,MEMORY,OPTIONS<etx><cr><lf>
+  if ((bytes = papplDeviceRead(device, line, sizeof(line) - 1)) <= 0)
+    goto done;
+
+  line[bytes] = '\0';
+
+  papplLog(system, PAPPL_LOGLEVEL_DEBUG, "HI response for '%s' was '%s'.", device_uri, line);
+
+  if (line[0] == 0x02 && sscanf(line + 1, "%255[^,],%*[^,],%d", model, &dpmm) > 1 && (dpmm == 8 || dpmm == 12 || dpmm == 24))
+  {
+    // Got model and dots-per-millimeter values, create a driver name from it...
+    // Note: We currently assume a 4" print head for auto-detection...
+    const char	*type = "tt";		// Type of printing (direct/transfer)
+    int		dpi;			// Print resolution
+
+    papplLog(system, PAPPL_LOGLEVEL_DEBUG, "model='%s', dpmm=%d", model, dpmm);
+
+    if ((modelptr = strchr(model, '-')) != NULL && modelptr > model)
+    {
+      if (modelptr[-1] == 'd')
+        type = "dt";
+    }
+
+    if (dpmm == 8)
+      dpi = 203;			// 203.2
+    else if (dpmm == 12)
+      dpi = 300;			// Technically should be 304.8...
+    else
+      dpi = 600;			// Technically should be 609.6...
+
+    snprintf(name, namesize, "zpl_4inch-%ddpi-%s", dpi, type);
+    papplLog(system, PAPPL_LOGLEVEL_DEBUG, "auto driver-name='%s'", name);
+  }
+
+  done:
+
+  papplDeviceClose(device);
+  return;
+}
+
+
 #if ZPL_COMPRESSION
 //
 // 'lprint_zpl_compress()' - Output a RLE run...
@@ -842,10 +914,6 @@ lprint_zpl_status(
   }
 
   ret = true;
-
-// ZPL Auto-configuration:
-//
-// ~HI returns model, firmware version, and dots-per-millimeter
 
   done:
 

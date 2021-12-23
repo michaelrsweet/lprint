@@ -62,6 +62,7 @@ extern bool	lprintEPL2(pappl_system_t *system, const char *driver_name, const ch
 extern bool	lprintTestFilterCB(pappl_job_t *job, pappl_device_t *device, void *data);
 extern const char *lprintTestPageCB(pappl_printer_t *printer, char *buffer, size_t bufsize);
 extern bool	lprintZPL(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
+extern void	lprintZPLQueryDriver(pappl_system_t *system, const char *device_uri, char *name, size_t namesize);
 
 // Future planned drivers that are not yet implemented
 //extern bool	lprintCPCL(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *driver_data, ipp_t **driver_attrs, void *data);

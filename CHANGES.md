@@ -10,6 +10,8 @@ v1.1 - Pending
 - Fixed the reported date and time information when no printers were added
   (Issue #26)
 - Fixed a startup bug on macOS (Issue #34)
+- Now support auto-detection of printer drivers and auto-add USB printers the
+  first time LPrint is run.
 - Added support for Zebra/Eltron EPL2 printers (Issue #38)
 - Added support for 600dpi ZPL thermal transfer printers.
 - Added support for ZPL status/ready media updates.
