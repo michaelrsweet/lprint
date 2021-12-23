@@ -8,7 +8,7 @@
 //
 
 // Version number
-#define LPRINT_VERSION "1.1"
+#define LPRINT_VERSION "1.1.0"
 #define LPRINT_MAJOR_VERSION 1
 #define LPRINT_MINOR_VERSION 1
 #define LPRINT_PATCH_VERSION 0

@@ -1,8 +1,8 @@
 LPrint Change History
 =====================
 
-v1.1 - Pending
---------------
+v1.1.0 - December 23, 2021
+--------------------------
 
 - Switched to PAPPL (Issue #20, #35)
 - Fixed `lprint default` and `lprint delete` not working (Issue #17, Issue #40)
