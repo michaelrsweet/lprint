@@ -12,6 +12,8 @@ v1.1 - Pending
 - Fixed a startup bug on macOS (Issue #34)
 - Now support auto-detection of printer drivers and auto-add USB printers the
   first time LPrint is run.
+- Added the missing macOS binary package (Issue #33)
+- Added launchd and systemd service files for running lprint as a service.
 - Added support for Zebra/Eltron EPL2 printers (Issue #38)
 - Added support for 600dpi ZPL thermal transfer printers.
 - Added support for ZPL status/ready media updates.
