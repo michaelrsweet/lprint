@@ -37,7 +37,7 @@ if test "$temp" != $version; then
 fi
 
 temp=`grep '^version:' snap/snapcraft.yaml | awk -F\" '{print $2}'`
-if test "$temp" != "$version; then
+if test "$temp" != "$version"; then
 	echo "Still need to update version to $version in snap/snapcraft.yaml (saw $temp)"
 	exit 1
 fi
