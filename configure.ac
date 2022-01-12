@@ -54,6 +54,12 @@ LDFLAGS="${LDFLAGS:=}"
 LIBS="${LIBS:=}"
 
 
+dnl Figure out prefix - needed for systemd unit dir
+AS_IF([test $prefix = NONE], [
+    prefix=$ac_default_prefix
+], [])
+
+
 dnl Standard programs...
 AC_PROG_CC
 AC_PROG_RANLIB
@@ -109,6 +115,38 @@ dnl Extra compiler options...
 AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [turn on debugging, default=no]))
 AC_ARG_ENABLE([maintainer], AS_HELP_STRING([--enable-maintainer], [turn on maintainer mode, default=no]))
 AC_ARG_ENABLE([sanitizer], AS_HELP_STRING([--enable-sanitizer], [build with AddressSanitizer, default=no]))
+
+
+AC_ARG_WITH([systemd], AS_HELP_STRING([--with-systemd[=PATH]], [install systemd service file, default=yes]),
+[
+    AS_CASE([$withval], [yes], [
+	with_systemd=yes
+	unitdir=${prefix}/lib/systemd/system
+    ], [no], [
+	with_systemd=no
+    ], [
+	with_systemd=yes
+	unitdir=$withval
+    ])
+], [
+    with_systemd=yes
+    unitdir=${prefix}/lib/systemd/system
+])
+
+
+dnl Substitute unitdir macro if we aren't on Darwin and want systemd...
+AS_IF([test `uname` != "Darwin" && test x$with_systemd = xyes], [
+    AC_MSG_CHECKING([for systemd unit directory])
+    AS_IF([test x$unitdir != x], [
+	AC_SUBST([unitdir])
+	AC_MSG_RESULT([$unitdir])
+    ],
+    [
+	AC_MSG_ERROR([Path to the unit dir is empty.])
+    ])
+],
+[])
+
 
 AS_IF([test x$enable_debug = xyes], [
     OPTIM="-g"

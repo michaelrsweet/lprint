@@ -56,6 +56,7 @@ sharedstatedir	=	@sharedstatedir@
 srcdir		=	@srcdir@
 sysconfdir	=	@sysconfdir@
 top_srcdir	=	@top_srcdir@
+unitdir	=	@unitdir@
 
 BUILDROOT	=	$(DSTROOT)$(RPM_BUILD_ROOT)$(DESTDIR)
 
@@ -130,10 +131,10 @@ install:	all
 	    echo "Installing launchd service to $(BUILDROOT)/Library/LaunchDaemons..."; \
 	    $(INSTALL) -d -m 755 $(BUILDROOT)/Library/LaunchDaemons; \
 	    $(INSTALL) -c -m 644 org.msweet.lprint.plist $(BUILDROOT)/Library/LaunchDaemons; \
-	else \
-	    echo "Installing systemd service to $(BUILDROOT)$(sysconfdir)/systemd/system..."; \
-	    $(INSTALL) -d -m 755 $(BUILDROOT)$(sysconfdir)/systemd/system; \
-	    $(INSTALL) -c -m 644 lprint.service $(BUILDROOT)$(sysconfdir)/systemd/system; \
+	elif test x$unitdir != x; then \
+	    echo "Installing systemd service to $(BUILDROOT)$(unitdir)..."; \
+	    $(INSTALL) -d -m 755 $(BUILDROOT)$(unitdir); \
+	    $(INSTALL) -c -m 644 lprint.service $(BUILDROOT)$(unitdir); \
 	fi
 
 
