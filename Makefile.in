@@ -56,7 +56,7 @@ sharedstatedir	=	@sharedstatedir@
 srcdir		=	@srcdir@
 sysconfdir	=	@sysconfdir@
 top_srcdir	=	@top_srcdir@
-unitdir	=	@unitdir@
+unitdir		=	@unitdir@
 
 BUILDROOT	=	$(DSTROOT)$(RPM_BUILD_ROOT)$(DESTDIR)
 

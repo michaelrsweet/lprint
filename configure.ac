@@ -13,7 +13,7 @@ AC_PREREQ(2.60)
 
 
 dnl Package name and version...
-AC_INIT([lprint], [1.1.0], [https://github.com/michaelrsweet/lprint/issues], [lprint], [https://michaelrsweet.github.io/lprint])
+AC_INIT([lprint], [1.1.1], [https://github.com/michaelrsweet/lprint/issues], [lprint], [https://michaelrsweet.github.io/lprint])
 AC_CONFIG_HEADERS([config.h])
 
 LPRINT_VERSION="AC_PACKAGE_VERSION"
@@ -111,42 +111,32 @@ AS_IF([$PKGCONFIG --exists pappl --atleast-version=1.1], [
 ])
 
 
-dnl Extra compiler options...
-AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [turn on debugging, default=no]))
-AC_ARG_ENABLE([maintainer], AS_HELP_STRING([--enable-maintainer], [turn on maintainer mode, default=no]))
-AC_ARG_ENABLE([sanitizer], AS_HELP_STRING([--enable-sanitizer], [build with AddressSanitizer, default=no]))
+dnl systemd support...
+unitdir=""
+AC_SUBST([unitdir])
 
-
-AC_ARG_WITH([systemd], AS_HELP_STRING([--with-systemd[=PATH]], [install systemd service file, default=yes]),
-[
+AC_ARG_WITH([systemd], AS_HELP_STRING([--with-systemd[=PATH]], [install systemd service file, default=auto]), [
     AS_CASE([$withval], [yes], [
 	with_systemd=yes
-	unitdir=${prefix}/lib/systemd/system
+	unitdir="\$(prefix)/lib/systemd/system"
     ], [no], [
 	with_systemd=no
     ], [
 	with_systemd=yes
-	unitdir=$withval
+	unitdir="$withval"
     ])
 ], [
-    with_systemd=yes
-    unitdir=${prefix}/lib/systemd/system
+    AS_IF([test $host_os_name != darwin], [
+	with_systemd=yes
+	unitdir="\$(prefix)/lib/systemd/system"
+    ])
 ])
 
 
-dnl Substitute unitdir macro if we aren't on Darwin and want systemd...
-AS_IF([test `uname` != "Darwin" && test x$with_systemd = xyes], [
-    AC_MSG_CHECKING([for systemd unit directory])
-    AS_IF([test x$unitdir != x], [
-	AC_SUBST([unitdir])
-	AC_MSG_RESULT([$unitdir])
-    ],
-    [
-	AC_MSG_ERROR([Path to the unit dir is empty.])
-    ])
-],
-[])
-
+dnl Extra compiler options...
+AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [turn on debugging, default=no]))
+AC_ARG_ENABLE([maintainer], AS_HELP_STRING([--enable-maintainer], [turn on maintainer mode, default=no]))
+AC_ARG_ENABLE([sanitizer], AS_HELP_STRING([--enable-sanitizer], [build with AddressSanitizer, default=no]))
 
 AS_IF([test x$enable_debug = xyes], [
     OPTIM="-g"

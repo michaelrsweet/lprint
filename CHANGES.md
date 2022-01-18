@@ -1,6 +1,13 @@
 LPrint Change History
 =====================
 
+v1.1.1 - Pending
+----------------
+
+- Added `--with-systemd` configure option and install to
+ `$prefix/lib/systemd/system` by default (Issue #50)
+
+
 v1.1.0 - December 23, 2021
 --------------------------
 
