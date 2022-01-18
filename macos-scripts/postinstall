@@ -1,0 +1,7 @@
+#!/bin/sh
+#
+# Post-install script for macOS package.  This script makes sure that the
+# LPrint service is loaded and run...
+#
+
+launchctl load -w /Library/LaunchDaemons/org.msweet.lprint.plist

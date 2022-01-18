@@ -201,6 +201,7 @@ macos:
 	pkgbuild --root /private/tmp/lprint-$(LPRINT_VERSION) \
 	    --identifier org.msweet.lprint \
 	    --version $(LPRINT_VERSION) \
+	    --scripts macos-scripts \
 	    --min-os-version 10.14 \
 	    --sign "$${PKGSIGN_IDENTITY}" --timestamp \
 	    lprint-$(LPRINT_VERSION)-macos.pkg
