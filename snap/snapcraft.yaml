@@ -1,6 +1,6 @@
 name: lprint
 base: core20
-version: "1.1.0"
+version: "1.1.1"
 summary: A Label Printer Application
 description: |
    LPrint implements printing for a variety of common label and receipt printers
@@ -26,6 +26,11 @@ icon: static-resources/lprint.png
 apps:
     lprint:
         command: usr/local/bin/lprint
+        plugs: [avahi-control, home, network, network-bind, network-manager, raw-usb]
+
+    lprint-server:
+        command: usr/local/bin/lprint server -o log-file=syslog
+        daemon: simple
         plugs: [avahi-control, home, network, network-bind, network-manager, raw-usb]
 
 parts:
