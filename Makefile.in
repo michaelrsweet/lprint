@@ -131,7 +131,7 @@ install:	all
 	    echo "Installing launchd service to $(BUILDROOT)/Library/LaunchDaemons..."; \
 	    $(INSTALL) -d -m 755 $(BUILDROOT)/Library/LaunchDaemons; \
 	    $(INSTALL) -c -m 644 org.msweet.lprint.plist $(BUILDROOT)/Library/LaunchDaemons; \
-	elif test x$unitdir != x; then \
+	elif test x${unitdir} != x; then \
 	    echo "Installing systemd service to $(BUILDROOT)$(unitdir)..."; \
 	    $(INSTALL) -d -m 755 $(BUILDROOT)$(unitdir); \
 	    $(INSTALL) -c -m 644 lprint.service $(BUILDROOT)$(unitdir); \
