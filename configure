@@ -4002,6 +4002,8 @@ then :
 
 fi
 
+    CFLAGS="$CFLAGS $WARNINGS"
+
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -fPIE" >&5
 printf %s "checking whether compiler supports -fPIE... " >&6; }
     OLDCFLAGS="$CFLAGS"

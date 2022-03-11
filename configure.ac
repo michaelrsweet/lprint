@@ -183,6 +183,8 @@ AS_IF([test -n "$GCC"], [
 	WARNINGS="$WARNINGS -Werror"
     ])
 
+    CFLAGS="$CFLAGS $WARNINGS"
+
     dnl See if PIE options are supported...
     AC_MSG_CHECKING(whether compiler supports -fPIE)
     OLDCFLAGS="$CFLAGS"
