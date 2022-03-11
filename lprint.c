@@ -316,7 +316,7 @@ printer_cb(const char     *device_info,	// I - Device information
 
   if (driver_name)
   {
-    char	name[1024],		// Printer name
+    char	name[1020],		// Printer name
 		*nameptr;		// Pointer in name
 
 
