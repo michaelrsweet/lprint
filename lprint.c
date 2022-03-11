@@ -341,7 +341,7 @@ printer_cb(const char     *device_info,	// I - Device information
       for (i = 2; i < 100; i ++)
       {
         snprintf(newname, sizeof(newname), "%s %d", name, i);
-        if (papplPrinterCreate(system, 0, name, driver_name, device_id, device_uri))
+        if (papplPrinterCreate(system, 0, newname, driver_name, device_id, device_uri))
           break;
       }
     }
