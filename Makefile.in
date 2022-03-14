@@ -24,7 +24,8 @@ AR		=	@AR@
 ARFLAGS		=	@ARFLAGS@
 ASAN_OPTIONS	=	leak_check_at_exit=false
 CC		=	@CC@
-CFLAGS		=	-I.. @CFLAGS@ $(OPTIM)
+CFLAGS		=	-I.. @CFLAGS@ $(CPPFLAGS) $(OPTIM) $(WARNINGS)
+CPPFLAGS	=	@CPPFLAGS@
 CSFLAGS		=	-s "$${CODESIGN_IDENTITY:=-}" --timestamp @CSFLAGS@
 INSTALL		=	@INSTALL@
 LDFLAGS		=	@LDFLAGS@ $(OPTIM)
@@ -35,6 +36,7 @@ RANLIB		=	@RANLIB@
 RM		=	@RM@ -f
 RMDIR		=	@RMDIR@
 SHELL		=	/bin/sh
+WARNINGS	=	@WARNINGS@
 
 
 # Directories...

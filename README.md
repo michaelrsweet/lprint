@@ -61,7 +61,7 @@ print queues and default printer.
 Legal Stuff
 -----------
 
-LPrint is Copyright © 2019-2021 by Michael R Sweet.
+LPrint is Copyright © 2019-2022 by Michael R Sweet.
 
 LPrint is licensed under the Apache License Version 2.0.  See the files
 "LICENSE" and "NOTICE" for more information.

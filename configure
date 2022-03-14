@@ -617,6 +617,7 @@ PACKAGE_URL='https://michaelrsweet.github.io/lprint'
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+WARNINGS
 OPTIM
 CSFLAGS
 unitdir
@@ -3937,6 +3938,9 @@ else $as_nop
 
 fi
 
+
+
+WARNINGS=""
 
 
 

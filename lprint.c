@@ -316,7 +316,7 @@ printer_cb(const char     *device_info,	// I - Device information
 
   if (driver_name)
   {
-    char	name[1024],		// Printer name
+    char	name[128],		// Printer name
 		*nameptr;		// Pointer in name
 
 
@@ -336,11 +336,25 @@ printer_cb(const char     *device_info,	// I - Device information
       // Printer already exists with this name, so try adding a number to the
       // name...
       int	i;			// Looping var
-      char	newname[1024];		// New name
+      char	newname[128],		// New name
+		number[4];		// Number string
+      size_t	namelen = strlen(name),	// Length of original name string
+		numberlen;		// Length of number string
 
       for (i = 2; i < 100; i ++)
       {
-        snprintf(newname, sizeof(newname), "%s %d", name, i);
+        // Append " NNN" to the name, truncating the existing name as needed to
+        // include the number at the end...
+        snprintf(number, sizeof(number), " %d", i);
+        numberlen = strlen(number);
+
+        papplCopyString(newname, name, sizeof(newname));
+        if ((namelen + numberlen) < sizeof(newname))
+          memcpy(newname + namelen, number, numberlen + 1);
+        else
+          memcpy(newname + sizeof(newname) - numberlen - 1, number, numberlen + 1);
+
+        // Try creating with this name...
         if (papplPrinterCreate(system, 0, name, driver_name, device_id, device_uri))
           break;
       }

@@ -1,7 +1,7 @@
 dnl
 dnl Configuration script for LPrint, a Label Printer Application
 dnl
-dnl Copyright © 2019-2021 by Michael R Sweet
+dnl Copyright © 2019-2022 by Michael R Sweet
 dnl
 dnl Licensed under Apache License v2.0.  See the file "LICENSE" for more
 dnl information.
@@ -147,6 +147,9 @@ AS_IF([test x$enable_debug = xyes], [
 ])
 AC_SUBST([CSFLAGS])
 AC_SUBST([OPTIM])
+
+WARNINGS=""
+AC_SUBST([WARNINGS])
 
 AS_IF([test -n "$GCC"], [
     AS_IF([test x$enable_sanitizer = xyes], [
