@@ -355,7 +355,7 @@ printer_cb(const char     *device_info,	// I - Device information
           memcpy(newname + sizeof(newname) - numberlen - 1, number, numberlen + 1);
 
         // Try creating with this name...
-        if (papplPrinterCreate(system, 0, name, driver_name, device_id, device_uri))
+        if (papplPrinterCreate(system, 0, newname, driver_name, device_id, device_uri))
           break;
       }
     }
