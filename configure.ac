@@ -232,5 +232,8 @@ AC_ARG_WITH(ldflags, AS_HELP_STRING([--with-ldflags=...], [Specify additional LD
 ])
 
 dnl Generate the Makefile...
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([
+    Makefile
+    lprint.service
+])
 AC_OUTPUT
