@@ -13,7 +13,7 @@ AC_PREREQ(2.60)
 
 
 dnl Package name and version...
-AC_INIT([lprint], [1.1.1], [https://github.com/michaelrsweet/lprint/issues], [lprint], [https://michaelrsweet.github.io/lprint])
+AC_INIT([lprint], [1.2.0], [https://github.com/michaelrsweet/lprint/issues], [lprint], [https://michaelrsweet.github.io/lprint])
 AC_CONFIG_HEADERS([config.h])
 
 LPRINT_VERSION="AC_PACKAGE_VERSION"
@@ -214,7 +214,7 @@ AS_IF([test -n "$GCC"], [
     dnl OS-specific compiler options...
     AS_CASE(["$host_os_name"],
     [linux*], [
-	CPPFLAGS="$CPPFLAGS -D__USE_MISC -D_TIME_BITS=64"
+	CPPFLAGS="$CPPFLAGS -D__USE_MISC -D_TIME_BITS=64 -D_FILE_OFFSET_BITS=64"
     ], [darwin*], [
         AS_IF([test "$host_os_version" -ge 200 -a x$enable_debug != xyes], [
             # macOS 11.0 and higher support the Apple Silicon (arm64) CPUs
