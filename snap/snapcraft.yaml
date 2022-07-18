@@ -1,6 +1,6 @@
 name: lprint
 base: core20
-version: "1.1.1"
+version: "1.2.0"
 summary: A Label Printer Application
 description: |
    LPrint implements printing for a variety of common label and receipt printers
@@ -22,6 +22,11 @@ description: |
 grade: stable
 confinement: strict
 icon: static-resources/lprint.png
+
+architectures:
+  - build-on: amd64
+  - build-on: arm64
+  - build-on: armhf
 
 apps:
     lprint:
