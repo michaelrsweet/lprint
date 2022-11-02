@@ -44,7 +44,9 @@ static pappl_pr_driver_t	lprint_drivers[] =
 #include "lprint-epl2.h"
 #include "lprint-zpl.h"
 };
-static char			lprint_statefile[1024];
+static char			lprint_spooldir[1024],
+					// Spool directory
+				lprint_statefile[1024];
 					// State file
 
 
@@ -378,7 +380,9 @@ system_cb(
   pappl_system_t	*system;	// System object
   const char		*val,		// Current option value
 			*hostname,	// Hostname, if any
+			*listenhost,	// Listen hostname, if any
 			*logfile,	// Log file, if any
+			*spooldir,	// Spool directory, if any
 			*system_name;	// System name, if any
   pappl_loglevel_t	loglevel;	// Log level
   int			port = 0;	// Port number, if any
@@ -391,10 +395,6 @@ system_cb(
 
 
   (void)data;
-
-  // Enable/disable TLS...
-  if ((val = cupsGetOption("tls", num_options, options)) != NULL && !strcmp(val, "no"))
-    soptions |= PAPPL_SOPTIONS_NO_TLS;
 
   // Parse standard log and server options...
   if ((val = cupsGetOption("log-level", num_options, options)) != NULL)
@@ -418,8 +418,44 @@ system_cb(
   else
     loglevel = PAPPL_LOGLEVEL_UNSPEC;
 
-  logfile     = cupsGetOption("log-file", num_options, options);
+  if ((val = cupsGetOption("server-options", num_options, options)) != NULL)
+  {
+    const char	*valptr;		// Pointer into value
+
+    for (valptr = val; valptr && *valptr;)
+    {
+      if (!strcmp(valptr, "none") || !strncmp(valptr, "none,", 5))
+        soptions = PAPPL_SOPTIONS_NONE;
+      else if (!strcmp(valptr, "dnssd-host") || !strncmp(valptr, "dnssd-host,", 11))
+        soptions |= PAPPL_SOPTIONS_DNSSD_HOST;
+      else if (!strcmp(valptr, "no-multi-queue") || !strncmp(valptr, "no-multi-queue,", 15))
+        soptions &= (pappl_soptions_t)~PAPPL_SOPTIONS_MULTI_QUEUE;
+      else if (!strcmp(valptr, "raw-socket") || !strncmp(valptr, "raw-socket,", 11))
+        soptions |= PAPPL_SOPTIONS_RAW_SOCKET;
+      else if (!strcmp(valptr, "usb-printer") || !strncmp(valptr, "usb-printer,", 12))
+        soptions |= PAPPL_SOPTIONS_USB_PRINTER;
+      else if (!strcmp(valptr, "no-web-interface") || !strncmp(valptr, "no-web-interface,", 17))
+        soptions &= (pappl_soptions_t)~PAPPL_SOPTIONS_WEB_INTERFACE;
+      else if (!strcmp(valptr, "web-log") || !strncmp(valptr, "web-log,", 8))
+        soptions |= PAPPL_SOPTIONS_WEB_LOG;
+      else if (!strcmp(valptr, "web-network") || !strncmp(valptr, "web-network,", 12))
+        soptions |= PAPPL_SOPTIONS_WEB_NETWORK;
+      else if (!strcmp(valptr, "web-remote") || !strncmp(valptr, "web-remote,", 11))
+        soptions |= PAPPL_SOPTIONS_WEB_REMOTE;
+      else if (!strcmp(valptr, "web-security") || !strncmp(valptr, "web-security,", 13))
+        soptions |= PAPPL_SOPTIONS_WEB_SECURITY;
+      else if (!strcmp(valptr, "no-tls") || !strncmp(valptr, "no-tls,", 7))
+        soptions |= PAPPL_SOPTIONS_NO_TLS;
+
+      if ((valptr = strchr(valptr, ',')) != NULL)
+        valptr ++;
+    }
+  }
+
   hostname    = cupsGetOption("server-hostname", num_options, options);
+  listenhost  = cupsGetOption("listen-hostname", num_options, options);
+  logfile     = cupsGetOption("log-file", num_options, options);
+  spooldir    = cupsGetOption("spool-directory", num_options, options);
   system_name = cupsGetOption("system-name", num_options, options);
 
   if ((val = cupsGetOption("server-port", num_options, options)) != NULL)
@@ -433,10 +469,14 @@ system_cb(
       port = atoi(val);
   }
 
-  // State file...
+  // Spool directory and state file...
   if ((val = getenv("SNAP_DATA")) != NULL)
   {
+    snprintf(lprint_spooldir, sizeof(lprint_spooldir), "%s/lprint.d", val);
     snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/lprint.conf", val);
+
+    if (!spooldir)
+      spooldir = lprint_spooldir;
   }
   else if ((val = getenv("XDG_DATA_HOME")) != NULL)
   {
@@ -445,7 +485,11 @@ system_cb(
 #ifdef _WIN32
   else if ((val = getenv("USERPROFILE")) != NULL)
   {
-    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/AppData/Local/lprint.conf", val);
+    snprintf(lprint_spooldir, sizeof(lprint_spooldir), "%s/AppData/Local/lprint.d", val);
+    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/AppData/Local/lprint.ini", val);
+
+    if (!spooldir)
+      spooldir = lprint_spooldir;
   }
   else
   {
@@ -454,7 +498,15 @@ system_cb(
 #else
   else if ((val = getenv("HOME")) != NULL)
   {
+#  ifdef __APPLE__
+    snprintf(lprint_spooldir, sizeof(lprint_spooldir), "%s/Library/Application Support/lprint.d", val);
+    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/Library/Application Support/lprint.state", val);
+
+    if (!spooldir)
+      spooldir = lprint_spooldir;
+#  else
     snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/.lprint.conf", val);
+#  endif // __APPLE__
   }
   else
   {
@@ -462,11 +514,25 @@ system_cb(
   }
 #endif // _WIN32
 
+  if (spooldir && access(spooldir, 0))
+  {
+    if (mkdir(spooldir, 0777))
+    {
+      perror(spooldir);
+      return (NULL);
+    }
+  }
+
   // Create the system object...
-  if ((system = papplSystemCreate(soptions, system_name ? system_name : "LPrint", port, "_print,_universal", cupsGetOption("spool-directory", num_options, options), logfile ? logfile : "-", loglevel, cupsGetOption("auth-service", num_options, options), /* tls_only */false)) == NULL)
+  if ((system = papplSystemCreate(soptions, system_name ? system_name : "LPrint", port, "_print,_universal", spooldir, logfile ? logfile : "-", loglevel, cupsGetOption("auth-service", num_options, options), /* tls_only */false)) == NULL)
     return (NULL);
 
-  papplSystemAddListeners(system, NULL);
+  if (!cupsGetOption("private-server", num_options, options))
+  {
+    // Listen for TCP/IP connections...
+    papplSystemAddListeners(system, listenhost);
+  }
+
   papplSystemSetHostName(system, hostname);
 
   papplSystemSetMIMECallback(system, mime_cb, NULL);
@@ -482,11 +548,9 @@ system_cb(
   papplSystemAddResourceString(system, "/fr.strings", "text/strings", lprint_fr_strings);
   papplSystemAddResourceString(system, "/it.strings", "text/strings", lprint_it_strings);
 
-  papplSystemSetFooterHTML(system, "Copyright &copy; 2019-2021 by Michael R Sweet. All rights reserved.");
+  papplSystemSetFooterHTML(system, "Copyright &copy; 2019-2022 by Michael R Sweet. All rights reserved.");
   papplSystemSetSaveCallback(system, (pappl_save_cb_t)papplSystemSaveState, (void *)lprint_statefile);
   papplSystemSetVersions(system, (int)(sizeof(versions) / sizeof(versions[0])), versions);
-
-  fprintf(stderr, "lprint: statefile='%s'\n", lprint_statefile);
 
   if (!papplSystemLoadState(system, lprint_statefile))
   {
