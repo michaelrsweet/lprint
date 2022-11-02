@@ -29,10 +29,13 @@ typedef enum lprint_dlang_e
 typedef struct lprint_dymo_s		// DYMO driver data
 {
   lprint_dlang_t dlang;			// Printer language
-  unsigned	ystart,			// First line
+  unsigned	xstart,			// Starting column (bytes)
+		xend,			// Ending column (bytes)
+		ystart,			// First line
 		yend;			// Last line
   int		feed,			// Accumulated feed
-		min_leader;		// Leader distance for cut
+		min_leader,		// Leader distance for cut
+		normal_leader;		// Leader distance for top of label
 } lprint_dymo_t;
 
 
@@ -142,7 +145,7 @@ lprintDYMO(
   data->status_cb     = lprint_dymo_status;
   data->format        = "application/vnd.dymo-lw";
 
-  if (strncmp(driver_name, "dymo_lm-", 8) || strstr(driver_name, "-tape"))
+  if (!strncmp(driver_name, "dymo_lm-", 8) || strstr(driver_name, "-tape"))
   {
     // Set pages-per-minute based on 3" of tape; not exact but
     // we need to report something...
@@ -182,7 +185,7 @@ lprintDYMO(
 
     data->x_default = data->y_default = 300;
 
-    data->left_right = 1;
+    data->left_right = 367;
     data->bottom_top = 1;
 
     data->num_media = (int)(sizeof(lprint_dymo_label) / sizeof(lprint_dymo_label[0]));
@@ -194,7 +197,7 @@ lprintDYMO(
       data->source[0]  = "main-roll";
       data->source[1]  = "alternate-roll";
 
-      papplCopyString(data->media_ready[0].size_name, "oe_multipurpose-label_1.125x3.5in", sizeof(data->media_ready[0].size_name));
+      papplCopyString(data->media_ready[0].size_name, "oe_address-label_1.125x3.5in", sizeof(data->media_ready[0].size_name));
       papplCopyString(data->media_ready[1].size_name, "oe_address-label_1.125x3.5in", sizeof(data->media_ready[1].size_name));
     }
     else
@@ -256,11 +259,20 @@ lprint_dymo_init(
     dymo->dlang = LPRINT_DLANG_TAPE;
 
     if (!strcmp(driver_name, "dymo_lw-duo-tape") || !strcmp(driver_name, "dymo_lw-duo-tape-128") || !strcmp(driver_name, "dymo_lw-450-duo-tape"))
-      dymo->min_leader = 61;
+    {
+      dymo->min_leader    = 61;
+      dymo->normal_leader = 14;
+    }
     else if (!strcmp(driver_name, "dymo_lm-pnp"))
-      dymo->min_leader = 58;
+    {
+      dymo->min_leader    = 58;
+      dymo->normal_leader = 17;
+    }
     else
-      dymo->min_leader = 55;
+    {
+      dymo->min_leader    = 55;
+      dymo->normal_leader = 20;
+    }
   }
   else
   {
@@ -364,14 +376,19 @@ lprint_dymo_rendpage(
   switch (dymo->dlang)
   {
     case LPRINT_DLANG_LABEL :
-        papplDevicePuts(device, "\033E");
         break;
 
     case LPRINT_DLANG_TAPE :
+	// Skip and cut...
+        papplDevicePrintf(device, "\033D%c", 0);
         memset(buffer, 0x16, dymo->min_leader);
         papplDeviceWrite(device, buffer, dymo->min_leader);
         break;
   }
+
+  // Eject/cut
+  papplDevicePuts(device, "\033E");
+  papplDeviceFlush(device);
 
   return (true);
 }
@@ -389,7 +406,7 @@ lprint_dymo_rstartjob(
 {
   lprint_dymo_t		*dymo = (lprint_dymo_t *)calloc(1, sizeof(lprint_dymo_t));
 					// DYMO driver data
-  char			buffer[131];	// Buffer for reset command
+  char			buffer[23];	// Buffer for reset command
 
 
   (void)options;
@@ -417,11 +434,12 @@ lprint_dymo_rstartjob(
         break;
 
     case LPRINT_DLANG_TAPE :
-        memset(buffer, 0, 128);
-        buffer[128] = 0x1b;
-        buffer[129] = 'C';
-        buffer[130] = 0;
-        papplDeviceWrite(device, buffer, 131);
+        // Send nul bytes to clear input buffer...
+        memset(buffer, 0, sizeof(buffer));
+        papplDeviceWrite(device, buffer, sizeof(buffer));
+
+        // Set tape color to black on white...
+        papplDevicePrintf(device, "\033C%c", 0);
         break;
   }
 
@@ -493,12 +511,21 @@ lprint_dymo_rstartpage(
 	break;
 
     case LPRINT_DLANG_TAPE :
-        memset(buffer, 0x16, dymo->min_leader);
-        papplDeviceWrite(device, buffer, dymo->min_leader);
+        // Set line width...
+        papplDevicePrintf(device, "\033D%c", 0);
+
+        // Feed for the leader...
+	memset(buffer, 0x16, dymo->normal_leader);
+	papplDeviceWrite(device, buffer, dymo->normal_leader);
+
+        // Set indentation...
+        papplDevicePrintf(device, "\033B%c", 0);
         break;
   }
 
   dymo->feed   = 0;
+  dymo->xstart = options->media.left_margin * options->printer_resolution[0] / 2540 / 8;
+  dymo->xend   = options->header.cupsBytesPerLine - dymo->xstart;
   dymo->ystart = options->media.top_margin * options->printer_resolution[1] / 2540;
   dymo->yend   = options->header.cupsHeight - dymo->ystart;
 
@@ -554,6 +581,7 @@ lprint_dymo_rwriteline(
       case LPRINT_DLANG_TAPE :
 	  if (dymo->feed)
 	  {
+            papplDevicePrintf(device, "\033D%c", 0);
 	    memset(buffer, 0x16, sizeof(buffer));
 	    while (dymo->feed > 255)
 	    {
@@ -562,12 +590,13 @@ lprint_dymo_rwriteline(
 	    }
 
             if (dymo->feed > 0)
+            {
 	      papplDeviceWrite(device, buffer, dymo->feed);
-
-	    dymo->feed = 0;
+	      dymo->feed = 0;
+	    }
 	  }
-	  papplDevicePrintf(device, "\033D%c\026", options->header.cupsBytesPerLine);
-	  papplDeviceWrite(device, line, options->header.cupsBytesPerLine);
+	  papplDevicePrintf(device, "\033D%c\026", dymo->xend - dymo->xstart);
+	  papplDeviceWrite(device, line + dymo->xstart, dymo->xend - dymo->xstart);
           break;
     }
   }
