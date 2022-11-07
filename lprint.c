@@ -42,6 +42,7 @@ static pappl_pr_driver_t	lprint_drivers[] =
 {					// Driver list
 #include "lprint-dymo.h"
 #include "lprint-epl2.h"
+#include "lprint-zj.h"
 #include "lprint-zpl.h"
 };
 static char			lprint_spooldir[1024],
@@ -99,8 +100,13 @@ autoadd_cb(const char *device_info,	// I - Device information/name (not used)
     if ((make = cupsGetOption("MANU", num_did, did)) == NULL)
       make = cupsGetOption("MFG", num_did, did);
 
-  if (make && !strncasecmp(make, "Zebra", 5))
-    lprintZPLQueryDriver((pappl_system_t *)cbdata, device_uri, name, sizeof(name));
+  if (make)
+  {
+    if (!strncasecmp(make, "Zebra", 5))
+      lprintZPLQueryDriver((pappl_system_t *)cbdata, device_uri, name, sizeof(name));
+    if (!strncasecmp(make, "STMicroelectronics", 18))
+      lprintZJQueryDriver((pappl_system_t *)cbdata, device_uri, name, sizeof(name));
+  }
 
   // Then loop through the driver list to find the best match...
   for (i = 0; i < (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])); i ++)
@@ -205,6 +211,8 @@ driver_cb(
     return (lprintDYMO(system, driver_name, device_uri, device_id, data, attrs, cbdata));
   else if (!strncmp(driver_name, "epl2_", 5))
     return (lprintEPL2(system, driver_name, device_uri, device_id, data, attrs, cbdata));
+  else if (!strncmp(driver_name, "zj_", 3))
+    return (lprintZJ(system, driver_name, device_uri, device_id, data, attrs, cbdata));
   else if (!strncmp(driver_name, "zpl_", 4))
     return (lprintZPL(system, driver_name, device_uri, device_id, data, attrs, cbdata));
   else

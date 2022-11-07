@@ -38,7 +38,8 @@ rather than starting and stopping like CUPS does to support a wider variety of
 printers.
 
 LPrint supports the full range of options and features supported by the
-embedded drivers - currently all DYMO and Zebra EPL2/ZPL label printers.
+embedded drivers - currently all DYMO and Zebra EPL2/ZPL label printers,
+as well as all Zijiang receipt printers.
 Whenever possible, LPrint will auto-detect the make and model of your printer
 and its installed capabilities.  And you can configure the default values of all
 options as well as manually configure the media that is loaded in each printer.

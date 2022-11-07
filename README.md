@@ -45,6 +45,7 @@ The following printers are currently supported:
 - DYMO LabelWriter printers
 - Zebra/Eltron EPL2 printers
 - Zebra ZPL printers
+- Zijiang receipt printers
 
 Others will be added as time and access to printers permits.
 

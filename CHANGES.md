@@ -4,6 +4,7 @@ LPrint Change History
 v1.2.0 - Pending
 ----------------
 
+- Added support for Zijiang receipt printers (Issue #83)
 - Documentation corrections (Issue #53, Issue #76)
 - Added snap server configuration.
 - Added `--with-systemd` configure option and install to

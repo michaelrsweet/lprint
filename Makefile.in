@@ -93,6 +93,7 @@ OBJS		=	\
 			lprint-dymo.o \
 			lprint-epl2.o \
 			lprint-testpage.o \
+			lprint-zj.o \
 			lprint-zpl.o \
 			lprint.o
 TARGETS		=	\
@@ -171,6 +172,7 @@ resheaders:
 $(OBJS):	config.h lprint.h Makefile
 lprint.o:	\
 		lprint-dymo.h \
+		lprint-zj.h \
 		lprint-zpl.h \
 		static-resources/lprint-png.h \
 		static-resources/lprint-large-png.h \
