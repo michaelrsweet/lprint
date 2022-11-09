@@ -20,17 +20,6 @@
 // Size in bytes of the bitmap header sent to the device
 #define ZJ_HEADER_SIZE 8
 
-// Printer status bits
-#define ZJ_PRINTER_OFFLINE	0x08
-#define ZJ_OFFLINE_COVER	0x04
-#define ZJ_OFFLINE_PAPER	0x20
-#define ZJ_OFFLINE_ERROR	0x40
-#define ZJ_ERROR_CUTTER		0x08
-#define ZJ_ERROR_UNRECOVERABLE	0x20
-#define ZJ_ERROR_RECOVERABLE	0x40
-#define ZJ_FEED_NEAR_END	0x0C
-#define ZJ_FEED_PRESENCE	0x60
-
 
 //
 // Local types...
@@ -420,122 +409,7 @@ static bool				// O - `true` on success, `false` on failure
 lprint_zj_status(
     pappl_printer_t *printer)		// I - Printer
 {
-  pappl_device_t	*device;	// Connection to printer
-  pappl_preason_t	reasons;	// "printer-state-reasons" values
-  char			status;		// Status from printer
-  bool			ret = false;	// Return value
+  (void)printer;
 
-
-  if ((device = papplPrinterOpenDevice(printer)) == NULL)
-  {
-    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to open device for status.");
-    return (false);
-  }
-
-  // Get the printer status...
-  if (papplDevicePuts(device, "\020\004\001") < 0)
-  {
-    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to send printer status command.");
-    goto done;
-  }
-
-  if (papplDeviceRead(device, &status, 1) < 0)
-  {
-    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to read printer status response.");
-    goto done;
-  }
-
-  papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Printer status: 0x%x.", status);
-
-  reasons = PAPPL_PREASON_NONE;
-  if (status & ZJ_PRINTER_OFFLINE)
-    reasons |= PAPPL_PREASON_OFFLINE;
-  papplPrinterSetReasons(printer, reasons, ~reasons);
-
-  // Get the off-line status...
-  if (papplDevicePuts(device, "\020\004\002") < 0)
-  {
-    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to send off-line status command.");
-    goto done;
-  }
-
-  if (papplDeviceRead(device, &status, 1) < 0)
-  {
-    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to read off-line status response.");
-    goto done;
-  }
-
-  papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Off-line status: 0x%x.", status);
-
-  reasons = PAPPL_PREASON_NONE;
-  if (status & ZJ_OFFLINE_COVER)
-    reasons |= PAPPL_PREASON_COVER_OPEN;
-  if (status & ZJ_OFFLINE_PAPER)
-    reasons |= PAPPL_PREASON_MEDIA_EMPTY;
-  if (status & ZJ_OFFLINE_ERROR)
-    reasons |= PAPPL_PREASON_OTHER;
-  papplPrinterSetReasons(printer, reasons, PAPPL_PREASON_NONE);
-
-  // Get the error status...
-  if (papplDevicePuts(device, "\020\004\003") < 0)
-  {
-    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to send error status command.");
-    goto done;
-  }
-
-  if (papplDeviceRead(device, &status, 1) < 0)
-  {
-    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to read error status response.");
-    goto done;
-  }
-
-  papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Error status: 0x%x.", status);
-
-  reasons = PAPPL_PREASON_NONE;
-  if (status & ZJ_ERROR_CUTTER)
-  {
-    reasons |= PAPPL_PREASON_OTHER;
-    papplLogPrinter(printer, PAPPL_LOGLEVEL_ERROR, "Cutter error.");
-  }
-  if (status & ZJ_ERROR_UNRECOVERABLE)
-  {
-    reasons |= PAPPL_PREASON_OTHER;
-    papplLogPrinter(printer, PAPPL_LOGLEVEL_ERROR, "Unrecoverable error.");
-  }
-  if (status & ZJ_ERROR_RECOVERABLE)
-  {
-    reasons |= PAPPL_PREASON_OTHER;
-    papplLogPrinter(printer, PAPPL_LOGLEVEL_ERROR, "Recoverable error.");
-  }
-  papplPrinterSetReasons(printer, reasons, PAPPL_PREASON_NONE);
-
-  // Get the feed status...
-  if (papplDevicePuts(device, "\020\004\004") < 0)
-  {
-    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to send feed status command.");
-    goto done;
-  }
-
-  if (papplDeviceRead(device, &status, 1) < 0)
-  {
-    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to read feed status response.");
-    goto done;
-  }
-
-  papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Feed status: 0x%x.", status);
-
-  reasons = PAPPL_PREASON_NONE;
-  if (status & ZJ_FEED_NEAR_END)
-    reasons |= PAPPL_PREASON_MEDIA_LOW;
-  if (status & ZJ_FEED_PRESENCE)
-    reasons |= PAPPL_PREASON_MEDIA_NEEDED;
-  papplPrinterSetReasons(printer, reasons, PAPPL_PREASON_NONE);
-
-  ret = true;
-
-  done:
-
-  papplPrinterCloseDevice(printer);
-
-  return (ret);
+  return (true);
 }
