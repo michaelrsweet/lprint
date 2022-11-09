@@ -33,82 +33,145 @@ lprintTestFilterCB(
 		black = 0xff,		// Black pixel
 	        gray0 = 0xaa,		// Gray pixel for even lines
 	        gray1 = 0x55;		// Gray pixel for odd lines
-  unsigned	y,			// Current position in page
+  unsigned	x, y,			// Current position in page
 		ytop, yend, ybottom,	// Top/end-of-image/bottom lines in page
 		x1mm, y1mm,		// Number of bytes/rows for 2mm
+		py, pycount,		// Index into image
 		pw, ph;			// Image width and height
   const char	**pixels,		// Output image pixels
 		*pixel;			// Current output pixel
   bool		ret = false;		// Return value
   static const char *portrait[] =	// Portrait label image
   {
-    "                ",
-    " TTT            ",
-    " TT             ",
-    " TT             ",
-    " TT           T ",
-    " TTTTTTTTTTTTTT ",
-    " TTTTTTTTTTTTTT ",
-    " TT           T ",
-    " TT             ",
-    " TT             ",
-    " TTT            ",
-    "                ",
-    "                ",
-    "   SS     SSS   ",
-    "  SS     SSSSS  ",
-    "  SS    SS  SS  ",
-    " SS     SS   SS ",
-    " SS    SS    SS ",
-    " SS    SS    SS ",
-    " SS   SS     SS ",
-    "  SS  SS    SS  ",
-    "  SSSSS     SS  ",
-    "   SSS     SS   ",
-    "                ",
-    "                ",
-    " EEE        EEE ",
-    " EE          EE ",
-    " EE   EEEE   EE ",
-    " EE    EE    EE ",
-    " EE    EE    EE ",
-    " EE    EE    EE ",
-    " EE    EE    EE ",
-    " EE    EE    EE ",
-    " EEEEEEEEEEEEEE ",
-    " EEEEEEEEEEEEEE ",
-    "                ",
-    "                ",
-    " TTT            ",
-    " TT             ",
-    " TT             ",
-    " TT           T ",
-    " TTTTTTTTTTTTTT ",
-    " TTTTTTTTTTTTTT ",
-    " TT           T ",
-    " TT             ",
-    " TT             ",
-    " TTT            ",
-    "                "
+    "                                ",
+    "                                ",
+    "  TTTTTT                        ",
+    "  TTTTTT                        ",
+    "  TTTT                          ",
+    "  TTTT                          ",
+    "  TTTT                          ",
+    "  TTTT                          ",
+    "  TTTT                      TT  ",
+    "  TTTT                      TT  ",
+    "  TTTTTTTTTTTTTTTTTTTTTTTTTTTT  ",
+    "  TTTTTTTTTTTTTTTTTTTTTTTTTTTT  ",
+    "  TTTTTTTTTTTTTTTTTTTTTTTTTTTT  ",
+    "  TTTTTTTTTTTTTTTTTTTTTTTTTTTT  ",
+    "  TTTT                      TT  ",
+    "  TTTT                      TT  ",
+    "  TTTT                          ",
+    "  TTTT                          ",
+    "  TTTT                          ",
+    "  TTTT                          ",
+    "  TTTTTT                        ",
+    "  TTTTTT                        ",
+    "                                ",
+    "                                ",
+    "                                ",
+    "                                ",
+    "      SSSS          SSSSSS      ",
+    "      SSSS          SSSSSS      ",
+    "    SSSS          SSSSSSSSSS    ",
+    "    SSSS          SSSSSSSSSS    ",
+    "    SSSS        SSSS    SSSS    ",
+    "    SSSS        SSSS    SSSS    ",
+    "  SSSS          SSSS      SSSS  ",
+    "  SSSS          SSSS      SSSS  ",
+    "  SSSS        SSSS        SSSS  ",
+    "  SSSS        SSSS        SSSS  ",
+    "  SSSS        SSSS        SSSS  ",
+    "  SSSS        SSSS        SSSS  ",
+    "  SSSS      SSSS          SSSS  ",
+    "  SSSS      SSSS          SSSS  ",
+    "    SSSS    SSSS        SSSS    ",
+    "    SSSS    SSSS        SSSS    ",
+    "    SSSSSSSSSS          SSSS    ",
+    "    SSSSSSSSSS          SSSS    ",
+    "      SSSSSS          SSSS      ",
+    "      SSSSSS          SSSS      ",
+    "                                ",
+    "                                ",
+    "                                ",
+    "                                ",
+    "  EEEEEE                EEEEEE  ",
+    "  EEEEEE                EEEEEE  ",
+    "  EEEE                    EEEE  ",
+    "  EEEE                    EEEE  ",
+    "  EEEE      EEEEEEEE      EEEE  ",
+    "  EEEE      EEEEEEEE      EEEE  ",
+    "  EEEE        EEEE        EEEE  ",
+    "  EEEE        EEEE        EEEE  ",
+    "  EEEE        EEEE        EEEE  ",
+    "  EEEE        EEEE        EEEE  ",
+    "  EEEE        EEEE        EEEE  ",
+    "  EEEE        EEEE        EEEE  ",
+    "  EEEE        EEEE        EEEE  ",
+    "  EEEE        EEEE        EEEE  ",
+    "  EEEE        EEEE        EEEE  ",
+    "  EEEEEEEEEEEEEEEEEEEEEEEEEEEE  ",
+    "  EEEEEEEEEEEEEEEEEEEEEEEEEEEE  ",
+    "  EEEEEEEEEEEEEEEEEEEEEEEEEEEE  ",
+    "  EEEEEEEEEEEEEEEEEEEEEEEEEEEE  ",
+    "                                ",
+    "                                ",
+    "                                ",
+    "                                ",
+    "  TTTTTT                        ",
+    "  TTTTTT                        ",
+    "  TTTT                          ",
+    "  TTTT                          ",
+    "  TTTT                          ",
+    "  TTTT                          ",
+    "  TTTT                      TT  ",
+    "  TTTT                      TT  ",
+    "  TTTTTTTTTTTTTTTTTTTTTTTTTTTT  ",
+    "  TTTTTTTTTTTTTTTTTTTTTTTTTTTT  ",
+    "  TTTTTTTTTTTTTTTTTTTTTTTTTTTT  ",
+    "  TTTT                      TT  ",
+    "  TTTT                      TT  ",
+    "  TTTT                          ",
+    "  TTTT                          ",
+    "  TTTT                          ",
+    "  TTTT                          ",
+    "  TTTTTT                        ",
+    "  TTTTTT                        ",
+    "                                ",
+    "                                "
   };
   static const char *landscape[] =	// Landscape label image
   {
-    "                                                ",
-    " TTTTTTTTTT  EEEEEEEEEE     SSSS     TTTTTTTTTT ",
-    " TTTTTTTTTT  EEEEEEEEEE   SSSSSSSS   TTTTTTTTTT ",
-    " T   TT   T  EE       E  SSS    SSS  T   TT   T ",
-    "     TT      EE          SS       S      TT     ",
-    "     TT      EE          SS              TT     ",
-    "     TT      EE     E     SSS            TT     ",
-    "     TT      EEEEEEEE      SSSS          TT     ",
-    "     TT      EEEEEEEE        SSSS        TT     ",
-    "     TT      EE     E          SSS       TT     ",
-    "     TT      EE                  SS      TT     ",
-    "     TT      EE          S       SS      TT     ",
-    "     TT      EE       E  SSS    SSS      TT     ",
-    "     TT      EEEEEEEEEE   SSSSSSSS       TT     ",
-    "    TTTT     EEEEEEEEEE     SSSS        TTTT    ",
-    "                                                "
+    "                                                                                                ",
+    "                                                                                                ",
+    "  TTTTTTTTTTTTTTTTTTTT    EEEEEEEEEEEEEEEEEEEE          SSSSSSSS          TTTTTTTTTTTTTTTTTTTT  ",
+    "  TTTTTTTTTTTTTTTTTTTT    EEEEEEEEEEEEEEEEEEEE          SSSSSSSS          TTTTTTTTTTTTTTTTTTTT  ",
+    "  TTTTTTTTTTTTTTTTTTTT    EEEEEEEEEEEEEEEEEEEE      SSSSSSSSSSSSSSSS      TTTTTTTTTTTTTTTTTTTT  ",
+    "  TTTTTTTTTTTTTTTTTTTT    EEEEEEEEEEEEEEEEEEEE      SSSSSSSSSSSSSSSS      TTTTTTTTTTTTTTTTTTTT  ",
+    "  TT      TTTT      TT    EEEE              EE    SSSSSS        SSSSSS    TT      TTTT      TT  ",
+    "  TT      TTTT      TT    EEEE              EE    SSSSSS        SSSSSS    TT      TTTT      TT  ",
+    "          TTTT            EEEE                    SSSS              SS            TTTT          ",
+    "          TTTT            EEEE                    SSSS              SS            TTTT          ",
+    "          TTTT            EEEE                    SSSS                            TTTT          ",
+    "          TTTT            EEEE                    SSSS                            TTTT          ",
+    "          TTTT            EEEE          EE          SSSSSS                        TTTT          ",
+    "          TTTT            EEEE          EE          SSSSSS                        TTTT          ",
+    "          TTTT            EEEEEEEEEEEEEEEE            SSSSSSSS                    TTTT          ",
+    "          TTTT            EEEEEEEEEEEEEEEE            SSSSSSSS                    TTTT          ",
+    "          TTTT            EEEEEEEEEEEEEEEE                SSSSSSSS                TTTT          ",
+    "          TTTT            EEEEEEEEEEEEEEEE                SSSSSSSS                TTTT          ",
+    "          TTTT            EEEE          EE                    SSSSSS              TTTT          ",
+    "          TTTT            EEEE          EE                    SSSSSS              TTTT          ",
+    "          TTTT            EEEE                                    SSSS            TTTT          ",
+    "          TTTT            EEEE                                    SSSS            TTTT          ",
+    "          TTTT            EEEE                    SS              SSSS            TTTT          ",
+    "          TTTT            EEEE                    SS              SSSS            TTTT          ",
+    "          TTTT            EEEE              EE    SSSSSS        SSSSSS            TTTT          ",
+    "          TTTT            EEEE              EE    SSSSSS        SSSSSS            TTTT          ",
+    "          TTTT            EEEEEEEEEEEEEEEEEEEE      SSSSSSSSSSSSSSSS              TTTT          ",
+    "          TTTT            EEEEEEEEEEEEEEEEEEEE      SSSSSSSSSSSSSSSS              TTTT          ",
+    "        TTTTTTTT          EEEEEEEEEEEEEEEEEEEE          SSSSSSSS                TTTTTTTT        ",
+    "        TTTTTTTT          EEEEEEEEEEEEEEEEEEEE          SSSSSSSS                TTTTTTTT        ",
+    "                                                                                                ",
+    "                                                                                                "
   };
 
 
@@ -124,37 +187,37 @@ lprintTestFilterCB(
     goto done;
   }
 
-  if ((x1mm = options->header.HWResolution[0] / 200) == 0)
+  if ((x1mm = options->header.HWResolution[0] / 100) == 0)
     x1mm = 1;
-  if ((y1mm = 8 * (options->header.HWResolution[1] / 200)) == 0)
+  if ((y1mm = 4 * (options->header.HWResolution[1] / 100)) == 0)
     y1mm = 1;
 
   if (options->header.cupsWidth > options->header.cupsHeight)
   {
     // Send landscape raster...
     pixels = landscape;
-    pw     = 48;
-    ph     = 16;
+    pw     = 96;
+    ph     = 32;
   }
   else
   {
     // Send portrait raster...
     pixels = portrait;
-    pw     = 16;
-    ph     = 48;
+    pw     = 32;
+    ph     = 96;
   }
 
-  if (((pw + 2) * x1mm) > options->header.cupsWidth || ((ph + 2) * y1mm) > options->header.cupsHeight)
+  if (((pw + 4) * x1mm / 2) > options->header.cupsWidth || ((ph + 4) * y1mm / 2) > options->header.cupsHeight)
   {
     papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Label too small to print test page.");
     goto done;
   }
 
-  pw *= x1mm;
-  ph *= y1mm;
+  pw = pw * x1mm / 2;
+  ph = ph * y1mm / 2;
 
-  ytop    = (options->header.cupsHeight - ph) / 2;
-  yend    = ytop + ph;
+  ytop    = (options->header.cupsHeight - ph) / 4;
+  yend    = ytop + ph / 2;
   ybottom = options->header.cupsHeight - y1mm;
 
   papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "pw=%u, ph=%u, ytop=%u, yend=%u, ybottom=%u", pw, ph, ytop, yend, ybottom);
@@ -200,17 +263,38 @@ lprintTestFilterCB(
   }
 
   // Side borders, gray shading, and image pixels in middle
-  for (; y < yend; y ++)
+  for (py = 0, pycount = y1mm; y < yend; y ++)
   {
     memset(line, (y & 1) ? gray1 : gray0, options->header.cupsBytesPerLine);
     memset(line, black, x1mm);
     memset(line + options->header.cupsBytesPerLine - x1mm, black, x1mm);
 
-    for (pixel = pixels[(y - ytop) / y1mm], lineptr = line + (options->header.cupsBytesPerLine - pw) / 2; *pixel; pixel ++, lineptr += x1mm)
-      memset(lineptr, isspace(*pixel) ? white : black, x1mm);
+    for (pixel = pixels[py], lineptr = line + x1mm/*(options->header.cupsBytesPerLine - pw) / 2*/, x = 0; *pixel; x ++)
+    {
+      if (x & 1)
+      {
+        *lineptr = (*lineptr & 0xf0) | ((isspace(*pixel) ? white : black) & 0x0f);
+        lineptr ++;
+        pixel ++;
+      }
+      else
+      {
+        *lineptr = (*lineptr & 0x0f) | ((isspace(*pixel) ? white : black) & 0xf0);
+      }
+    }
 
     if (!(data.rwriteline_cb)(job, options, device, y, line))
       goto done;
+
+    if (pycount > 0)
+    {
+      pycount --;
+    }
+    else
+    {
+      py ++;
+      pycount = y1mm;
+    }
   }
 
   // Side borders and gray shading on lower half
