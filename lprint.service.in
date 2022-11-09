@@ -7,7 +7,7 @@ Requires=avahi-daemon.socket
 WantedBy=multi-user.target
 
 [Service]
-ExecStart=@bindir@/lprint server -o log-file=- -o log-level=debug
+ExecStart=@bindir@/lprint server -o log-file=- -o log-level=info
 Type=simple
 Restart=on-failure
 
