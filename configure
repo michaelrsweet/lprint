@@ -2359,6 +2359,20 @@ then :
 
 fi
 
+if test "$exec_prefix" = "NONE"
+then :
+
+    exec_prefix="$prefix"
+
+fi
+
+if test "$bindir" = "\${exec_prefix}/bin"
+then :
+
+    bindir="$exec_prefix/bin"
+
+fi
+
 
 
 
@@ -3723,19 +3737,6 @@ else
   PKGCONFIG="$ac_cv_path_PKGCONFIG"
 fi
 
-
-
-#AC_PATH_TOOL([CUPSCONFIG], [cups-config])
-#
-#AS_IF([$PKGCONFIG --exists cups], [
-#    CFLAGS="$CFLAGS $($PKGCONFIG --cflags cups)"
-#    LIBS="$LIBS $($PKGCONFIG --libs cups)"
-#], [test "x$CUPSCONFIG" != x], [
-#    CFLAGS="$CFLAGS $($CUPSCONFIG --cflags)"
-#    LIBS="$LIBS $($CUPSCONFIG --libs)"
-#], [
-#    AC_MSG_ERROR([CUPS is required for LPrint.])
-#])
 
 
 if $PKGCONFIG --exists pappl --atleast-version=1.1

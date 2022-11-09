@@ -59,6 +59,16 @@ AS_IF([test $prefix = NONE], [
     prefix=$ac_default_prefix
 ], [])
 
+dnl Fix "exec_prefix" variable if it hasn't been specified...
+AS_IF([test "$exec_prefix" = "NONE"], [
+    exec_prefix="$prefix"
+])
+
+dnl Fix "bindir" variable...
+AS_IF([test "$bindir" = "\${exec_prefix}/bin"], [
+    bindir="$exec_prefix/bin"
+])
+
 
 dnl Standard programs...
 AC_PROG_CC
