@@ -88,6 +88,9 @@ lprintZJ(
   // Only Zijiang receipt printers supported for now
   data->kind = PAPPL_KIND_RECEIPT;
 
+  data->input_face_up  = false;
+  data->output_face_up = false;
+
   data->num_resolution  = 1;
   data->x_resolution[0] = 203;
   data->y_resolution[0] = 203;
@@ -271,14 +274,15 @@ lprint_zj_rendpage(
     zj->buffer[6] = zj->lines & 0xff;
     zj->buffer[7] = (zj->lines >> 8) & 0xff;
     papplDeviceWrite(device, zj->buffer, ZJ_HEADER_SIZE + zj->lines * options->header.cupsBytesPerLine);
+    papplDevicePrintf(device, "\033J%c", 0);
   }
 
   if (zj->feed)
   {
-    while (zj->feed > 255)
+    while (zj->feed > 24)
     {
-      papplDevicePrintf(device, "\033J%c", 255);
-      zj->feed -= 255;
+      papplDevicePrintf(device, "\033J%c", 24);
+      zj->feed -= 24;
     }
 
     papplDevicePrintf(device, "\033J%c", zj->feed);
@@ -371,10 +375,10 @@ lprint_zj_rwriteline(
   {
     if (zj->feed)
     {
-      while (zj->feed > 255)
+      while (zj->feed > 24)
       {
-        papplDevicePrintf(device, "\033J%c", 255);
-        zj->feed -= 255;
+        papplDevicePrintf(device, "\033J%c", 24);
+        zj->feed -= 24;
       }
 
       papplDevicePrintf(device, "\033J%c", zj->feed);
@@ -391,6 +395,7 @@ lprint_zj_rwriteline(
       zj->buffer[6] = zj->lines & 0xff;
       zj->buffer[7] = (zj->lines >> 8) & 0xff;
       papplDeviceWrite(device, zj->buffer, ZJ_HEADER_SIZE + zj->lines * options->header.cupsBytesPerLine);
+      papplDevicePrintf(device, "\033J%c", 0);
       zj->lines = 0;
     }
 
