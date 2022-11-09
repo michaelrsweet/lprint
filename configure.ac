@@ -88,6 +88,20 @@ dnl Check for pkg-config, which is used for some other tests later on...
 AC_PATH_TOOL([PKGCONFIG], [pkg-config])
 
 
+dnl CUPS library...
+AC_PATH_TOOL([CUPSCONFIG], [cups-config])
+
+AS_IF([$PKGCONFIG --exists cups], [
+    CFLAGS="$CFLAGS $($PKGCONFIG --cflags cups)"
+    LIBS="$LIBS $($PKGCONFIG --libs cups)"
+], [test "x$CUPSCONFIG" != x], [
+    CFLAGS="$CFLAGS $($CUPSCONFIG --cflags)"
+    LIBS="$LIBS $($CUPSCONFIG --libs)"
+], [
+    AC_MSG_ERROR([CUPS is required for LPrint.])
+])
+
+
 dnl PAPPL library...
 AS_IF([$PKGCONFIG --exists pappl --atleast-version=1.1], [
     CFLAGS="$CFLAGS $($PKGCONFIG --cflags pappl)"
