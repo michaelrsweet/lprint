@@ -4,6 +4,7 @@
 /config.log
 /config.status
 /lprint
+/lprint.service
 /Makefile
 /xcode/lprint.xcodeproj/xcshareddata
 xcuserdata
