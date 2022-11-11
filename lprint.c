@@ -1,7 +1,7 @@
 //
 // Main entry for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2021 by Michael R Sweet.
+// Copyright © 2019-2022 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -170,7 +170,7 @@ driver_cb(
   data->kind = PAPPL_KIND_LABEL;
 
   // Color values...
-  data->color_supported   = PAPPL_COLOR_MODE_AUTO | PAPPL_COLOR_MODE_MONOCHROME;
+  data->color_supported   = PAPPL_COLOR_MODE_AUTO | PAPPL_COLOR_MODE_MONOCHROME | PAPPL_COLOR_MODE_BI_LEVEL;
   data->color_default     = PAPPL_COLOR_MODE_MONOCHROME;
   data->raster_types      = PAPPL_PWG_RASTER_TYPE_BLACK_1 | PAPPL_PWG_RASTER_TYPE_BLACK_8 | PAPPL_PWG_RASTER_TYPE_SGRAY_8;
   data->force_raster_type = PAPPL_PWG_RASTER_TYPE_BLACK_1;
