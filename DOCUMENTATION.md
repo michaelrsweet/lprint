@@ -242,7 +242,7 @@ You can set the default values for each option with the "add" or "modify"
 sub-commands:
 
     lprint add -d PRINTER -v DEVICE-URI -m DRIVER-NAME -o OPTION=VALUE ...
-    lprint modify -D PRINTER -o OPTION=VALUE ...
+    lprint modify -d PRINTER -o OPTION=VALUE ...
 
 In addition, you can configure the installed media and other printer settings
 using other "-o" options.  For example, the following command configures the
@@ -263,7 +263,7 @@ control the server operation:
 
 - "-o listen-name=HOSTNAME": Sets the network hostname to resolve for listen
   addresses - "*" for the wildcard addresses.
-- "-o server-name=HOSTNAME": Sets the network hostname to advertise.
+- "-o server-hostname=HOSTNAME": Sets the network hostname to advertise.
 - "-o server-port=NNN": Sets the network port number; the default is randomly
   assigned.
 - "-o auth-service=SERVICE": Specifies a PAM service for remote authentication.
@@ -292,7 +292,7 @@ operations, you set the PAM authentication service with the
 `-o auth-service=SERVICE` option.  For example, to use the "cups" PAM service
 with LPrint, run:
 
-    lprint -o server-name=HOSTNAME -o server-port=NNN -o auth-service=cups
+    lprint server -o server-name=HOSTNAME -o server-port=NNN -o auth-service=cups
 
 By default, any user can authenticate web interface operations.  To restrict
 access to a particular UNIX group, use the `-o admin-group=GROUP` option as

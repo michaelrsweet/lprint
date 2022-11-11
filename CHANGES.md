@@ -4,6 +4,7 @@ LPrint Change History
 v1.2.0 - Pending
 ----------------
 
+- Documentation corrections (Issue #76)
 - Added snap server configuration.
 - Added `--with-systemd` configure option and install to
  `$prefix/lib/systemd/system` by default (Issue #50)
