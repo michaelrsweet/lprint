@@ -29,9 +29,7 @@ typedef enum lprint_dlang_e
 typedef struct lprint_dymo_s		// DYMO driver data
 {
   lprint_dlang_t dlang;			// Printer language
-  unsigned	xstart,			// Starting column (bytes)
-		xend,			// Ending column (bytes)
-		ystart,			// First line
+  unsigned	ystart,			// First line
 		yend;			// Last line
   int		feed,			// Accumulated feed
 		min_leader,		// Leader distance for cut
@@ -477,13 +475,17 @@ lprint_dymo_rstartpage(
     return (false);
   }
 
+  dymo->feed   = 0;
+  dymo->ystart = options->media.top_margin * options->printer_resolution[1] / 2540;
+  dymo->yend   = options->header.cupsHeight - dymo->ystart;
+
   switch (dymo->dlang)
   {
     case LPRINT_DLANG_LABEL :
 	papplDevicePrintf(device, "\033Q%c%c", 0, 0);
 	papplDevicePrintf(device, "\033B%c", 0);
 	papplDevicePrintf(device, "\033L%c%c", options->header.cupsHeight >> 8, options->header.cupsHeight);
-	papplDevicePrintf(device, "\033D%c", options->header.cupsBytesPerLine - 1);
+	papplDevicePrintf(device, "\033D%c", options->header.cupsBytesPerLine);
 
 	papplPrinterGetDriverData(papplJobGetPrinter(job), &data);
 
@@ -523,12 +525,6 @@ lprint_dymo_rstartpage(
         break;
   }
 
-  dymo->feed   = 0;
-  dymo->xstart = options->media.left_margin * options->printer_resolution[0] / 2540 / 8;
-  dymo->xend   = options->header.cupsBytesPerLine - dymo->xstart;
-  dymo->ystart = options->media.top_margin * options->printer_resolution[1] / 2540;
-  dymo->yend   = options->header.cupsHeight - dymo->ystart;
-
   return (true);
 }
 
@@ -547,7 +543,7 @@ lprint_dymo_rwriteline(
 {
   lprint_dymo_t		*dymo = (lprint_dymo_t *)papplJobGetData(job);
 					// DYMO driver data
-  unsigned char		buffer[256];	// Write buffer
+  unsigned char		byte;		// Byte to write
 
 
   if (y < dymo->ystart || y >= dymo->yend)
@@ -573,14 +569,16 @@ lprint_dymo_rwriteline(
 	  }
 
 	  // Then write the non-blank line...
-	  buffer[0] = 0x16;
-	  memcpy(buffer + 1, line + 1, options->header.cupsBytesPerLine - 1);
-	  papplDeviceWrite(device, buffer, options->header.cupsBytesPerLine);
+	  byte = 0x16;
+	  papplDeviceWrite(device, &byte, 1);
+	  papplDeviceWrite(device, line, options->header.cupsBytesPerLine);
 	  break;
 
       case LPRINT_DLANG_TAPE :
 	  if (dymo->feed)
 	  {
+	    unsigned char buffer[256];	// Write buffer
+
             papplDevicePrintf(device, "\033D%c", 0);
 	    memset(buffer, 0x16, sizeof(buffer));
 	    while (dymo->feed > 255)
@@ -595,8 +593,8 @@ lprint_dymo_rwriteline(
 	      dymo->feed = 0;
 	    }
 	  }
-	  papplDevicePrintf(device, "\033D%c\026", dymo->xend - dymo->xstart);
-	  papplDeviceWrite(device, line + dymo->xstart, dymo->xend - dymo->xstart);
+	  papplDevicePrintf(device, "\033D%c\026", options->header.cupsBytesPerLine);
+	  papplDeviceWrite(device, line, options->header.cupsBytesPerLine);
           break;
     }
   }
