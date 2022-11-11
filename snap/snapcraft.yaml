@@ -30,11 +30,11 @@ architectures:
 
 apps:
     lprint:
-        command: usr/local/bin/lprint
+        command: /bin/lprint
         plugs: [avahi-control, home, network, network-bind, network-manager, raw-usb]
 
     lprint-server:
-        command: usr/local/bin/lprint server -o log-file=syslog
+        command: /bin/lprint server -o log-file=syslog
         daemon: simple
         plugs: [avahi-control, home, network, network-bind, network-manager, raw-usb]
 
@@ -42,13 +42,13 @@ parts:
     pappl:
         plugin: autotools
         autotools-configure-parameters: [--disable-shared,--enable-libjpeg,--enable-libpng,--enable-libusb,--with-dnssd=avahi]
-        source: https://github.com/michaelrsweet/pappl/releases/download/v1.2.1/pappl-1.2.1.tar.gz
+        source: https://github.com/michaelrsweet/pappl/releases/download/v1.2.3/pappl-1.2.3.tar.gz
         build-packages: [libavahi-client-dev, libcups2-dev, libcupsimage2-dev, libgnutls28-dev, libjpeg8-dev, libpam-dev, libpng-dev, libusb-1.0-0-dev, zlib1g-dev]
         stage-packages: [libavahi-client3, libcups2, libcupsimage2, libjpeg8, libpng16-16, libusb-1.0-0]
 
     lprint:
         plugin: autotools
-        autotools-configure-parameters: [--enable-libpng,--enable-libusb,--with-dnssd=avahi]
+        autotools-configure-parameters: [--enable-libpng,--enable-libusb,--with-dnssd=avahi,--prefix=/]
         source: .
         after: [pappl]
         build-packages: [libavahi-client-dev, libcups2-dev, libcupsimage2-dev, libgnutls28-dev, libpng-dev, libusb-1.0-0-dev, zlib1g-dev]
