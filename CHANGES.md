@@ -7,11 +7,13 @@ v1.2.0 - Pending
 - Added snap server configuration.
 - Added `--with-systemd` configure option and install to
  `$prefix/lib/systemd/system` by default (Issue #50)
+- Changed the default log level for systemd to info (Issue #82)
 - Fixed macOS installer to start LPrint server (Issue #48)
 - Fixed configure script not using warning/preprocessor options in build
   (Issue #60)
 - Fixed printer renaming algorithm to not truncate the name (Issue #60)
 - Fixed label mode support in EPL and ZPL drivers (Issue #79)
+- Fixed driver names for EPL printers (Issue #52)
 
 
 v1.1.0 - December 23, 2021
