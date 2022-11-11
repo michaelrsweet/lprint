@@ -298,6 +298,10 @@ mime_cb(const unsigned char *header,	// I - Header data
 
   if (headersize >= sizeof(testpage) && !memcmp(header, testpage, sizeof(testpage)))
     return (LPRINT_TESTPAGE_MIMETYPE);
+  else if (headersize >= 2 && header[0] == '^' && isupper(header[1] & 255))
+    return (LPRINT_ZPL_MIMETYPE);
+  else if (headersize >= 3 && !memcmp(header, "\nN\n", 3))
+    return (LPRINT_EPL2_MIMETYPE);
   else
     return (NULL);
 }

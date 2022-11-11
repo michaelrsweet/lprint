@@ -8,6 +8,7 @@ v1.2.0 - Pending
 - Added snap server configuration.
 - Added `--with-systemd` configure option and install to
  `$prefix/lib/systemd/system` by default (Issue #50)
+- Added EPL2 and ZPL auto-typing support (Issue #64)
 - Changed the default log level for systemd to info (Issue #82)
 - Fixed macOS installer to start LPrint server (Issue #48)
 - Fixed configure script not using warning/preprocessor options in build

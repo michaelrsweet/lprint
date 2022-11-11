@@ -154,7 +154,7 @@ lprintEPL2(
   data->rstartpage_cb = lprint_epl2_rstartpage;
   data->rwriteline_cb = lprint_epl2_rwriteline;
   data->status_cb     = lprint_epl2_status;
-  data->format        = "application/vnd.eltron-epl";
+  data->format        = LPRINT_EPL2_MIMETYPE;
 
   data->num_resolution = 1;
 

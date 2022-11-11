@@ -52,6 +52,9 @@
 #  define LPRINT_TESTPAGE_MIMETYPE	"application/vnd.lprint-test"
 #  define LPRINT_TESTPAGE_HEADER	"T*E*S*T*P*A*G*E*"
 
+#  define LPRINT_EPL2_MIMETYPE		"application/vnd.eltron-epl"
+#  define LPRINT_ZPL_MIMETYPE		"application/vnd.zebra-zpl"
+
 
 //
 // Functions...

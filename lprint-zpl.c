@@ -208,7 +208,7 @@ lprintZPL(
   data->rstartpage_cb = lprint_zpl_rstartpage;
   data->rwriteline_cb = lprint_zpl_rwriteline;
   data->status_cb     = lprint_zpl_status;
-  data->format        = "application/vnd.zebra-zpl";
+  data->format        = LPRINT_ZPL_MIMETYPE;
 
   data->num_resolution = 1;
 
