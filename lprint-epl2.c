@@ -1,7 +1,7 @@
 //
 // EPL2 driver for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2021 by Michael R Sweet.
+// Copyright © 2019-2022 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -167,6 +167,16 @@ lprintEPL2(
   {
     data->x_resolution[0] = 300;
     data->y_resolution[0] = 300;
+
+    // Adjust dither matrices...
+    for (i = 0; i < 16; i ++)
+    {
+      for (j = 0; j < 16; j ++)
+      {
+        data->gdither[i][j] = (int)(255.0 * pow(data->gdither[i][j] / 255.0, 1.7));
+        data->pdither[i][j] = (int)(255.0 * pow(data->pdither[i][j] / 255.0, 1.7));
+      }
+    }
   }
 
   data->x_default = data->y_default = data->x_resolution[0];

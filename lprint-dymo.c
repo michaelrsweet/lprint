@@ -131,7 +131,7 @@ lprintDYMO(
     ipp_t                  **attrs,	// O - Pointer to driver attributes
     void                   *cbdata)	// I - Callback data (not used)
 {
-  int	i;				// Looping var
+  int	i, j;				// Looping vars
 
 
   data->printfile_cb  = lprint_dymo_printfile;
@@ -183,6 +183,17 @@ lprintDYMO(
 
     data->x_default = data->y_default = 300;
 
+    // Adjust dither matrices...
+    for (i = 0; i < 16; i ++)
+    {
+      for (j = 0; j < 16; j ++)
+      {
+        data->gdither[i][j] = (int)(255.0 * pow(data->gdither[i][j] / 255.0, 1.7));
+        data->pdither[i][j] = (int)(255.0 * pow(data->pdither[i][j] / 255.0, 1.7));
+      }
+    }
+
+    // Media...
     data->left_right = 367;
     data->bottom_top = 1;
 

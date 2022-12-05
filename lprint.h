@@ -17,6 +17,7 @@
 
 #  include "config.h"
 #  include <pappl/pappl.h>
+#  include <math.h>
 
 
 //

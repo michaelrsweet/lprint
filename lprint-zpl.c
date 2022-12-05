@@ -221,11 +221,31 @@ lprintZPL(
   {
     data->x_resolution[0] = 300;
     data->y_resolution[0] = 300;
+
+    // Adjust dither matrices...
+    for (i = 0; i < 16; i ++)
+    {
+      for (j = 0; j < 16; j ++)
+      {
+        data->gdither[i][j] = (int)(255.0 * pow(data->gdither[i][j] / 255.0, 1.7));
+        data->pdither[i][j] = (int)(255.0 * pow(data->pdither[i][j] / 255.0, 1.7));
+      }
+    }
   }
   else
   {
     data->x_resolution[0] = 600;
     data->y_resolution[0] = 600;
+
+    // Adjust dither matrices...
+    for (i = 0; i < 16; i ++)
+    {
+      for (j = 0; j < 16; j ++)
+      {
+        data->gdither[i][j] = (int)(255.0 * pow(data->gdither[i][j] / 255.0, 2.2));
+        data->pdither[i][j] = (int)(255.0 * pow(data->pdither[i][j] / 255.0, 2.2));
+      }
+    }
   }
 
   data->x_default = data->y_default = data->x_resolution[0];
