@@ -165,6 +165,8 @@ lprintEPL2(
   }
   else
   {
+    int i, j;				// Looping vars...
+
     data->x_resolution[0] = 300;
     data->y_resolution[0] = 300;
 

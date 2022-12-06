@@ -219,6 +219,8 @@ lprintZPL(
   }
   else if (strstr(driver_name, "-300dpi"))
   {
+    int i, j;				// Looping vars...
+
     data->x_resolution[0] = 300;
     data->y_resolution[0] = 300;
 
@@ -234,6 +236,8 @@ lprintZPL(
   }
   else
   {
+    int i, j;				// Looping vars...
+
     data->x_resolution[0] = 600;
     data->y_resolution[0] = 600;
 
