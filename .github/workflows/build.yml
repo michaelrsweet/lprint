@@ -9,10 +9,10 @@ on:
 jobs:
   build-linux:
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: update build environment
       run: sudo apt-get update --fix-missing -y
     - name: install prerequisites
@@ -31,7 +31,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: install prerequisites
       run: brew install cppcheck libjpeg libpng libusb
     - name: install PAPPL
