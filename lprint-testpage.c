@@ -29,13 +29,15 @@ lprintTestFilterCB(
 					// Print options
   unsigned char	*line = NULL,		// Output line
 		*lineptr,		// Pointer into line
+		bit,			// Current bit
 		black = 0xff,		// Black pixel
-	        gray0 = 0xaa,		// Gray pixel for even lines
-	        gray1 = 0x55;		// Gray pixel for odd lines
+	        gray,			// Gray pixel for current line
+	        *dither;		// Current dither row
   unsigned	width,			// Width accounting for margins
 		height,			// Height accounting for margins
 		y,			// Current position in page
 		ytop, yend, ybottom,	// Top/end-of-image/bottom lines in page
+		xc,			// X count
 		x1mm, y1mm,		// Number of columns/rows per pixel (nominally 1mm)
 		xleft,			// Start for line
 		x1b,			// Number of bytes for borders
@@ -225,7 +227,24 @@ lprintTestFilterCB(
   // Side borders and gray shading on upper half
   for (; y < ytop; y ++)
   {
-    memset(line, (y & 1) ? gray1 : gray0, options->header.cupsBytesPerLine);
+    // Draw a 50% gray pattern with black borders...
+    for (xc = 0, lineptr = line, gray = 0, bit = 128, dither = options->dither[y & 15]; xc < options->header.cupsWidth; xc ++)
+    {
+      if (dither[xc & 15] > 127)
+        gray |= bit;
+
+      if (bit > 1)
+      {
+        bit /= 2;
+      }
+      else
+      {
+        *lineptr++ = gray;
+        gray       = 0;
+        bit        = 128;
+      }
+    }
+
     memset(line, black, x1b);
     memset(line + options->header.cupsBytesPerLine - x1b, black, x1b);
 
@@ -236,15 +255,29 @@ lprintTestFilterCB(
   // Side borders, gray shading, and image pixels in middle
   for (; y < yend; y ++)
   {
-    unsigned char	bit = 128 >> (xleft & 7);
-					// Current bit
-    unsigned		xc;		// X count
+    // Draw a 50% gray pattern with black borders...
+    for (xc = 0, lineptr = line, gray = 0, bit = 128, dither = options->dither[y & 15]; xc < options->header.cupsWidth; xc ++)
+    {
+      if (dither[xc & 15] > 127)
+        gray |= bit;
 
-    memset(line, (y & 1) ? gray1 : gray0, options->header.cupsBytesPerLine);
+      if (bit > 1)
+      {
+        bit /= 2;
+      }
+      else
+      {
+        *lineptr++ = gray;
+        gray       = 0;
+        bit        = 128;
+      }
+    }
+
     memset(line, black, x1b);
     memset(line + options->header.cupsBytesPerLine - x1b, black, x1b);
 
-    for (pixel = pixels[(y - ytop) / y1mm], lineptr = line + xleft / 8; *pixel; pixel ++)
+     // Render the interior text...
+    for (pixel = pixels[(y - ytop) / y1mm], lineptr = line + xleft / 8, bit = 128 >> (xleft & 7); *pixel; pixel ++)
     {
       for (xc = x1mm; xc > 0; xc --)
       {
@@ -272,7 +305,24 @@ lprintTestFilterCB(
   // Side borders and gray shading on lower half
   for (; y < ybottom; y ++)
   {
-    memset(line, (y & 1) ? gray1 : gray0, options->header.cupsBytesPerLine);
+    // Draw a 50% gray pattern with black borders...
+    for (xc = 0, lineptr = line, gray = 0, bit = 128, dither = options->dither[y & 15]; xc < options->header.cupsWidth; xc ++)
+    {
+      if (dither[xc & 15] > 127)
+        gray |= bit;
+
+      if (bit > 1)
+      {
+        bit /= 2;
+      }
+      else
+      {
+        *lineptr++ = gray;
+        gray       = 0;
+        bit        = 128;
+      }
+    }
+
     memset(line, black, x1b);
     memset(line + options->header.cupsBytesPerLine - x1b, black, x1b);
 

@@ -229,8 +229,8 @@ lprintZPL(
     {
       for (j = 0; j < 16; j ++)
       {
-        data->gdither[i][j] = (int)(255.0 * pow(data->gdither[i][j] / 255.0, 1.7));
-        data->pdither[i][j] = (int)(255.0 * pow(data->pdither[i][j] / 255.0, 1.7));
+        data->gdither[i][j] = (int)(255.0 * pow(data->gdither[i][j] / 255.0, 1.2));
+        data->pdither[i][j] = (int)(255.0 * pow(data->pdither[i][j] / 255.0, 1.2));
       }
     }
   }
@@ -246,8 +246,8 @@ lprintZPL(
     {
       for (j = 0; j < 16; j ++)
       {
-        data->gdither[i][j] = (int)(255.0 * pow(data->gdither[i][j] / 255.0, 2.2));
-        data->pdither[i][j] = (int)(255.0 * pow(data->pdither[i][j] / 255.0, 2.2));
+        data->gdither[i][j] = (int)(255.0 * pow(data->gdither[i][j] / 255.0, 1.44));
+        data->pdither[i][j] = (int)(255.0 * pow(data->pdither[i][j] / 255.0, 1.44));
       }
     }
   }
