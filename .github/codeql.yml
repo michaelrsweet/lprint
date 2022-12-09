@@ -1,0 +1,15 @@
+paths-ignore:
+  - 'pappl'
+  - '**/test*.c'
+
+query-filters:
+  - exclude:
+      id: cpp/integer-multiplication-cast-to-long
+  - exclude:
+      id: cpp/missing-header-guard
+  - exclude:
+      id: cpp/short-global-name
+  - exclude:
+      id: cpp/tainted-format-string
+  - exclude:
+      id: cpp/toctou-race-condition
