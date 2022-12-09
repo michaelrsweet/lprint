@@ -13,3 +13,5 @@ query-filters:
       id: cpp/tainted-format-string
   - exclude:
       id: cpp/toctou-race-condition
+  - exclude:
+      id: cpp/commented-out-code

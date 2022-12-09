@@ -797,9 +797,16 @@ lprint_zpl_status(
   papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "HQES returned '%s'.", line);
 
   if ((lineptr = strstr(line, "ERRORS:")) != NULL)
-    sscanf(lineptr + 7, "%*d%*x%x", &errors);
+  {
+    if (sscanf(lineptr + 7, "%*d%*x%x", &errors) != 1)
+      errors = 0;
+  }
+
   if ((lineptr = strstr(line, "WARNINGS:")) != NULL)
-    sscanf(lineptr + 9, "%*d%*x%x", &warnings);
+  {
+    if (sscanf(lineptr + 9, "%*d%*x%x", &warnings) != 1)
+      warnings = 0;
+  }
 
   reasons = PAPPL_PREASON_NONE;
 
@@ -897,8 +904,7 @@ lprint_zpl_status(
 
   papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "HS returned '%s'.", line);
 
-  sscanf(line + 1, "%*d,%*d,%*d,%d", &length);
-  if (length > 11)
+  if (sscanf(line + 1, "%*d,%*d,%*d,%d", &length) == 1 && length > 11)
   {
     // Auto-detect label length for ready media...
     pappl_pr_driver_data_t	data;	// Driver data
