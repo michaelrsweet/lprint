@@ -26,6 +26,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Update build environment
+        run: sudo apt-get update --fix-missing -y
+
+      - name: Install prerequisites
+        run: sudo apt-get install -y avahi-daemon cppcheck libavahi-client-dev libjpeg-dev libpam-dev libpng-dev libssl-dev libusb-1.0-0-dev zlib1g-dev
+
+      - name: Install PAPPL
+        run: git clone https://github.com/michaelrsweet/pappl.git && cd pappl && ./configure --enable-debug && make && sudo make install
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
         with:
