@@ -1,5 +1,5 @@
 name: lprint
-base: core20
+base: core22
 version: "1.2.0"
 summary: A Label Printer Application
 description: |
@@ -48,7 +48,7 @@ parts:
 
     lprint:
         plugin: autotools
-        autotools-configure-parameters: [--enable-libpng,--enable-libusb,--with-dnssd=avahi,--prefix=/]
+        autotools-configure-parameters: [--prefix=/]
         source: .
         after: [pappl]
         build-packages: [libavahi-client-dev, libcups2-dev, libcupsimage2-dev, libgnutls28-dev, libpng-dev, libusb-1.0-0-dev, zlib1g-dev]
