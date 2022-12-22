@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Script to start lprint as a server.
+# Script to start LPrint as a server.
 #
 # Copyright © 2022 by Michael R Sweet
 #
@@ -8,4 +8,29 @@
 # information.
 #
 
-exec lprint server -o log-file=- -o log-level=debug
+# Collect options:
+#
+# - admin-group: The name of the administrative group to use
+# - auth-service: The PAM authentication service to use
+# - listen-hostname: Listen hostname ("*" for all addresses)
+# - log-file: Log filename ("-" for stderr, "syslog" for system log)
+# - log-level: Log level (fatal, error, warn, info, debug)
+# - server-hostname: Host name to use
+# - server-name: DNS-SD name for LPrint on this system
+# - server-options: Comma-separated list of server options (none, dnssd-host,
+#   no-multi-queue, raw-socket, usb-printer, no-web-interface, web-log,
+#   web-network, web-remote, web-security, no-tls)
+# - server-port: Port number to use
+# - spool-directory: The directory for spool and state files
+#
+
+options=""
+for option in admin-group auth-service listen-hostname log-file log-level server-options spool-directory server-hostname server-name server-port; do
+    value="$(snapctl get $option)"
+    if test "x$value" != x; then
+        options="$options $option='$value'"
+    fi
+done
+
+# Execute the server with the specified options...
+exec lprint server -o "$options"

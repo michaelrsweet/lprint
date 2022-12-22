@@ -34,7 +34,7 @@ apps:
         plugs: [avahi-control, home, network, network-bind, network-manager, raw-usb]
 
     lprint-server:
-        command: /bin/lprint=-server
+        command: /bin/lprint-server
         daemon: simple
         plugs: [avahi-control, home, network, network-bind, network-manager, raw-usb]
 

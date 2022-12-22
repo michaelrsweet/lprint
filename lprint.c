@@ -539,6 +539,9 @@ system_cb(
 
   papplSystemSetHostName(system, hostname);
 
+  if ((val = cupsGetOption("admin-group", num_options, options)) != NULL)
+    papplSystemSetAdminGroup(system, val);
+
   papplSystemSetMIMECallback(system, mime_cb, NULL);
   papplSystemAddMIMEFilter(system, LPRINT_TESTPAGE_MIMETYPE, "image/pwg-raster", lprintTestFilterCB, NULL);
 
