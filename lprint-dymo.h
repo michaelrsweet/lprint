@@ -1,7 +1,7 @@
 //
 // DYMO driver table for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2021 by Michael R Sweet.
+// Copyright © 2019-2022 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -38,9 +38,9 @@
 { "dymo_lw-450",             "DYMO LabelWriter 450",
   "MFG:DYMO;MDL:LabelWriter 450;", NULL },
 { "dymo_lw-450-duo-label",   "DYMO LabelWriter 450 DUO Label",
-  "MFG:DYMO;MDL:LabelWriter ;", NULL },
+  "MFG:DYMO;MDL:LabelWriter 450 DUO Label;", NULL },
 { "dymo_lw-450-duo-tape",    "DYMO LabelWriter 450 DUO Tape",
-  "MFG:DYMO;MDL:LabelWriter ;", NULL },
+  "MFG:DYMO;MDL:LabelWriter 450 DUO Tape;", NULL },
 { "dymo_lw-450-turbo",       "DYMO LabelWriter 450 Turbo",
   "MFG:DYMO;MDL:LabelWriter 450 Turbo;", NULL },
 { "dymo_lw-450-twin-turbo",  "DYMO LabelWriter 450 Twin Turbo",

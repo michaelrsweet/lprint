@@ -23,15 +23,29 @@
 
 
 //
+// Local types...
+//
+
+typedef struct lprint_device_s
+{
+  char	*device_info;			// Device description
+  char	*device_uri;			// Device URI
+  char	*device_id;			// Device ID
+} lprint_device_t;
+
+
+//
 // Local functions...
 //
 
-static const char *autoadd_cb(const char *device_info, const char *device_uri, const char *device_id, void *cbdata);
-static bool	driver_cb(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
-static int	match_id(int num_did, cups_option_t *did, const char *match_id);
-static const char *mime_cb(const unsigned char *header, size_t headersize, void *data);
-static bool	printer_cb(const char *device_info, const char *device_uri, const char *device_id, pappl_system_t *system);
-static pappl_system_t *system_cb(int num_options, cups_option_t *options, void *data);
+static const char	*autoadd_cb(const char *device_info, const char *device_uri, const char *device_id, void *cbdata);
+static lprint_device_t	*copy_cb(lprint_device_t *src);
+static bool		driver_cb(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
+static void		free_cb(lprint_device_t *src);
+static int		match_id(int num_did, cups_option_t *did, const char *match_id);
+static const char	*mime_cb(const unsigned char *header, size_t headersize, void *data);
+static bool		printer_cb(const char *device_info, const char *device_uri, const char *device_id, cups_array_t *devices);
+static pappl_system_t	*system_cb(int num_options, cups_option_t *options, void *data);
 
 
 //
@@ -131,6 +145,32 @@ autoadd_cb(const char *device_info,	// I - Device information/name (not used)
 }
 
 
+//
+// 'copy_cb()' - Copy a device entry.
+//
+
+static lprint_device_t *		// O - New device entry
+copy_cb(lprint_device_t *src)		// I - Original device entry
+{
+  lprint_device_t	*dst;		// New device entry
+
+
+  if ((dst = (lprint_device_t *)calloc(1, sizeof(lprint_device_t))) != NULL)
+  {
+    dst->device_info = strdup(src->device_info);
+    dst->device_uri  = strdup(src->device_uri);
+    dst->device_id   = strdup(src->device_id);
+
+    if (!dst->device_info || !dst->device_uri || !dst->device_id)
+    {
+      free_cb(dst);
+      dst = NULL;
+    }
+  }
+
+  return (dst);
+}
+
 
 //
 // 'driver_cb()' - Main driver callback.
@@ -209,6 +249,20 @@ driver_cb(
     return (lprintZPL(system, driver_name, device_uri, device_id, data, attrs, cbdata));
   else
     return (false);
+}
+
+
+//
+// 'free_cb()' - Free a device entry.
+//
+
+static void
+free_cb(lprint_device_t *dev)		// I - Device entry
+{
+  free(dev->device_info);
+  free(dev->device_uri);
+  free(dev->device_id);
+  free(dev);
 }
 
 
@@ -312,60 +366,19 @@ mime_cb(const unsigned char *header,	// I - Header data
 //
 
 static bool				// O - `false` to continue
-printer_cb(const char     *device_info,	// I - Device information
-	   const char     *device_uri,	// I - Device URI
-	   const char     *device_id,	// I - IEEE-1284 device ID
-	   pappl_system_t *system)	// I - System
+printer_cb(const char   *device_info,	// I - Device information
+	   const char   *device_uri,	// I - Device URI
+	   const char   *device_id,	// I - IEEE-1284 device ID
+	   cups_array_t *devices)	// I - Device array
 {
-  const char *driver_name = autoadd_cb(device_info, device_uri, device_id, system);
-					// Driver name, if any
-
-  if (driver_name)
-  {
-    char	name[128],		// Printer name
-		*nameptr;		// Pointer in name
+  lprint_device_t	dev;		// New device
 
 
-    // Zebra puts "Zebra Technologies ZTC" on the front of their printer names,
-    // which is a bit, um, wordy.  Clean up the device info string to use as a
-    // printer name and drop any trailing "(ID)" nonsense if we don't need it.
-    if (!strncasecmp(device_info, "Zebra Technologies ZTC ", 23))
-      snprintf(name, sizeof(name), "Zebra %s", device_info + 23);
-    else
-      papplCopyString(name, device_info, sizeof(name));
+  dev.device_info = (char *)device_info;
+  dev.device_uri  = (char *)device_uri;
+  dev.device_id   = (char *)device_id;
 
-    if ((nameptr = strstr(name, " (")) != NULL)
-      *nameptr = '\0';
-
-    if (!papplPrinterCreate(system, 0, name, driver_name, device_id, device_uri))
-    {
-      // Printer already exists with this name, so try adding a number to the
-      // name...
-      int	i;			// Looping var
-      char	newname[128],		// New name
-		number[4];		// Number string
-      size_t	namelen = strlen(name),	// Length of original name string
-		numberlen;		// Length of number string
-
-      for (i = 2; i < 100; i ++)
-      {
-        // Append " NNN" to the name, truncating the existing name as needed to
-        // include the number at the end...
-        snprintf(number, sizeof(number), " %d", i);
-        numberlen = strlen(number);
-
-        papplCopyString(newname, name, sizeof(newname));
-        if ((namelen + numberlen) < sizeof(newname))
-          memcpy(newname + namelen, number, numberlen + 1);
-        else
-          memcpy(newname + sizeof(newname) - numberlen - 1, number, numberlen + 1);
-
-        // Try creating with this name...
-        if (papplPrinterCreate(system, 0, newname, driver_name, device_id, device_uri))
-          break;
-      }
-    }
-  }
+  cupsArrayAdd(devices, &dev);
 
   return (false);
 }
@@ -562,10 +575,70 @@ system_cb(
   if (!papplSystemLoadState(system, lprint_statefile))
   {
     // No old state, use defaults and auto-add printers...
+    cups_array_t	*devices;	// Device array
+    lprint_device_t	*dev;		// Current device
+
     papplSystemSetDNSSDName(system, system_name ? system_name : "LPrint");
 
     papplLog(system, PAPPL_LOGLEVEL_INFO, "Auto-adding printers...");
-    papplDeviceList(PAPPL_DEVTYPE_USB, (pappl_device_cb_t)printer_cb, system, papplLogDevice, system);
+    devices = cupsArrayNew(NULL, NULL, NULL, 0, (cups_acopy_cb_t)copy_cb, (cups_afree_cb_t)free_cb);
+    papplDeviceList(PAPPL_DEVTYPE_USB, (pappl_device_cb_t)printer_cb, devices, papplLogDevice, system);
+
+    for (dev = (lprint_device_t *)cupsArrayGetFirst(devices); dev; dev = (lprint_device_t *)cupsArrayGetNext(devices))
+    {
+      const char *driver_name = autoadd_cb(dev->device_info, dev->device_uri, dev->device_id, system);
+					// Driver name, if any
+
+      printf("%s (%s;%s) -> %s\n", dev->device_info, dev->device_uri, dev->device_id, driver_name);
+
+      if (driver_name)
+      {
+	char	name[128],		// Printer name
+		*nameptr;		// Pointer in name
+
+	// Zebra puts "Zebra Technologies ZTC" on the front of their printer names,
+	// which is a bit, um, wordy.  Clean up the device info string to use as a
+	// printer name and drop any trailing "(ID)" nonsense if we don't need it.
+	if (!strncasecmp(dev->device_info, "Zebra Technologies ZTC ", 23))
+	  snprintf(name, sizeof(name), "Zebra %s", dev->device_info + 23);
+	else
+	  papplCopyString(name, dev->device_info, sizeof(name));
+
+	if ((nameptr = strstr(name, " (")) != NULL)
+	  *nameptr = '\0';
+
+	if (!papplPrinterCreate(system, 0, name, driver_name, dev->device_id, dev->device_uri))
+	{
+	  // Printer already exists with this name, so try adding a number to the
+	  // name...
+	  int	i;			// Looping var
+	  char	newname[128],		// New name
+		number[4];		// Number string
+	  size_t namelen = strlen(name),// Length of original name string
+		numberlen;		// Length of number string
+
+	  for (i = 2; i < 100; i ++)
+	  {
+	    // Append " NNN" to the name, truncating the existing name as needed to
+	    // include the number at the end...
+	    snprintf(number, sizeof(number), " %d", i);
+	    numberlen = strlen(number);
+
+	    papplCopyString(newname, name, sizeof(newname));
+	    if ((namelen + numberlen) < sizeof(newname))
+	      memcpy(newname + namelen, number, numberlen + 1);
+	    else
+	      memcpy(newname + sizeof(newname) - numberlen - 1, number, numberlen + 1);
+
+	    // Try creating with this name...
+	    if (papplPrinterCreate(system, 0, newname, driver_name, dev->device_id, dev->device_uri))
+	      break;
+	  }
+	}
+      }
+    }
+
+    cupsArrayDelete(devices);
   }
 
   return (system);

@@ -1,8 +1,7 @@
 //
 // Header file for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2021 by Michael R Sweet.
-// Copyright © 2010-2019 by Apple Inc.
+// Copyright © 2019-2022 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -44,6 +43,60 @@
 #    define LPRINT_NONNULL(...)
 #    define LPRINT_NORETURN
 #  endif // __GNUC__ || __has_extension
+
+
+//
+// The CUPS API is changed in CUPS v3...
+//
+
+#  if CUPS_VERSION_MAJOR < 3
+#    define CUPS_ENCODING_ISO8859_1	CUPS_ISO8859_1
+#    define CUPS_ENCODING_JIS_X0213	CUPS_JIS_X0213
+#    define cups_len_t int
+#    define cups_page_header_t cups_page_header2_t
+#    define cupsArrayNew cupsArrayNew3
+#    define cupsArrayGetCount cupsArrayCount
+#    define cupsArrayGetElement(a,n) cupsArrayIndex(a,(int)n)
+#    define cupsArrayGetFirst cupsArrayFirst
+#    define cupsArrayGetLast cupsArrayLast
+#    define cupsArrayGetNext cupsArrayNext
+#    define cupsArrayGetPrev cupsArrayPrev
+#    define cupsGetUser cupsUser
+#    define cupsLangGetName(lang)	lang->language
+#    define cupsRasterReadHeader cupsRasterReadHeader2
+#    define cupsRasterWriteHeader cupsRasterWriteHeader2
+#    define cupsTempFd(prefix,suffix,buffer,bufsize) cupsTempFd(buffer,bufsize)
+#    define httpAddrConnect httpAddrConnect2
+#    define httpAddrGetFamily httpAddrFamily
+#    define httpAddrGetLength httpAddrLength
+#    define httpAddrGetString httpAddrString
+#    define httpAddrIsLocalhost httpAddrLocalhost
+#    define httpConnect httpConnect2
+#    define httpDecode64(out,outlen,in,end) httpDecode64_2(out,outlen,in)
+#    define httpEncode64(out,outlen,in,inlen,url) httpEncode64_2(out,outlen,in,inlen)
+#    define httpGetDateString httpGetDateString2
+#    define httpRead httpRead2
+#    define httpReconnect httpReconnect2
+#    define httpSetEncryption(http,e) (httpEncryption(http,e)>=0)
+#    define httpStatusString httpStatus
+#    define httpWrite httpWrite2
+#    define httpWriteResponse(http,code) (httpWriteResponse(http,code) == 0)
+#    define ippGetFirstAttribute ippFirstAttribute
+#    define ippGetNextAttribute ippNextAttribute
+#    define IPP_NUM_CAST (int)
+typedef cups_array_func_t cups_array_cb_t;
+typedef cups_acopy_func_t cups_acopy_cb_t;
+typedef cups_afree_func_t cups_afree_cb_t;
+typedef cups_raster_iocb_t cups_raster_cb_t;
+typedef ipp_copycb_t ipp_copy_cb_t;
+#    if CUPS_VERSION_MINOR < 3
+#      define HTTP_STATUS_FOUND (http_status_t)302
+#    endif // CUPS_VERSION_MINOR < 3
+#  else
+#    define cups_len_t size_t
+#    define cups_utf8_t char
+#    define IPP_NUM_CAST (size_t)
+#  endif // CUPS_VERSION_MAJOR < 3
 
 
 //
