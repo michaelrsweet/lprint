@@ -38,6 +38,10 @@ apps:
         daemon: simple
         plugs: [avahi-control, home, network, network-bind, network-manager, raw-usb]
 
+hooks:
+    configure:
+        plugs: [avahi-control, home, network, network-bind, network-manager, raw-usb]
+
 parts:
     pappl:
         plugin: autotools
@@ -46,9 +50,15 @@ parts:
         build-packages: [libavahi-client-dev, libcups2-dev, libcupsimage2-dev, libgnutls28-dev, libjpeg8-dev, libpam-dev, libpng-dev, libusb-1.0-0-dev, zlib1g-dev]
         stage-packages: [libavahi-client3, libcups2, libcupsimage2, libjpeg8, libpng16-16, libusb-1.0-0]
 
+    hooks:
+        plugin: dump
+        source: snap/hooks
+        organize:
+          configure: snap/hooks/
+
     scripts:
         plugin: dump
-        source: .
+        source: snap/scripts
         organize:
           lprint-server: bin/
 
@@ -56,6 +66,6 @@ parts:
         plugin: autotools
         autotools-configure-parameters: [--prefix=/]
         source: .
-        after: [pappl, scripts]
+        after: [pappl, hooks, scripts]
         build-packages: [libavahi-client-dev, libcups2-dev, libcupsimage2-dev, libgnutls28-dev, libpng-dev, libusb-1.0-0-dev, zlib1g-dev]
         stage-packages: [libavahi-client3, libcups2, libcupsimage2, libpng16-16, libusb-1.0-0]
