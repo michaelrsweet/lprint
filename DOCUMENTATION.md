@@ -56,10 +56,13 @@ job status.
 Installation
 ------------
 
-LPrint is published as a snap for Linux.  Run the following command to install
+LPrint is published as a snap for Linux.  Run the following commands to install
 it:
 
+    sudo snap install core         (if you haven't already done so)
     sudo snap install lprint
+    sudo snap connect lprint:raw-usb
+    sudo snap start lprint.lprint-server
 
 A package file is included with all source releases on Github for use on macOS
 10.14 and higher for both Intel and Apple Silicon.
