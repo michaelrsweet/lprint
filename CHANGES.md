@@ -1,8 +1,8 @@
 LPrint Change History
 =====================
 
-v1.2.0 - Pending
-----------------
+v1.2.0 - December 31, 2022
+--------------------------
 
 - Documentation corrections (Issue #53, Issue #76)
 - Added snap server configuration.
