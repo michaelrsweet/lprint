@@ -1,7 +1,7 @@
 LPrint Documentation
 ====================
 
-LPrint v1.2 - December 22, 2022
+LPrint v1.2.1 - January 2, 2023
 Copyright 2019-2022 by Michael R Sweet
 
 LPrint is licensed under the Apache License Version 2.0.  See the files
@@ -57,9 +57,10 @@ Installation
 ------------
 
 LPrint is published as a snap for Linux.  Run the following commands to install
-it:
+it and start the server:
 
     sudo snap install core         (if you haven't already done so)
+    sudo snap install avahi        (some Debian-based distros)
     sudo snap install lprint
     sudo snap connect lprint:raw-usb
     sudo snap start lprint.lprint-server
@@ -288,7 +289,7 @@ control the server operation:
   - 'web-security': Enable web-based security configuration
   - 'no-tls': Disable TLS (encryption) support
 - "-o server-port=NNN": Sets the network port number; the default is randomly
-  assigned.
+  assigned starting at 8000.
 - "-o spool-directory=DIRECTORY": Specifies the directory to store print files.
 
 When using the LPrint snap you can set these options using the `snap set`
