@@ -140,9 +140,9 @@ typedef struct lprint_dither_s		// Dithering state
 // Functions...
 //
 
-extern bool	lprintDitherAlloc(lprint_dither_t *dither, pappl_pr_options_t *options, cups_page_header_t *in_header, double out_gamma);
+extern bool	lprintDitherAlloc(lprint_dither_t *dither, pappl_pr_options_t *options, cups_cspace_t out_cspace, double out_gamma);
 extern void	lprintDitherFree(lprint_dither_t *dither);
-extern bool	lprintDitherLine(lprint_dither_t *dither, unsigned y, unsigned char *line);
+extern bool	lprintDitherLine(lprint_dither_t *dither, unsigned y, const unsigned char *line);
 
 extern bool	lprintDYMO(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern bool	lprintEPL2(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);

@@ -29,8 +29,7 @@ typedef enum lprint_dlang_e
 typedef struct lprint_dymo_s		// DYMO driver data
 {
   lprint_dlang_t dlang;			// Printer language
-  unsigned	ystart,			// First line
-		yend;			// Last line
+  lprint_dither_t dither;		// Dithering buffer
   int		feed,			// Accumulated feed
 		min_leader,		// Leader distance for cut
 		normal_leader;		// Leader distance for top of label
@@ -131,7 +130,7 @@ lprintDYMO(
     ipp_t                  **attrs,	// O - Pointer to driver attributes
     void                   *cbdata)	// I - Callback data (not used)
 {
-  int	i, j;				// Looping vars
+  int		i;			// Looping var
 
 
   data->printfile_cb  = lprint_dymo_printfile;
@@ -141,10 +140,12 @@ lprintDYMO(
   data->rstartpage_cb = lprint_dymo_rstartpage;
   data->rwriteline_cb = lprint_dymo_rwriteline;
   data->status_cb     = lprint_dymo_status;
-  data->format        = "application/vnd.dymo-lw";
 
   if (!strncmp(driver_name, "dymo_lm-", 8) || strstr(driver_name, "-tape"))
   {
+    // Vendor-specific format...
+    data->format = "application/vnd.dymo-lm";
+
     // Set pages-per-minute based on 3" of tape; not exact but
     // we need to report something...
     data->ppm = 20;
@@ -169,6 +170,9 @@ lprintDYMO(
   }
   else
   {
+    // Vendor-specific format...
+    data->format = "application/vnd.dymo-lw";
+
     // Set pages-per-minute based on 1.125x3.5" address labels; not exact but
     // we need to report something...
     if (strstr(driver_name, "-turbo"))
@@ -182,16 +186,6 @@ lprintDYMO(
     data->y_resolution[0] = 300;
 
     data->x_default = data->y_default = 300;
-
-    // Adjust dither matrices...
-    for (i = 0; i < 16; i ++)
-    {
-      for (j = 0; j < 16; j ++)
-      {
-        data->gdither[i][j] = (int)(255.0 * pow(data->gdither[i][j] / 255.0, 1.2));
-        data->pdither[i][j] = (int)(255.0 * pow(data->pdither[i][j] / 255.0, 1.2));
-      }
-    }
 
     // Media...
     data->left_right = 367;
@@ -378,9 +372,9 @@ lprint_dymo_rendpage(
   char		buffer[256];		// Command buffer
 
 
-  (void)job;
-  (void)options;
   (void)page;
+
+  lprint_dymo_rwriteline(job, options, device, options->header.cupsHeight, NULL);
 
   switch (dymo->dlang)
   {
@@ -398,6 +392,9 @@ lprint_dymo_rendpage(
   // Eject/cut
   papplDevicePuts(device, "\033E");
   papplDeviceFlush(device);
+
+  // Free memory and return...
+  lprintDitherFree(&dymo->dither);
 
   return (true);
 }
@@ -476,19 +473,28 @@ lprint_dymo_rstartpage(
   const char	*density = "cdeg";	// Density codes
   int		i;			// Looping var
   char		buffer[256];		// Command buffer
+  double	out_gamma = 1.0;	// Output gamma correction
+
 
 
   (void)page;
 
-  if (options->header.cupsBytesPerLine > 256)
+  if (options->header.cupsWidth > 2048)
   {
     papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Raster data too large for printer.");
     return (false);
   }
 
-  dymo->feed   = 0;
-  dymo->ystart = options->media.top_margin * options->printer_resolution[1] / 2540;
-  dymo->yend   = options->header.cupsHeight - dymo->ystart;
+  if (options->header.HWResolution[0] == 300)
+    out_gamma = 1.2;
+
+  if (!lprintDitherAlloc(&dymo->dither, options, CUPS_CSPACE_K, out_gamma))
+  {
+    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Raster data too large for printer.");
+    return (false);
+  }
+
+  dymo->feed = 0;
 
   switch (dymo->dlang)
   {
@@ -496,7 +502,7 @@ lprint_dymo_rstartpage(
 	papplDevicePrintf(device, "\033Q%c%c", 0, 0);
 	papplDevicePrintf(device, "\033B%c", 0);
 	papplDevicePrintf(device, "\033L%c%c", options->header.cupsHeight >> 8, options->header.cupsHeight);
-	papplDevicePrintf(device, "\033D%c", options->header.cupsBytesPerLine);
+	papplDevicePrintf(device, "\033D%c", dymo->dither.out_width);
 
 	papplPrinterGetDriverData(papplJobGetPrinter(job), &data);
 
@@ -557,10 +563,10 @@ lprint_dymo_rwriteline(
   unsigned char		byte;		// Byte to write
 
 
-  if (y < dymo->ystart || y >= dymo->yend)
+  if (!lprintDitherLine(&dymo->dither, y, line))
     return (true);
 
-  if (line[0] || memcmp(line, line + 1, options->header.cupsBytesPerLine - 1))
+  if (dymo->dither.output[0] || memcmp(dymo->dither.output, dymo->dither.output + 1, dymo->dither.out_width - 1))
   {
     // Not a blank line
     switch (dymo->dlang)
@@ -582,7 +588,7 @@ lprint_dymo_rwriteline(
 	  // Then write the non-blank line...
 	  byte = 0x16;
 	  papplDeviceWrite(device, &byte, 1);
-	  papplDeviceWrite(device, line, options->header.cupsBytesPerLine);
+	  papplDeviceWrite(device, dymo->dither.output, dymo->dither.out_width);
 	  break;
 
       case LPRINT_DLANG_TAPE :
@@ -604,8 +610,8 @@ lprint_dymo_rwriteline(
 	      dymo->feed = 0;
 	    }
 	  }
-	  papplDevicePrintf(device, "\033D%c\026", options->header.cupsBytesPerLine);
-	  papplDeviceWrite(device, line, options->header.cupsBytesPerLine);
+	  papplDevicePrintf(device, "\033D%c\026", dymo->dither.out_width);
+	  papplDeviceWrite(device, dymo->dither.output, dymo->dither.out_width);
           break;
     }
   }

@@ -22,7 +22,7 @@ bool					// O - `true` on success, `false` on error
 lprintDitherAlloc(
     lprint_dither_t    *dither,		// I - Dither buffer
     pappl_pr_options_t *options,	// I - Print options
-    cups_page_header_t *in_header,	// I - Input raster header
+    cups_cspace_t      out_cspace,	// I - Output color space
     double             out_gamma)	// I - Output gamma correction
 {
   int		i, j;			// Looping vars
@@ -43,20 +43,16 @@ lprintDitherAlloc(
   right             = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxRight];
   dither->top       = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxTop];
   dither->bottom    = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom];
+  dither->in_width  = right - dither->left;
   dither->out_width = (right - dither->left + 7) / 8;
-
-  if (right <= in_header->cupsWidth)
-    dither->in_width = right - dither->left;
-  else
-    dither->in_width = in_header->cupsWidth - dither->left;
 
   if (dither->in_width > 65536 || dither->out_width > 65536)
     return (false);			// Protect against large allocations
 
   // Calculate input/output color values
-  dither->in_bpp = in_header->cupsBitsPerPixel;
+  dither->in_bpp = options->header.cupsBitsPerPixel;
 
-  switch (in_header->cupsColorSpace)
+  switch (options->header.cupsColorSpace)
   {
     case CUPS_CSPACE_W :
     case CUPS_CSPACE_SW :
@@ -71,7 +67,7 @@ lprintDitherAlloc(
         break;
   }
 
-  switch (options->header.cupsColorSpace)
+  switch (out_cspace)
   {
     case CUPS_CSPACE_W :
     case CUPS_CSPACE_SW :
@@ -131,9 +127,9 @@ lprintDitherFree(
 
 bool					// O - `true` if line dithered, `false` to skip
 lprintDitherLine(
-    lprint_dither_t *dither,		// I - Dither buffer
-    unsigned        y,			// I - Input line number (starting at `0`)
-    unsigned char   *line)		// I - Input line
+    lprint_dither_t     *dither,	// I - Dither buffer
+    unsigned            y,		// I - Input line number (starting at `0`)
+    const unsigned char *line)		// I - Input line
 {
   unsigned	x,			// Current column
 		count;			// Remaining count
@@ -152,93 +148,97 @@ lprintDitherLine(
 
   memset(next, 0, count * sizeof(lprint_pixel_t));
 
-  switch (dither->in_bpp)
+  if (line)
   {
-    case 1 : // 1-bit black
-        for (line += dither->left / 8, byte = *line++, bit = 128 >> (dither->left & 7); count > 0; count --, next ++)
-        {
-          // Convert to 8-bit black...
-          if (byte & bit)
-            next->value = 255;
-
-	  if (bit > 1)
+    switch (dither->in_bpp)
+    {
+      case 1 : // 1-bit black
+	  for (line += dither->left / 8, byte = *line++, bit = 128 >> (dither->left & 7); count > 0; count --, next ++)
 	  {
-	    bit /= 2;
+	    // Convert to 8-bit black...
+	    if (byte & bit)
+	      next->value = 255;
+
+	    if (bit > 1)
+	    {
+	      bit /= 2;
+	    }
+	    else
+	    {
+	      bit  = 128;
+	      byte = *line++;
+	    }
+	  }
+	  break;
+
+      case 8 : // Grayscale or 8-bit black
+	  if (dither->in_white)
+	  {
+	    // Convert grayscale to black...
+	    for (line += dither->left; count > 0; count --, next ++, line ++)
+	    {
+	      if (*line < 16)
+		next->value = 255;
+	      else if (*line > 239)
+		next->value = 0;
+	      else
+		next->value = 255 - *line;
+
+	    }
 	  }
 	  else
 	  {
-	    bit  = 128;
-	    byte = *line++;
+	    // Copy with clamping...
+	    for (line += dither->left; count > 0; count --, next ++, line ++)
+	    {
+	      if (*line < 16)
+		next->value = 255;
+	      else if (*line > 239)
+		next->value = 0;
+	      else
+		next->value = *line;
+	    }
 	  }
-        }
-        break;
+	  break;
 
-    case 8 : // Grayscale or 8-bit black
-        if (dither->in_white)
-        {
-          // Convert grayscale to black...
-          for (line += dither->left; count > 0; count --, next ++, line ++)
-          {
-            if (*line < 16)
-              next->value = 255;
-	    else if (*line > 239)
-	      next->value = 0;
-	    else
-	      next->value = 255 - *line;
-	  }
-	}
-	else
-	{
-          // Copy with clamping...
-          for (line += dither->left; count > 0; count --, next ++, line ++)
-          {
-            if (*line < 16)
-              next->value = 255;
-	    else if (*line > 239)
-	      next->value = 0;
-	    else
-	      next->value = *line;
-	  }
-	}
-        break;
-
-    default : // Something else...
-        return (false);
-  }
-
-  // Then look for runs of repeated pixels
-  for (count = dither->in_width, next = dither->input[y & 3]; count > 1;)
-  {
-    if (next->value == next[1].value)
-    {
-      // Repeated sequence...
-      unsigned	length;			// Length of repetition
-
-      // Calculate run length
-      for (length = 2; length < count; length ++)
-      {
-        if (next[length - 1].value != next[length].value)
-          break;
-      }
-
-      // Store run length in run...
-      while (length > 0)
-      {
-        if (length < 255)
-          next->count = length;
-	else
-	  next->count = 255;
-
-        length --;
-        count --;
-        next ++;
-      }
+      default : // Something else...
+	  return (false);
     }
-    else
+
+    // Then look for runs of repeated pixels
+    for (count = dither->in_width, next = dither->input[y & 3]; count > 1;)
     {
-      // Non-repeated sequence...
-      count --;
-      next ++;
+      if (next->value == next[1].value)
+      {
+	// Repeated sequence...
+	unsigned	length;			// Length of repetition
+
+	// Calculate run length
+	for (length = 2; length < count; length ++)
+	{
+	  if (next[length - 1].value != next[length].value)
+	    break;
+	}
+
+	// Store run length in run...
+	while (length > 0)
+	{
+	  if (length < 255)
+	    next->count = length;
+	  else
+	    next->count = 255;
+
+	  length --;
+	  count --;
+	  next ++;
+	}
+      }
+      else
+      {
+	// Non-repeated sequence...
+	count --;
+	next ++;
+      }
     }
   }
 
@@ -287,6 +287,7 @@ lprintDitherLine(
     {
       *outptr++ = byte;
       byte      = dither->out_white;
+      bit       = 128;
     }
   }
 
