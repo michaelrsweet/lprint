@@ -135,5 +135,164 @@ lprintDitherLine(
     unsigned        y,			// I - Input line number (starting at `0`)
     unsigned char   *line)		// I - Input line
 {
-  return (false);
+  unsigned	x,			// Current column
+		count;			// Remaining count
+  lprint_pixel_t *current,		// Current line
+		*prev,			// Previous line
+		*next;			// Next line
+  unsigned char	*dline,			// Dither line
+		*outptr,		// Pointer into output
+		byte,			// Current byte
+		bit;			// Current bit
+
+
+  // Copy current input line...
+  count = dither->in_width;
+  next  = dither->input[y & 3];
+
+  memset(next, 0, count * sizeof(lprint_pixel_t));
+
+  switch (dither->in_bpp)
+  {
+    case 1 : // 1-bit black
+        for (line += dither->left / 8, byte = *line++, bit = 128 >> (dither->left & 7); count > 0; count --, next ++)
+        {
+          // Convert to 8-bit black...
+          if (byte & bit)
+            next->value = 255;
+
+	  if (bit > 1)
+	  {
+	    bit /= 2;
+	  }
+	  else
+	  {
+	    bit  = 128;
+	    byte = *line++;
+	  }
+        }
+        break;
+
+    case 8 : // Grayscale or 8-bit black
+        if (dither->in_white)
+        {
+          // Convert grayscale to black...
+          for (line += dither->left; count > 0; count --, next ++, line ++)
+          {
+            if (*line < 16)
+              next->value = 255;
+	    else if (*line > 239)
+	      next->value = 0;
+	    else
+	      next->value = 255 - *line;
+	  }
+	}
+	else
+	{
+          // Copy with clamping...
+          for (line += dither->left; count > 0; count --, next ++, line ++)
+          {
+            if (*line < 16)
+              next->value = 255;
+	    else if (*line > 239)
+	      next->value = 0;
+	    else
+	      next->value = *line;
+	  }
+	}
+        break;
+
+    default : // Something else...
+        return (false);
+  }
+
+  // Then look for runs of repeated pixels
+  for (count = dither->in_width, next = dither->input[y & 3]; count > 1;)
+  {
+    if (next->value == next[1].value)
+    {
+      // Repeated sequence...
+      unsigned	length;			// Length of repetition
+
+      // Calculate run length
+      for (length = 2; length < count; length ++)
+      {
+        if (next[length - 1].value != next[length].value)
+          break;
+      }
+
+      // Store run length in run...
+      while (length > 0)
+      {
+        if (length < 255)
+          next->count = length;
+	else
+	  next->count = 255;
+
+        length --;
+        count --;
+        next ++;
+      }
+    }
+    else
+    {
+      // Non-repeated sequence...
+      count --;
+      next ++;
+    }
+  }
+
+  // If we are outside the imageable area then don't dither...
+  if (y < (dither->top + 2) || y > (dither->bottom + 1))
+    return (false);
+
+  // Dither...
+  for (x = 0, count = dither->in_width, prev = dither->input[(y - 2) & 3], current = dither->input[(y - 1) & 3], next = dither->input[y & 3], outptr = dither->output, byte = dither->out_white, bit = 128, dline = dither->dither[y & 15]; count > 0; x ++, count --, prev ++, current ++, next ++)
+  {
+    if (current->value)
+    {
+      // Not pure white/blank...
+      if (current->value == 255)
+      {
+        // 100% black...
+        byte ^= bit;
+      }
+      else
+      {
+        // Something potentially to dither.  If this pixel borders a 100% black
+        // run, use thresholding, otherwise dither it...
+        if ((!current->count && x > 0 && current[-1].value == 255 && current[-1].count) ||
+            (!current->count && count > 1 && current[1].value == 255 && current[1].count) ||
+            (prev->value == 255 && prev->count) ||
+            (next->value == 255 && next->count))
+        {
+          // Threshold
+          if (current->value > 127)
+	    byte ^= bit;
+        }
+        else if (current->value > dline[x & 15])
+        {
+          // Dither
+	  byte ^= bit;
+	}
+      }
+    }
+
+    // Next output bit...
+    if (bit > 1)
+    {
+      bit /= 2;
+    }
+    else
+    {
+      *outptr++ = byte;
+      byte      = dither->out_white;
+    }
+  }
+
+  // Save last byte of output as needed and return...
+  if (bit < 128)
+    *outptr = byte;
+
+  return (true);
 }

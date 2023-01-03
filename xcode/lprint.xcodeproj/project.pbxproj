@@ -13,10 +13,16 @@
 		273A4980276BB83B00C3B44E /* lprint-epl2.c in Sources */ = {isa = PBXBuildFile; fileRef = 273A497F276BB83B00C3B44E /* lprint-epl2.c */; };
 		273A4982276BCE3100C3B44E /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 273A4981276BCE3100C3B44E /* libjpeg.a */; };
 		275C79822772301C00BB595D /* lprint-testpage.c in Sources */ = {isa = PBXBuildFile; fileRef = 275C79812772301C00BB595D /* lprint-testpage.c */; };
+		277343A82964619E00380814 /* libcups3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343A72964619E00380814 /* libcups3.a */; };
+		277343AB296461CB00380814 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343A9296461CB00380814 /* libssl.a */; };
+		277343AC296461CB00380814 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343AA296461CB00380814 /* libcrypto.a */; };
+		277343AE296461E100380814 /* libobjc.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343AD296461E100380814 /* libobjc.tbd */; };
+		277343B0296461F000380814 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343AF296461F000380814 /* libiconv.tbd */; };
+		277343B2296461FD00380814 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343B1296461FD00380814 /* libresolv.tbd */; };
+		277343B42964620400380814 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343B32964620400380814 /* Cocoa.framework */; };
 		277BC9BE23D88C930022AC4D /* libpam.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEEF2396995C00BB195A /* libpam.tbd */; };
 		2790DD5625FB037A00686B4C /* libpappl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2790DD5525FB037A00686B4C /* libpappl.a */; };
 		27FBEEE52396988300BB195A /* lprint.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEC92396988300BB195A /* lprint.c */; };
-		27FBEEEE2396994E00BB195A /* libcups.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEED2396994E00BB195A /* libcups.tbd */; };
 		27FBEEF22396996600BB195A /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF12396996600BB195A /* IOKit.framework */; };
 		27FBEEF42396998300BB195A /* libusb-1.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF32396998300BB195A /* libusb-1.0.a */; };
 		27FBEEF823969AB700BB195A /* libdl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF723969AB700BB195A /* libdl.tbd */; };
@@ -54,6 +60,13 @@
 		273A4981276BCE3100C3B44E /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libjpeg.a; path = ../../../../../usr/local/lib/libjpeg.a; sourceTree = "<group>"; };
 		275C79802770055400BB595D /* lprint-epl2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-epl2.h"; path = "../lprint-epl2.h"; sourceTree = "<group>"; };
 		275C79812772301C00BB595D /* lprint-testpage.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-testpage.c"; path = "../lprint-testpage.c"; sourceTree = "<group>"; };
+		277343A72964619E00380814 /* libcups3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcups3.a; path = ../../../../../usr/local/lib/libcups3.a; sourceTree = "<group>"; };
+		277343A9296461CB00380814 /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = ../../../../../usr/local/lib/libssl.a; sourceTree = "<group>"; };
+		277343AA296461CB00380814 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = ../../../../../usr/local/lib/libcrypto.a; sourceTree = "<group>"; };
+		277343AD296461E100380814 /* libobjc.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libobjc.tbd; path = usr/lib/libobjc.tbd; sourceTree = SDKROOT; };
+		277343AF296461F000380814 /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
+		277343B1296461FD00380814 /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = usr/lib/libresolv.tbd; sourceTree = SDKROOT; };
+		277343B32964620400380814 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		277BC9BF23D9E2DA0022AC4D /* lprint-es-strings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-es-strings.h"; path = "../static-resources/lprint-es-strings.h"; sourceTree = "<group>"; };
 		277BC9C023D9E2DA0022AC4D /* lprint-fr-strings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-fr-strings.h"; path = "../static-resources/lprint-fr-strings.h"; sourceTree = "<group>"; };
 		277BC9C123D9E2DB0022AC4D /* lprint-it-strings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-it-strings.h"; path = "../static-resources/lprint-it-strings.h"; sourceTree = "<group>"; };
@@ -104,6 +117,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				277343B42964620400380814 /* Cocoa.framework in Frameworks */,
+				277343B2296461FD00380814 /* libresolv.tbd in Frameworks */,
+				277343B0296461F000380814 /* libiconv.tbd in Frameworks */,
+				277343AE296461E100380814 /* libobjc.tbd in Frameworks */,
+				277343AB296461CB00380814 /* libssl.a in Frameworks */,
+				277343AC296461CB00380814 /* libcrypto.a in Frameworks */,
+				277343A82964619E00380814 /* libcups3.a in Frameworks */,
 				273A4982276BCE3100C3B44E /* libjpeg.a in Frameworks */,
 				2790DD5625FB037A00686B4C /* libpappl.a in Frameworks */,
 				27FE0EED23CBFDFD00FE1347 /* libpng16.a in Frameworks */,
@@ -111,7 +131,6 @@
 				27FE0EEB23CBFC6200FE1347 /* libz.tbd in Frameworks */,
 				27FBEEF823969AB700BB195A /* libdl.tbd in Frameworks */,
 				27FBEEFE23969AD900BB195A /* libpthread.tbd in Frameworks */,
-				27FBEEEE2396994E00BB195A /* libcups.tbd in Frameworks */,
 				27FBEEFC23969ACC00BB195A /* CoreFoundation.framework in Frameworks */,
 				27FBEEFA23969AC000BB195A /* SystemConfiguration.framework in Frameworks */,
 				27FBEEF42396998300BB195A /* libusb-1.0.a in Frameworks */,
@@ -198,6 +217,13 @@
 		27FBEEEC2396994E00BB195A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				277343B32964620400380814 /* Cocoa.framework */,
+				277343B1296461FD00380814 /* libresolv.tbd */,
+				277343AF296461F000380814 /* libiconv.tbd */,
+				277343AD296461E100380814 /* libobjc.tbd */,
+				277343AA296461CB00380814 /* libcrypto.a */,
+				277343A9296461CB00380814 /* libssl.a */,
+				277343A72964619E00380814 /* libcups3.a */,
 				273A4981276BCE3100C3B44E /* libjpeg.a */,
 				2790DD5525FB037A00686B4C /* libpappl.a */,
 				27FE0EEC23CBFDFD00FE1347 /* libpng16.a */,
@@ -251,7 +277,7 @@
 		27155E9B239697D4000D0567 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1240;
+				LastUpgradeCheck = 1420;
 				ORGANIZATIONNAME = "Michael R Sweet";
 				TargetAttributes = {
 					27155EA2239697D4000D0567 = {
@@ -329,6 +355,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -397,6 +424,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -428,9 +456,11 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = RU58A2256H;
 				ENABLE_HARDENED_RUNTIME = YES;
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -440,9 +470,11 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = RU58A2256H;
 				ENABLE_HARDENED_RUNTIME = YES;
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
