@@ -1,7 +1,7 @@
 //
 // Header file for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2022 by Michael R Sweet.
+// Copyright © 2019-2023 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -111,8 +111,38 @@ typedef ipp_copycb_t ipp_copy_cb_t;
 
 
 //
+// Types...
+//
+
+typedef struct lprint_pixel_s		// Pixel for dithering
+{
+  unsigned	count,			// Repetition count (pinned at 255)
+		value;			// Value
+} lprint_pixel_t;
+
+typedef struct lprint_dither_s		// Dithering state
+{
+  pappl_dither_t dither;		// Dither matrix to use
+  lprint_pixel_t *input[4];		// Input lines for dithering (only 3 are needed, 4 makes it easier for ring buffer)
+  unsigned	in_width,		// Width in pixels
+		left,			// Left (starting) pixel
+		top,			// Top-most pixel
+		bottom;			// Bottom-most pixel
+  unsigned char	in_bpp,			// Input bits per pixel (1 or 8)
+		in_white;		// Input white pixel value (0 or 255)
+  unsigned char	*output,		// Output bitmap
+		out_white;		// Output white pixel value (0 or 255)
+  unsigned	out_width;		// Output width in bytes
+} lprint_dither_t;
+
+
+//
 // Functions...
 //
+
+extern bool	lprintDitherAlloc(lprint_dither_t *dither, pappl_pr_options_t *options, cups_page_header_t *in_header, double out_gamma);
+extern void	lprintDitherFree(lprint_dither_t *dither);
+extern bool	lprintDitherLine(lprint_dither_t *dither, unsigned y, unsigned char *line);
 
 extern bool	lprintDYMO(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern bool	lprintEPL2(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
