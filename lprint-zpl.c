@@ -672,7 +672,7 @@ lprint_zpl_rstartpage(
     papplDevicePrintf(device, "^PR%d,%d,%d\n", ips, ips, ips);
 
   // Download bitmap...
-  papplDevicePrintf(device, "~DGR:LPRINT.GRF,%u,%u,\n", options->header.cupsHeight * zpl->dither.out_width, zpl->dither.out_width);
+  papplDevicePrintf(device, "~DGR:LPRINT.GRF,%u,%u,\n", zpl->dither.in_height * zpl->dither.out_width, zpl->dither.out_width);
 
   // Allocate memory for writing the bitmap...
   zpl->comp_buffer     = malloc(2 * zpl->dither.out_width + 1);

@@ -44,8 +44,8 @@ lprintDitherAlloc(
   {
     options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxLeft]   = options->header.HWResolution[0] * (unsigned)options->media.left_margin / 2540;
     options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxTop]    = options->header.HWResolution[1] * (unsigned)options->media.top_margin / 2540;
-    options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxRight]  = options->header.HWResolution[0] * (unsigned)(options->media.size_width - options->media.right_margin) / 2540 - 1;
-    options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom] = options->header.HWResolution[1] * (unsigned)(options->media.size_length - options->media.bottom_margin) / 2540 - 1;
+    options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxRight]  = options->header.cupsWidth - options->header.HWResolution[0] * (unsigned)options->media.right_margin / 2540 - 1;
+    options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom] = options->header.cupsHeight - options->header.HWResolution[1] * (unsigned)options->media.bottom_margin / 2540 - 1;
   }
 
   dither->in_left   = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxLeft];
@@ -53,6 +53,7 @@ lprintDitherAlloc(
   dither->in_top    = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxTop];
   dither->in_bottom = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom];
   dither->in_width  = right - dither->in_left + 1;
+  dither->in_height = dither->in_bottom - dither->in_top + 1;
   dither->out_width = (right - dither->in_left + 8) / 8;
 
   if (dither->in_width > 65536 || dither->out_width > 65536)

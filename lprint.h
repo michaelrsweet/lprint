@@ -125,6 +125,7 @@ typedef struct lprint_dither_s		// Dithering state
   pappl_dither_t dither;		// Dither matrix to use
   lprint_pixel_t *input[4];		// Input lines for dithering (only 3 are needed, 4 makes it easier for ring buffer)
   unsigned	in_width,		// Width in pixels
+		in_height,		// Height in lines
 		in_left,		// Left (starting) pixel
 		in_top,			// Top-most pixel
 		in_bottom;		// Bottom-most pixel
