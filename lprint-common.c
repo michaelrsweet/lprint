@@ -41,9 +41,9 @@ lprintDitherAlloc(
 
   // Calculate margins and dimensions...
   dither->in_left   = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxLeft];
-  right             = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxRight];
-  dither->in_top    = options->header.cupsHeight - options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxTop];
-  dither->in_bottom = options->header.cupsHeight - options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom];
+  right             = options->header.cupsWidth - options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxRight] - 1;
+  dither->in_top    = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxTop];
+  dither->in_bottom = options->header.cupsHeight - options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom] - 1;
   dither->in_width  = right - dither->in_left + 1;
   dither->out_width = (right - dither->in_left + 8) / 8;
 
