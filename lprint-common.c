@@ -40,6 +40,14 @@ lprintDitherAlloc(
   }
 
   // Calculate margins and dimensions...
+  if (!options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom] || !options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxLeft] || !options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxRight] || !options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxTop])
+  {
+    options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxLeft]   = options->header.HWResolution[0] * (unsigned)options->media.left_margin / 2540;
+    options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxTop]    = options->header.HWResolution[1] * (unsigned)options->media.top_margin / 2540;
+    options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxRight]  = options->header.HWResolution[0] * (unsigned)(options->media.size_width - options->media.right_margin) / 2540 - 1;
+    options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom] = options->header.HWResolution[1] * (unsigned)(options->media.size_length - options->media.bottom_margin) / 2540 - 1;
+  }
+
   dither->in_left   = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxLeft];
   right             = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxRight];
   dither->in_top    = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxTop];
