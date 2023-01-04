@@ -1,7 +1,7 @@
 //
 // DYMO driver for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2022 by Michael R Sweet.
+// Copyright © 2019-2023 by Michael R Sweet.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 2001-2007 by Easy Software Products.
 //

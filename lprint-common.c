@@ -41,8 +41,8 @@ lprintDitherAlloc(
   // Calculate margins and dimensions...
   dither->left      = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxLeft];
   right             = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxRight];
-  dither->top       = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxTop];
-  dither->bottom    = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom];
+  dither->top       = options->header.cupsHeight - options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxTop];
+  dither->bottom    = options->header.cupsHeight - options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom];
   dither->in_width  = right - dither->left;
   dither->out_width = (right - dither->left + 7) / 8;
 
@@ -243,7 +243,7 @@ lprintDitherLine(
   }
 
   // If we are outside the imageable area then don't dither...
-  if (y < (dither->top + 2) || y > (dither->bottom + 1))
+  if (y < (dither->top + 1) || y > (dither->bottom + 1))
     return (false);
 
   // Dither...

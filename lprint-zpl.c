@@ -1,7 +1,7 @@
 //
 // ZPL driver for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2021 by Michael R Sweet.
+// Copyright © 2019-2023 by Michael R Sweet.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 2001-2007 by Easy Software Products.
 //
@@ -666,6 +666,12 @@ lprint_zpl_rstartpage(
     papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to allocate dither buffer.");
     return (false);
   }
+
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "in_width=%u", zpl->dither.in_width);
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "left=%u", zpl->dither.left);
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "top=%u", zpl->dither.top);
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "bottom=%u", zpl->dither.bottom);
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "out_width=%u", zpl->dither.out_width);
 
   // print-darkness
   papplDevicePrintf(device, "~MD%d\n", 30 * options->print_darkness / 100);
