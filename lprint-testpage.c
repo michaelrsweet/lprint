@@ -28,11 +28,7 @@ lprintTestFilterCB(
   pappl_pr_options_t	*options = papplJobCreatePrintOptions(job, 1, false);
 					// Print options
   unsigned char	*line = NULL,		// Output line
-		*lineptr,		// Pointer into line
-		bit,			// Current bit
-		black = 0xff,		// Black pixel
-	        gray,			// Gray pixel for current line
-	        *dither;		// Current dither row
+		*lineptr;		// Pointer into line
   unsigned	width,			// Width accounting for margins
 		height,			// Height accounting for margins
 		y,			// Current position in page
@@ -40,7 +36,6 @@ lprintTestFilterCB(
 		xc,			// X count
 		x1mm, y1mm,		// Number of columns/rows per pixel (nominally 1mm)
 		xleft,			// Start for line
-		x1b,			// Number of bytes for borders
 		pw, ph;			// Image width and height
   const char	**pixels,		// Output image pixels
 		*pixel;			// Current output pixel
@@ -187,7 +182,6 @@ lprintTestFilterCB(
   pw *= x1mm;
   ph *= y1mm;
 
-  x1b     = (x1mm + 7) / 8;
   xleft   = (width - pw) / 2 - x1mm + options->header.HWResolution[0] * options->media.left_margin / 2540;
   ytop    = (height - ph) / 2 + options->header.HWResolution[1] * options->media.top_margin / 2540;
   yend    = ytop + ph;
@@ -217,7 +211,7 @@ lprintTestFilterCB(
   // +---------------+
 
   // Top border
-  memset(line, black, options->header.cupsBytesPerLine);
+  memset(line, 0, options->header.cupsBytesPerLine);
   for (y = 0; y < y1mm; y ++)
   {
     if (!(data.rwriteline_cb)(job, options, device, y, line))
@@ -225,29 +219,12 @@ lprintTestFilterCB(
   }
 
   // Side borders and gray shading on upper half
+  memset(line, 0, x1mm);
+  memset(line + x1mm, 128, options->header.cupsBytesPerLine - 2 * x1mm);
+  memset(line + options->header.cupsBytesPerLine - x1mm, 0, x1mm);
+
   for (; y < ytop; y ++)
   {
-    // Draw a 50% gray pattern with black borders...
-    for (xc = 0, lineptr = line, gray = 0, bit = 128, dither = options->dither[y & 15]; xc < options->header.cupsWidth; xc ++)
-    {
-      if (dither[xc & 15] > 127)
-        gray |= bit;
-
-      if (bit > 1)
-      {
-        bit /= 2;
-      }
-      else
-      {
-        *lineptr++ = gray;
-        gray       = 0;
-        bit        = 128;
-      }
-    }
-
-    memset(line, black, x1b);
-    memset(line + options->header.cupsBytesPerLine - x1b, black, x1b);
-
     if (!(data.rwriteline_cb)(job, options, device, y, line))
       goto done;
   }
@@ -256,45 +233,19 @@ lprintTestFilterCB(
   for (; y < yend; y ++)
   {
     // Draw a 50% gray pattern with black borders...
-    for (xc = 0, lineptr = line, gray = 0, bit = 128, dither = options->dither[y & 15]; xc < options->header.cupsWidth; xc ++)
+    memset(line, 0, x1mm);
+    memset(line + x1mm, 128, options->header.cupsBytesPerLine - 2 * x1mm);
+    memset(line + options->header.cupsBytesPerLine - x1mm, 0, x1mm);
+
+    // Render the interior text...
+    for (pixel = pixels[(y - ytop) / y1mm], lineptr = line + xleft; *pixel; pixel ++)
     {
-      if (dither[xc & 15] > 127)
-        gray |= bit;
-
-      if (bit > 1)
-      {
-        bit /= 2;
-      }
-      else
-      {
-        *lineptr++ = gray;
-        gray       = 0;
-        bit        = 128;
-      }
-    }
-
-    memset(line, black, x1b);
-    memset(line + options->header.cupsBytesPerLine - x1b, black, x1b);
-
-     // Render the interior text...
-    for (pixel = pixels[(y - ytop) / y1mm], lineptr = line + xleft / 8, bit = 128 >> (xleft & 7); *pixel; pixel ++)
-    {
-      for (xc = x1mm; xc > 0; xc --)
+      for (xc = x1mm; xc > 0; xc --, lineptr ++)
       {
         if (*pixel == '.')
-	  *lineptr &= ~bit;
+	  *lineptr = 255;
         else if (!isspace(*pixel))
-	  *lineptr |= bit;
-
-	if (bit == 1)
-	{
-	  bit = 128;
-	  lineptr ++;
-	}
-	else
-	{
-	  bit /= 2;
-	}
+	  *lineptr = 0;
       }
     }
 
@@ -303,35 +254,18 @@ lprintTestFilterCB(
   }
 
   // Side borders and gray shading on lower half
+  memset(line, 0, x1mm);
+  memset(line + x1mm, 128, options->header.cupsBytesPerLine - 2 * x1mm);
+  memset(line + options->header.cupsBytesPerLine - x1mm, 0, x1mm);
+
   for (; y < ybottom; y ++)
   {
-    // Draw a 50% gray pattern with black borders...
-    for (xc = 0, lineptr = line, gray = 0, bit = 128, dither = options->dither[y & 15]; xc < options->header.cupsWidth; xc ++)
-    {
-      if (dither[xc & 15] > 127)
-        gray |= bit;
-
-      if (bit > 1)
-      {
-        bit /= 2;
-      }
-      else
-      {
-        *lineptr++ = gray;
-        gray       = 0;
-        bit        = 128;
-      }
-    }
-
-    memset(line, black, x1b);
-    memset(line + options->header.cupsBytesPerLine - x1b, black, x1b);
-
     if (!(data.rwriteline_cb)(job, options, device, y, line))
       goto done;
   }
 
   // Bottom border
-  memset(line, black, options->header.cupsBytesPerLine);
+  memset(line, 0, options->header.cupsBytesPerLine);
   for (; y < options->header.cupsHeight; y ++)
   {
     if (!(data.rwriteline_cb)(job, options, device, y, line))

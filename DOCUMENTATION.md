@@ -63,6 +63,7 @@ it and start the server:
     sudo snap install avahi        (some Debian-based distros)
     sudo snap install lprint
     sudo snap connect lprint:raw-usb
+    sudo snap connect lprint:avahi-control
     sudo snap start lprint.lprint-server
 
 A package file is included with all source releases on Github for use on macOS

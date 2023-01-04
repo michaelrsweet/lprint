@@ -53,6 +53,7 @@
 
 typedef struct lprint_zpl_s		// ZPL driver data
 {
+  lprint_dither_t dither;		// Dither buffer
   unsigned char	*comp_buffer;		// Compression buffer
   unsigned char *last_buffer;		// Last line
   int		last_buffer_set;	// Is the last line set?
@@ -527,6 +528,8 @@ lprint_zpl_rendpage(
 
   (void)page;
 
+  lprint_zpl_rwriteline(job, options, device, options->header.cupsHeight, NULL);
+
   papplDevicePrintf(device, "^XA\n^POI\n^PW%u\n^LH0,0\n^LT%d\n", options->header.cupsWidth, options->media.top_offset * options->printer_resolution[1] / 2540);
 
   if (options->media.type[0] && strcmp(options->media.type, "labels"))
@@ -557,6 +560,9 @@ lprint_zpl_rendpage(
   if (options->finishings & PAPPL_FINISHINGS_TRIM)
     papplDevicePuts(device, "^CN1\n");
 
+  // Free memory and return...
+  lprintDitherFree(&zpl->dither);
+
   free(zpl->comp_buffer);
   free(zpl->last_buffer);
 
@@ -579,6 +585,7 @@ lprint_zpl_rstartjob(
 					// ZPL driver data
 
 
+  // Initialize driver data...
   papplJobSetData(job, zpl);
 
   papplPrinterGetDriverData(papplJobGetPrinter(job), &data);
@@ -643,9 +650,22 @@ lprint_zpl_rstartpage(
   lprint_zpl_t	*zpl = (lprint_zpl_t *)papplJobGetData(job);
 					// ZPL driver data
   int		ips;			// Inches per second
+  double	out_gamma = 1.0;	// Output gamma correction
 
 
   (void)page;
+
+  // Setup dither buffer...
+  if (options->header.HWResolution[0] == 300)
+    out_gamma = 1.2;
+  else if (options->header.HWResolution[0] == 600)
+    out_gamma = 1.44;
+
+  if (!lprintDitherAlloc(&zpl->dither, options, CUPS_CSPACE_K, out_gamma))
+  {
+    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to allocate dither buffer.");
+    return (false);
+  }
 
   // print-darkness
   papplDevicePrintf(device, "~MD%d\n", 30 * options->print_darkness / 100);
@@ -655,12 +675,18 @@ lprint_zpl_rstartpage(
     papplDevicePrintf(device, "^PR%d,%d,%d\n", ips, ips, ips);
 
   // Download bitmap...
-  papplDevicePrintf(device, "~DGR:LPRINT.GRF,%u,%u,\n", options->header.cupsHeight * options->header.cupsBytesPerLine, options->header.cupsBytesPerLine);
+  papplDevicePrintf(device, "~DGR:LPRINT.GRF,%u,%u,\n", options->header.cupsHeight * zpl->dither.out_width, zpl->dither.out_width);
 
   // Allocate memory for writing the bitmap...
-  zpl->comp_buffer     = malloc(2 * options->header.cupsBytesPerLine + 1);
-  zpl->last_buffer     = malloc(options->header.cupsBytesPerLine);
+  zpl->comp_buffer     = malloc(2 * zpl->dither.out_width + 1);
+  zpl->last_buffer     = malloc(zpl->dither.out_width);
   zpl->last_buffer_set = 0;
+
+  if (!zpl->comp_buffer || !zpl->last_buffer)
+  {
+    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to allocate compression buffers.");
+    return (false);
+  }
 
   return (true);
 }
@@ -690,18 +716,20 @@ lprint_zpl_rwriteline(
   static const unsigned char *hex = (const unsigned char *)"0123456789ABCDEF";
 					// Hex digits
 
-  (void)y;
+
+  if (!lprintDitherLine(&zpl->dither, y, line))
+    return (true);
 
   // Determine whether this row is the same as the previous line.
   // If so, output a ':' and return...
-  if (zpl->last_buffer_set && !memcmp(line, zpl->last_buffer, options->header.cupsBytesPerLine))
+  if (zpl->last_buffer_set && !memcmp(zpl->dither.output, zpl->last_buffer, zpl->dither.out_width))
   {
     papplDeviceWrite(device, ":", 1);
     return (true);
   }
 
   // Convert the line to hex digits...
-  for (ptr = line, compptr = zpl->comp_buffer, i = options->header.cupsBytesPerLine; i > 0; i --, ptr ++)
+  for (ptr = zpl->dither.output, compptr = zpl->comp_buffer, i = zpl->dither.out_width; i > 0; i --, ptr ++)
   {
     *compptr++ = hex[*ptr >> 4];
     *compptr++ = hex[*ptr & 15];
@@ -747,7 +775,7 @@ lprint_zpl_rwriteline(
 #endif // ZPL_COMPRESSION
 
   // Save this line for the next round...
-  memcpy(zpl->last_buffer, line, options->header.cupsBytesPerLine);
+  memcpy(zpl->last_buffer, zpl->dither.output, zpl->dither.out_width);
   zpl->last_buffer_set = 1;
 
   return (true);

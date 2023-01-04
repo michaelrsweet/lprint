@@ -165,20 +165,8 @@ lprintEPL2(
   }
   else
   {
-    int i, j;				// Looping vars...
-
     data->x_resolution[0] = 300;
     data->y_resolution[0] = 300;
-
-    // Adjust dither matrices...
-    for (i = 0; i < 16; i ++)
-    {
-      for (j = 0; j < 16; j ++)
-      {
-        data->gdither[i][j] = (int)(255.0 * pow(data->gdither[i][j] / 255.0, 1.2));
-        data->pdither[i][j] = (int)(255.0 * pow(data->pdither[i][j] / 255.0, 1.2));
-      }
-    }
   }
 
   data->x_default = data->y_default = data->x_resolution[0];
@@ -293,9 +281,15 @@ lprint_epl2_rendjob(
     pappl_pr_options_t *options,	// I - Job options
     pappl_device_t     *device)		// I - Output device
 {
-  (void)job;
+  lprint_dither_t *dither = (lprint_dither_t *)papplJobGetData(job);
+					// Dither buffer
+
+
   (void)options;
   (void)device;
+
+  free(dither);
+  papplJobSetData(job, NULL);
 
   return (true);
 }
@@ -312,13 +306,21 @@ lprint_epl2_rendpage(
     pappl_device_t     *device,		// I - Output device
     unsigned           page)		// I - Page number
 {
-  (void)job;
+  lprint_dither_t *dither = (lprint_dither_t *)papplJobGetData(job);
+					// Dither buffer
+
+
   (void)page;
+
+  lprint_epl2_rwriteline(job, options, device, options->header.cupsHeight, NULL);
 
   papplDevicePuts(device, "P1\n");
 
   if (options->finishings & PAPPL_FINISHINGS_TRIM)
     papplDevicePuts(device, "C\n");
+
+  // Free memory and return...
+  lprintDitherFree(dither);
 
   return (true);
 }
@@ -334,9 +336,15 @@ lprint_epl2_rstartjob(
     pappl_pr_options_t *options,	// I - Job options
     pappl_device_t     *device)		// I - Output device
 {
-  (void)job;
+  lprint_dither_t *dither = (lprint_dither_t *)calloc(1, sizeof(lprint_dither_t));
+					// Dither buffer
+
+
   (void)options;
   (void)device;
+
+  // Save dither buffer for job...
+  papplJobSetData(job, dither);
 
   return (true);
 }
@@ -354,11 +362,24 @@ lprint_epl2_rstartpage(
     unsigned           page)		// I - Page number
 {
   int		ips;			// Inches per second
+  lprint_dither_t *dither = (lprint_dither_t *)papplJobGetData(job);
+					// Dither buffer
+  double	out_gamma = 1.0;	// Output gamma correction
 
 
-  (void)job;
   (void)page;
 
+  // Initialize the dither buffer...
+  if (options->header.HWResolution[0] == 300)
+    out_gamma = 1.2;
+
+  if (!lprintDitherAlloc(dither, options, CUPS_CSPACE_W, out_gamma))
+  {
+    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Raster data too large for printer.");
+    return (false);
+  }
+
+  // Start a new label...
   papplDevicePuts(device, "\nN\n");
 
   // print-darkness
@@ -368,8 +389,8 @@ lprint_epl2_rstartpage(
   if ((ips = options->print_speed / 2540) > 0)
     papplDevicePrintf(device, "S%d\n", ips);
 
-  // Set label size...
-  papplDevicePrintf(device, "q%u\n", (options->header.cupsWidth + 7) & ~7U);
+  // Set label width...
+  papplDevicePrintf(device, "q%u\n", dither->out_width * 8);
 
   return (true);
 }
@@ -387,18 +408,18 @@ lprint_epl2_rwriteline(
     unsigned            y,		// I - Line number
     const unsigned char *line)		// I - Line
 {
-  if (line[0] || memcmp(line, line + 1, options->header.cupsBytesPerLine - 1))
+  lprint_dither_t *dither = (lprint_dither_t *)papplJobGetData(job);
+					// Dither buffer
+
+
+  if (!lprintDitherLine(dither, y, line))
+    return (true);
+
+  if (dither->output[0] || memcmp(dither->output, dither->output + 1, dither->out_width - 1))
   {
-    unsigned		i;		// Looping var
-    const unsigned char	*lineptr;	// Pointer into line
-    unsigned char	buffer[300],	// Buffer (big enough for 8" at 300dpi)
-			*bufptr;	// Pointer into buffer
-
-    for (i = options->header.cupsBytesPerLine, lineptr = line, bufptr = buffer; i > 0; i --)
-      *bufptr++ = ~*lineptr++;
-
-    papplDevicePrintf(device, "GW0,%u,%u,1\n", y, options->header.cupsBytesPerLine);
-    papplDeviceWrite(device, buffer, options->header.cupsBytesPerLine);
+    // Not a blank line
+    papplDevicePrintf(device, "GW0,%u,%u,1\n", y, dither->out_width);
+    papplDeviceWrite(device, dither->output, dither->out_width);
     papplDevicePuts(device, "\n");
   }
 
