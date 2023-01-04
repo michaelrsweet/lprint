@@ -490,7 +490,7 @@ lprint_dymo_rstartpage(
 
   if (!lprintDitherAlloc(&dymo->dither, options, CUPS_CSPACE_K, out_gamma))
   {
-    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Raster data too large for printer.");
+    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to allocate dither buffer.");
     return (false);
   }
 
