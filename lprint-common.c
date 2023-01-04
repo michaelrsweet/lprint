@@ -21,6 +21,7 @@
 bool					// O - `true` on success, `false` on error
 lprintDitherAlloc(
     lprint_dither_t    *dither,		// I - Dither buffer
+    pappl_job_t        *job,		// I - Job
     pappl_pr_options_t *options,	// I - Print options
     cups_cspace_t      out_cspace,	// I - Output color space
     double             out_gamma)	// I - Output gamma correction
@@ -39,15 +40,18 @@ lprintDitherAlloc(
   }
 
   // Calculate margins and dimensions...
-  dither->left      = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxLeft];
+  dither->in_left   = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxLeft];
   right             = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxRight];
-  dither->top       = options->header.cupsHeight - options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxTop];
-  dither->bottom    = options->header.cupsHeight - options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom];
-  dither->in_width  = right - dither->left;
-  dither->out_width = (right - dither->left + 7) / 8;
+  dither->in_top    = options->header.cupsHeight - options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxTop];
+  dither->in_bottom = options->header.cupsHeight - options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom];
+  dither->in_width  = right - dither->in_left + 1;
+  dither->out_width = (right - dither->in_left + 8) / 8;
 
   if (dither->in_width > 65536 || dither->out_width > 65536)
+  {
+    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Page too wide.");
     return (false);			// Protect against large allocations
+  }
 
   // Calculate input/output color values
   dither->in_bpp = options->header.cupsBitsPerPixel;
@@ -84,13 +88,32 @@ lprintDitherAlloc(
 
   // Allocate memory...
   if ((dither->input[0] = calloc(4 * dither->in_width, sizeof(lprint_pixel_t))) == NULL)
+  {
+    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to allocate input buffer.");
     return (false);
+  }
 
   for (i = 1; i < 4; i ++)
     dither->input[i] = dither->input[0] + i * dither->in_width;
 
   if ((dither->output = malloc(dither->out_width)) == NULL)
+  {
+    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to allocate output buffer.");
     return (false);
+  }
+
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "dither=[");
+  for (i = 0; i < 16; i ++)
+    papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "  [ %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u ]", dither->dither[i][0], dither->dither[i][1], dither->dither[i][2], dither->dither[i][3], dither->dither[i][4], dither->dither[i][5], dither->dither[i][6], dither->dither[i][7], dither->dither[i][8], dither->dither[i][9], dither->dither[i][10], dither->dither[i][11], dither->dither[i][12], dither->dither[i][13], dither->dither[i][14], dither->dither[i][15]);
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "]");
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "in_bottom=%u", dither->in_bottom);
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "in_left=%u", dither->in_left);
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "in_top=%u", dither->in_top);
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "in_width=%u", dither->in_width);
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "in_bpp=%u", dither->in_bpp);
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "in_white=%u", dither->in_white);
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "out_white=%u", dither->out_white);
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "out_width=%u", dither->out_width);
 
   // Return indicating success...
   return (true);
@@ -153,7 +176,7 @@ lprintDitherLine(
     switch (dither->in_bpp)
     {
       case 1 : // 1-bit black
-	  for (line += dither->left / 8, byte = *line++, bit = 128 >> (dither->left & 7); count > 0; count --, next ++)
+	  for (line += dither->in_left / 8, byte = *line++, bit = 128 >> (dither->in_left & 7); count > 0; count --, next ++)
 	  {
 	    // Convert to 8-bit black...
 	    if (byte & bit)
@@ -175,7 +198,7 @@ lprintDitherLine(
 	  if (dither->in_white)
 	  {
 	    // Convert grayscale to black...
-	    for (line += dither->left; count > 0; count --, next ++, line ++)
+	    for (line += dither->in_left; count > 0; count --, next ++, line ++)
 	    {
 	      if (*line < 16)
 		next->value = 255;
@@ -189,7 +212,7 @@ lprintDitherLine(
 	  else
 	  {
 	    // Copy with clamping...
-	    for (line += dither->left; count > 0; count --, next ++, line ++)
+	    for (line += dither->in_left; count > 0; count --, next ++, line ++)
 	    {
 	      if (*line < 16)
 		next->value = 255;
@@ -243,7 +266,7 @@ lprintDitherLine(
   }
 
   // If we are outside the imageable area then don't dither...
-  if (y < (dither->top + 1) || y > (dither->bottom + 1))
+  if (y < (dither->in_top + 1) || y > (dither->in_bottom + 1))
     return (false);
 
   // Dither...

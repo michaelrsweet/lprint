@@ -661,17 +661,8 @@ lprint_zpl_rstartpage(
   else if (options->header.HWResolution[0] == 600)
     out_gamma = 1.44;
 
-  if (!lprintDitherAlloc(&zpl->dither, options, CUPS_CSPACE_K, out_gamma))
-  {
-    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to allocate dither buffer.");
+  if (!lprintDitherAlloc(&zpl->dither, job, options, CUPS_CSPACE_K, out_gamma))
     return (false);
-  }
-
-  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "in_width=%u", zpl->dither.in_width);
-  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "left=%u", zpl->dither.left);
-  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "top=%u", zpl->dither.top);
-  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "bottom=%u", zpl->dither.bottom);
-  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "out_width=%u", zpl->dither.out_width);
 
   // print-darkness
   papplDevicePrintf(device, "~MD%d\n", 30 * options->print_darkness / 100);

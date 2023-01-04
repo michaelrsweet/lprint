@@ -373,11 +373,8 @@ lprint_epl2_rstartpage(
   if (options->header.HWResolution[0] == 300)
     out_gamma = 1.2;
 
-  if (!lprintDitherAlloc(dither, options, CUPS_CSPACE_W, out_gamma))
-  {
-    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Raster data too large for printer.");
+  if (!lprintDitherAlloc(dither, job, options, CUPS_CSPACE_W, out_gamma))
     return (false);
-  }
 
   // Start a new label...
   papplDevicePuts(device, "\nN\n");

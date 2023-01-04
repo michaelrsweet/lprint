@@ -488,11 +488,8 @@ lprint_dymo_rstartpage(
   if (options->header.HWResolution[0] == 300)
     out_gamma = 1.2;
 
-  if (!lprintDitherAlloc(&dymo->dither, options, CUPS_CSPACE_K, out_gamma))
-  {
-    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to allocate dither buffer.");
+  if (!lprintDitherAlloc(&dymo->dither, job, options, CUPS_CSPACE_K, out_gamma))
     return (false);
-  }
 
   dymo->feed = 0;
 

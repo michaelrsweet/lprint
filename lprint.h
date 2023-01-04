@@ -125,9 +125,9 @@ typedef struct lprint_dither_s		// Dithering state
   pappl_dither_t dither;		// Dither matrix to use
   lprint_pixel_t *input[4];		// Input lines for dithering (only 3 are needed, 4 makes it easier for ring buffer)
   unsigned	in_width,		// Width in pixels
-		left,			// Left (starting) pixel
-		top,			// Top-most pixel
-		bottom;			// Bottom-most pixel
+		in_left,		// Left (starting) pixel
+		in_top,			// Top-most pixel
+		in_bottom;		// Bottom-most pixel
   unsigned char	in_bpp,			// Input bits per pixel (1 or 8)
 		in_white;		// Input white pixel value (0 or 255)
   unsigned char	*output,		// Output bitmap
@@ -140,7 +140,7 @@ typedef struct lprint_dither_s		// Dithering state
 // Functions...
 //
 
-extern bool	lprintDitherAlloc(lprint_dither_t *dither, pappl_pr_options_t *options, cups_cspace_t out_cspace, double out_gamma);
+extern bool	lprintDitherAlloc(lprint_dither_t *dither, pappl_job_t *job, pappl_pr_options_t *options, cups_cspace_t out_cspace, double out_gamma);
 extern void	lprintDitherFree(lprint_dither_t *dither);
 extern bool	lprintDitherLine(lprint_dither_t *dither, unsigned y, const unsigned char *line);
 
