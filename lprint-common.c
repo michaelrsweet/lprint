@@ -292,11 +292,13 @@ lprintDitherLine(
       else
       {
         // Something potentially to dither.  If this pixel borders a 100% black
-        // run, use thresholding, otherwise dither it...
+        // run, or is a 1 dot wide line between whitespace, use thresholding...
         if ((!current->count && x > 0 && current[-1].value == 255 && current[-1].count) ||
             (!current->count && count > 1 && current[1].value == 255 && current[1].count) ||
             (prev->value == 255 && prev->count) ||
-            (next->value == 255 && next->count))
+            (next->value == 255 && next->count) ||
+            (!current->count && (x == 0 || !current[-1].value) && (count == 1 || !current[1].value)) ||
+            (current->count && !prev->value && prev->count && !next->value && next->count))
         {
           // Threshold
           if (current->value > 127)
@@ -304,7 +306,7 @@ lprintDitherLine(
         }
         else if (current->value > dline[x & 15])
         {
-          // Dither
+          // Dither anything else
 	  byte ^= bit;
 	}
       }
