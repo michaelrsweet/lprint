@@ -99,13 +99,20 @@ TARGETS		=	\
 			lprint
 
 
+TESTOBJS	=	\
+			lprint-common.o \
+			testdither.o
+TESTTARGETS	=	\
+			testdither
+
+
 # Make everything...
 all:	$(TARGETS)
 
 
 # Clean everything...
 clean:
-	$(RM) $(TARGETS) $(OBJS)
+	$(RM) $(TARGETS) $(OBJS) $(TESTTARGETS) $(TESTOBJS)
 
 
 # Clean everything and generated files
@@ -141,7 +148,7 @@ install:	all
 
 
 # Test everything...
-test:	$(TARGETS)
+test:	$(TARGETS) $(TESTTARGETS)
 
 
 # LPrint program...
@@ -151,6 +158,16 @@ lprint:	$(OBJS)
 	if test `uname` = Darwin; then \
 	    echo "Code-signing $@..."; \
 	    codesign $(CSFLAGS) -i org.msweet.lprint $@; \
+	fi
+
+
+# Dither test program...
+testdither: $(TESTOBJS)
+	echo Linking $@...
+	$(CC) $(LDFLAGS) -o $@ $(TESTOBJS) $(LIBS)
+	if test `uname` = Darwin; then \
+	    echo "Code-signing $@..."; \
+	    codesign $(CSFLAGS) -i org.msweet.testdither $@; \
 	fi
 
 
@@ -168,9 +185,10 @@ resheaders:
 
 
 # Dependencies...
-$(OBJS):	config.h lprint.h Makefile
+$(OBJS) $(TESTOBJS):	config.h lprint.h Makefile
 lprint.o:	\
 		lprint-dymo.h \
+		lprint-epl2.h \
 		lprint-zpl.h \
 		static-resources/lprint-png.h \
 		static-resources/lprint-large-png.h \
