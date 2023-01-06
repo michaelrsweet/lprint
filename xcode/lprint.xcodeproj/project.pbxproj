@@ -23,6 +23,27 @@
 		277343B42964620400380814 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343B32964620400380814 /* Cocoa.framework */; };
 		277BC9BE23D88C930022AC4D /* libpam.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEEF2396995C00BB195A /* libpam.tbd */; };
 		2790DD5625FB037A00686B4C /* libpappl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2790DD5525FB037A00686B4C /* libpappl.a */; };
+		27EC68942967B17700ABB3EE /* lprint-common.c in Sources */ = {isa = PBXBuildFile; fileRef = 2715B53025FD7FC200C0BBF6 /* lprint-common.c */; };
+		27EC68962967B17700ABB3EE /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 272FF1982966330F008C4F4F /* Security.framework */; };
+		27EC68972967B17700ABB3EE /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343B32964620400380814 /* Cocoa.framework */; };
+		27EC68982967B17700ABB3EE /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343B1296461FD00380814 /* libresolv.tbd */; };
+		27EC68992967B17700ABB3EE /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343AF296461F000380814 /* libiconv.tbd */; };
+		27EC689A2967B17700ABB3EE /* libobjc.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343AD296461E100380814 /* libobjc.tbd */; };
+		27EC689B2967B17700ABB3EE /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343A9296461CB00380814 /* libssl.a */; };
+		27EC689C2967B17700ABB3EE /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343AA296461CB00380814 /* libcrypto.a */; };
+		27EC689D2967B17700ABB3EE /* libcups3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343A72964619E00380814 /* libcups3.a */; };
+		27EC689E2967B17700ABB3EE /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 273A4981276BCE3100C3B44E /* libjpeg.a */; };
+		27EC689F2967B17700ABB3EE /* libpappl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2790DD5525FB037A00686B4C /* libpappl.a */; };
+		27EC68A02967B17700ABB3EE /* libpng16.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FE0EEC23CBFDFD00FE1347 /* libpng16.a */; };
+		27EC68A12967B17700ABB3EE /* libpam.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEEF2396995C00BB195A /* libpam.tbd */; };
+		27EC68A22967B17700ABB3EE /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FE0EEA23CBFC6200FE1347 /* libz.tbd */; };
+		27EC68A32967B17700ABB3EE /* libdl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF723969AB700BB195A /* libdl.tbd */; };
+		27EC68A42967B17700ABB3EE /* libpthread.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEFD23969AD900BB195A /* libpthread.tbd */; };
+		27EC68A52967B17700ABB3EE /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEFB23969ACC00BB195A /* CoreFoundation.framework */; };
+		27EC68A62967B17700ABB3EE /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF923969AC000BB195A /* SystemConfiguration.framework */; };
+		27EC68A72967B17700ABB3EE /* libusb-1.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF32396998300BB195A /* libusb-1.0.a */; };
+		27EC68A82967B17700ABB3EE /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF12396996600BB195A /* IOKit.framework */; };
+		27EC68AF2967B1A400ABB3EE /* testdither.c in Sources */ = {isa = PBXBuildFile; fileRef = 27EC68AE2967B1A400ABB3EE /* testdither.c */; };
 		27FBEEE52396988300BB195A /* lprint.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FBEEC92396988300BB195A /* lprint.c */; };
 		27FBEEF22396996600BB195A /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF12396996600BB195A /* IOKit.framework */; };
 		27FBEEF42396998300BB195A /* libusb-1.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEF32396998300BB195A /* libusb-1.0.a */; };
@@ -36,6 +57,15 @@
 
 /* Begin PBXCopyFilesBuildPhase section */
 		27155EA1239697D4000D0567 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		27EC68A92967B17700ABB3EE /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -78,6 +108,8 @@
 		27BE5C4623CCA1B10095CD45 /* CONTRIBUTING.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = CONTRIBUTING.md; path = ../CONTRIBUTING.md; sourceTree = "<group>"; };
 		27BE5C4723CCA1B10095CD45 /* DOCUMENTATION.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = DOCUMENTATION.md; path = ../DOCUMENTATION.md; sourceTree = "<group>"; };
 		27BE5C4823CCA1B10095CD45 /* CHANGES.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = CHANGES.md; path = ../CHANGES.md; sourceTree = "<group>"; };
+		27EC68AD2967B17700ABB3EE /* testdither */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testdither; sourceTree = BUILT_PRODUCTS_DIR; };
+		27EC68AE2967B1A400ABB3EE /* testdither.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = testdither.c; path = ../testdither.c; sourceTree = "<group>"; };
 		27FB485723BD7D8000BE0E47 /* lprint-large-png.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-large-png.h"; path = "../static-resources/lprint-large-png.h"; sourceTree = "<group>"; };
 		27FB486023C2519B00BE0E47 /* lprint-drivers.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-drivers.1"; path = "../man/lprint-drivers.1"; sourceTree = "<group>"; };
 		27FB486123C2519B00BE0E47 /* lprint-options.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-options.1"; path = "../man/lprint-options.1"; sourceTree = "<group>"; };
@@ -141,6 +173,32 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		27EC68952967B17700ABB3EE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27EC68962967B17700ABB3EE /* Security.framework in Frameworks */,
+				27EC68972967B17700ABB3EE /* Cocoa.framework in Frameworks */,
+				27EC68982967B17700ABB3EE /* libresolv.tbd in Frameworks */,
+				27EC68992967B17700ABB3EE /* libiconv.tbd in Frameworks */,
+				27EC689A2967B17700ABB3EE /* libobjc.tbd in Frameworks */,
+				27EC689B2967B17700ABB3EE /* libssl.a in Frameworks */,
+				27EC689C2967B17700ABB3EE /* libcrypto.a in Frameworks */,
+				27EC689D2967B17700ABB3EE /* libcups3.a in Frameworks */,
+				27EC689E2967B17700ABB3EE /* libjpeg.a in Frameworks */,
+				27EC689F2967B17700ABB3EE /* libpappl.a in Frameworks */,
+				27EC68A02967B17700ABB3EE /* libpng16.a in Frameworks */,
+				27EC68A12967B17700ABB3EE /* libpam.tbd in Frameworks */,
+				27EC68A22967B17700ABB3EE /* libz.tbd in Frameworks */,
+				27EC68A32967B17700ABB3EE /* libdl.tbd in Frameworks */,
+				27EC68A42967B17700ABB3EE /* libpthread.tbd in Frameworks */,
+				27EC68A52967B17700ABB3EE /* CoreFoundation.framework in Frameworks */,
+				27EC68A62967B17700ABB3EE /* SystemConfiguration.framework in Frameworks */,
+				27EC68A72967B17700ABB3EE /* libusb-1.0.a in Frameworks */,
+				27EC68A82967B17700ABB3EE /* IOKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -160,6 +218,7 @@
 				275C79812772301C00BB595D /* lprint-testpage.c */,
 				2715B52D25FD7FC200C0BBF6 /* lprint-zpl.c */,
 				2715B52E25FD7FC200C0BBF6 /* lprint-zpl.h */,
+				27EC68AE2967B1A400ABB3EE /* testdither.c */,
 				27FB485E23C0D91300BE0E47 /* Static Resources */,
 				27155EA4239697D4000D0567 /* Products */,
 				27FBEEEC2396994E00BB195A /* Frameworks */,
@@ -170,6 +229,7 @@
 			isa = PBXGroup;
 			children = (
 				27155EA3239697D4000D0567 /* lprint */,
+				27EC68AD2967B17700ABB3EE /* testdither */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -275,6 +335,23 @@
 			productReference = 27155EA3239697D4000D0567 /* lprint */;
 			productType = "com.apple.product-type.tool";
 		};
+		27EC688D2967B17700ABB3EE /* testdither */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 27EC68AA2967B17700ABB3EE /* Build configuration list for PBXNativeTarget "testdither" */;
+			buildPhases = (
+				27EC688E2967B17700ABB3EE /* Sources */,
+				27EC68952967B17700ABB3EE /* Frameworks */,
+				27EC68A92967B17700ABB3EE /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = testdither;
+			productName = lprint;
+			productReference = 27EC68AD2967B17700ABB3EE /* testdither */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -303,6 +380,7 @@
 			projectRoot = "";
 			targets = (
 				27155EA2239697D4000D0567 /* lprint */,
+				27EC688D2967B17700ABB3EE /* testdither */,
 			);
 		};
 /* End PBXProject section */
@@ -318,6 +396,15 @@
 				2715B53425FD7FC200C0BBF6 /* lprint-dymo.c in Sources */,
 				2715B53225FD7FC200C0BBF6 /* lprint-zpl.c in Sources */,
 				2715B53325FD7FC200C0BBF6 /* lprint-common.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27EC688E2967B17700ABB3EE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27EC68942967B17700ABB3EE /* lprint-common.c in Sources */,
+				27EC68AF2967B1A400ABB3EE /* testdither.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -483,6 +570,34 @@
 			};
 			name = Release;
 		};
+		27EC68AB2967B17700ABB3EE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = RU58A2256H;
+				ENABLE_HARDENED_RUNTIME = YES;
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		27EC68AC2967B17700ABB3EE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = RU58A2256H;
+				ENABLE_HARDENED_RUNTIME = YES;
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -500,6 +615,15 @@
 			buildConfigurations = (
 				27155EAB239697D4000D0567 /* Debug */,
 				27155EAC239697D4000D0567 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		27EC68AA2967B17700ABB3EE /* Build configuration list for PBXNativeTarget "testdither" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				27EC68AB2967B17700ABB3EE /* Debug */,
+				27EC68AC2967B17700ABB3EE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

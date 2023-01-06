@@ -101,6 +101,9 @@ main(int  argc,				// I - Number of command-line arguments
     if (!in_line || !out_line)
     {
       perror("Unable to allocate memory for page");
+      free(in_line);
+      free(out_line);
+      lprintDitherFree(&dither);
       ret = 1;
       break;
     }
@@ -167,14 +170,14 @@ write_line(
         // Dark blue
 	*out_ptr++ = 0;
 	*out_ptr++ = 0;
-        *out_ptr++ = 63 - in_ptr->value / 4;
+        *out_ptr++ = 127 - in_ptr->value / 4;
       }
       else if (in_ptr->value < 255)
       {
         // Dark yellow for dithered gray to black
-	*out_ptr++ = 63 - in_ptr->value / 8;
-	*out_ptr++ = 63 - in_ptr->value / 8;
-	*out_ptr++ = 0;
+	*out_ptr++ = 79 - in_ptr->value / 8;
+	*out_ptr++ = 79 - in_ptr->value / 8;
+	*out_ptr++ = 31;
       }
       else
       {
