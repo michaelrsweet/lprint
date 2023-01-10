@@ -6,5 +6,6 @@
 /lprint
 /lprint.service
 /Makefile
+/testdither
 /xcode/lprint.xcodeproj/xcshareddata
 xcuserdata
