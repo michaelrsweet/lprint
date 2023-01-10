@@ -238,38 +238,25 @@ lprintDitherLine(
     }
 
     // Then look for runs of repeated pixels
-    for (count = dither->in_width, next = dither->input[y & 3]; count > 1;)
+    for (count = dither->in_width, prev = dither->input[(y - 2) & 3], current = dither->input[(y - 1) & 3], next = dither->input[y & 3]; count > 0; count --, prev ++, current ++, next ++)
     {
-      if (next->value == next[1].value)
+      // Update repetition flags...
+      if (count > 1 && current[0].value == current[1].value)
       {
-	// Repeated sequence...
-	unsigned	length;			// Length of repetition
-
-	// Calculate run length
-	for (length = 2; length < count; length ++)
-	{
-	  if (next[length - 1].value != next[length].value)
-	    break;
-	}
-
-	// Store run length in run...
-	while (length > 0)
-	{
-	  if (length < 255)
-	    next->count = length;
-	  else
-	    next->count = 255;
-
-	  length --;
-	  count --;
-	  next ++;
-	}
+        current[0].repeat |= LPRINT_REPEAT_H;
+        current[1].repeat |= LPRINT_REPEAT_H;
       }
-      else
+
+      if (prev->value == current->value)
       {
-	// Non-repeated sequence...
-	count --;
-	next ++;
+        prev->repeat    |= LPRINT_REPEAT_V;
+        current->repeat |= LPRINT_REPEAT_V;
+      }
+
+      if (current->value == next->value)
+      {
+        current->repeat |= LPRINT_REPEAT_V;
+        next->repeat    |= LPRINT_REPEAT_V;
       }
     }
   }
@@ -291,14 +278,22 @@ lprintDitherLine(
       }
       else
       {
-        // Something potentially to dither.  If this pixel borders a 100% black
-        // run, or is a 1 dot wide line between whitespace, use thresholding...
-        if ((!current->count && x > 0 && current[-1].value == 255 && current[-1].count) ||
-            (!current->count && count > 1 && current[1].value == 255 && current[1].count) ||
-            (prev->value == 255 && prev->count) ||
-            (next->value == 255 && next->count) ||
-            (!current->count && (x == 0 || !current[-1].value) && (count == 1 || !current[1].value)) ||
-            (current->count && !prev->value && prev->count && !next->value && next->count))
+        // Something potentially to threshold:
+        //
+        // - this pixel borders a 100% black run
+        // - this pixel is a 1 dot wide line between whitespace
+        // - this pixel is a 1 dot wide line between other 1 dot
+        //   wide lines (striped)
+        //
+        // Otherwise use dithering...
+        if ((!(current->repeat & LPRINT_REPEAT_H) && x > 0 && current[-1].value == 255 && current[-1].repeat) ||
+            (!(current->repeat & LPRINT_REPEAT_H) && count > 1 && current[1].value == 255 && current[1].repeat) ||
+            (prev->value == 255 && prev->repeat) ||
+            (next->value == 255 && next->repeat) ||
+            (!(current->repeat & LPRINT_REPEAT_H) && (x == 0 || !current[-1].value) && (count == 1 || !current[1].value)) ||
+            ((current->repeat & LPRINT_REPEAT_H) && !prev->value && prev->repeat && !next->value && next->repeat) ||
+            (current->repeat == LPRINT_REPEAT_V && (x == 0 || current[-1].repeat == LPRINT_REPEAT_V || current[-1].value == 255) && (count == 1 || current[1].repeat == LPRINT_REPEAT_V || current[1].value == 255)) ||
+            (current->repeat == LPRINT_REPEAT_H && (prev->repeat == LPRINT_REPEAT_H || prev->value == 255) && (next->repeat == LPRINT_REPEAT_V || next->value == 255)))
         {
           // Threshold
           if (current->value > 127)

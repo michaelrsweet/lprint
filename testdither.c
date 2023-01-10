@@ -222,7 +222,7 @@ write_line(
     if (*dptr & dbit)
     {
       // Black or dark blue
-      if (in_ptr->count)
+      if (in_ptr->repeat)
       {
         // Dark blue
 	*out_ptr++ = 0;
@@ -244,7 +244,7 @@ write_line(
         *out_ptr++ = 0;
       }
     }
-    else if (in_ptr->count)
+    else if (in_ptr->repeat)
     {
       // Light blue
       *out_ptr++ = 223;

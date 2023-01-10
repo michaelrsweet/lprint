@@ -114,9 +114,16 @@ typedef ipp_copycb_t ipp_copy_cb_t;
 // Types...
 //
 
+enum
+{
+  LPRINT_REPEAT_H = 0x01,
+  LPRINT_REPEAT_V = 0x02,
+  LPRINT_REPEAT_ALL = 0x03
+};
+
 typedef struct lprint_pixel_s		// Pixel for dithering
 {
-  unsigned	count,			// Repetition count (pinned at 255)
+  unsigned char	repeat,			// Repetition flags
 		value;			// Value
 } lprint_pixel_t;
 
