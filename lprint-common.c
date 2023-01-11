@@ -14,6 +14,10 @@
 #include "lprint.h"
 
 
+#define LPRINT_WHITE	64
+#define LPRINT_BLACK	191
+
+
 //
 // 'lprintDitherAlloc()' - Allocate memory for a dither buffer.
 //
@@ -35,7 +39,7 @@ lprintDitherAlloc(
   {
     for (j = 0; j < 16; j ++)
     {
-      dither->dither[i][j] = (unsigned char)(223.0 * pow(options->dither[i][j] / 255.0, out_gamma) + 16.0);
+      dither->dither[i][j] = (unsigned char)((LPRINT_BLACK - LPRINT_WHITE) * pow(options->dither[i][j] / 255.0, out_gamma) + LPRINT_WHITE);
     }
   }
 
@@ -209,9 +213,9 @@ lprintDitherLine(
 	    // Convert grayscale to black...
 	    for (line += dither->in_left; count > 0; count --, next ++, line ++)
 	    {
-	      if (*line < 16)
+	      if (*line < LPRINT_WHITE)
 		next->value = 255;
-	      else if (*line > 239)
+	      else if (*line > LPRINT_BLACK)
 		next->value = 0;
 	      else
 		next->value = 255 - *line;
@@ -223,9 +227,9 @@ lprintDitherLine(
 	    // Copy with clamping...
 	    for (line += dither->in_left; count > 0; count --, next ++, line ++)
 	    {
-	      if (*line < 16)
+	      if (*line < LPRINT_WHITE)
 		next->value = 255;
-	      else if (*line > 239)
+	      else if (*line > LPRINT_BLACK)
 		next->value = 0;
 	      else
 		next->value = *line;
