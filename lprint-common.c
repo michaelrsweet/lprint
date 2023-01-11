@@ -14,8 +14,8 @@
 #include "lprint.h"
 
 
-#define LPRINT_WHITE	64
-#define LPRINT_BLACK	191
+#define LPRINT_WHITE	56
+#define LPRINT_BLACK	199
 
 
 //
