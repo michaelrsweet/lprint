@@ -60,7 +60,7 @@ lprintDitherAlloc(
   dither->in_height = dither->in_bottom - dither->in_top + 1;
   dither->out_width = (right - dither->in_left + 8) / 8;
 
-  if (dither->in_width > 65536 || dither->out_width > 65536)
+  if (dither->in_width > 65536)
   {
     papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Page too wide.");
     return (false);			// Protect against large allocations
