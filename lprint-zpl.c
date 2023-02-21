@@ -299,7 +299,7 @@ lprintZPL(
   papplCopyString(data->media_default.source, "main-roll", sizeof(data->media_default.source));
   data->media_default.top_margin = data->bottom_top;
   data->media_default.top_offset = 0;
-  data->media_default.tracking   = PAPPL_MEDIA_TRACKING_MARK;
+  data->media_default.tracking   = PAPPL_MEDIA_TRACKING_WEB;
   papplCopyString(data->media_default.type, "labels", sizeof(data->media_default.type));
 
   data->media_ready[0] = data->media_default;
