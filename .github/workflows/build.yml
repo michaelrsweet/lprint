@@ -33,7 +33,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: install prerequisites
-      run: brew install cppcheck libjpeg libpng libusb
+      run: brew install cppcheck libjpeg libpng libusb openssl@3
     - name: install PAPPL
       run: git clone https://github.com/michaelrsweet/pappl.git && cd pappl && ./configure --enable-debug && make && sudo make install
     - name: configure
