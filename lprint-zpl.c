@@ -186,6 +186,7 @@ static bool	lprint_zpl_rstartjob(pappl_job_t *job, pappl_pr_options_t *options, 
 static bool	lprint_zpl_rstartpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page);
 static bool	lprint_zpl_rwriteline(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned y, const unsigned char *line);
 static bool	lprint_zpl_status(pappl_printer_t *printer);
+static bool	lprint_zpl_update_reasons(pappl_printer_t *printer, pappl_job_t *job, pappl_device_t *device);
 
 
 //
@@ -471,6 +472,10 @@ lprint_zpl_printfile(
     return (false);
   }
 
+  // Update status...
+  lprint_zpl_update_reasons(papplJobGetPrinter(job), job, device);
+
+  // Copy print data...
   while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
   {
     if (papplDeviceWrite(device, buffer, (size_t)bytes) < 0)
@@ -483,6 +488,9 @@ lprint_zpl_printfile(
   close(fd);
 
   papplJobSetImpressionsCompleted(job, 1);
+
+  // Update status...
+  lprint_zpl_update_reasons(papplJobGetPrinter(job), job, device);
 
   return (true);
 }
@@ -559,6 +567,9 @@ lprint_zpl_rendpage(
 
   if (options->finishings & PAPPL_FINISHINGS_TRIM)
     papplDevicePuts(device, "^CN1\n");
+
+  // Update status...
+  lprint_zpl_update_reasons(papplJobGetPrinter(job), job, device);
 
   // Free memory and return...
   lprintDitherFree(&zpl->dither);
@@ -654,6 +665,9 @@ lprint_zpl_rstartpage(
 
 
   (void)page;
+
+  // Update status...
+  lprint_zpl_update_reasons(papplJobGetPrinter(job), job, device);
 
   // Setup dither buffer...
   if (options->header.HWResolution[0] == 300)
@@ -788,12 +802,8 @@ lprint_zpl_status(
     pappl_printer_t *printer)		// I - Printer
 {
   pappl_device_t	*device;	// Connection to printer
-  char			line[1025],	// Line from printer
-			*lineptr;	// Pointer into line
+  char			line[1025];	// Line from printer
   ssize_t		bytes;		// Bytes read
-  unsigned		errors = 0,	// Detected errors
-			warnings = 0;	// Detected warnings
-  pappl_preason_t	reasons;	// "printer-state-reasons" values
   int			length = 0;	// Label length
   bool			ret = false;	// Return value
 
@@ -805,16 +815,104 @@ lprint_zpl_status(
   }
 
   // Get the printer status...
-  if (papplDevicePuts(device, "~HQES\n") < 0)
+  if (!lprint_zpl_update_reasons(printer, NULL, device))
+    goto done;
+
+  // Query host status...
+  if (papplDevicePuts(device, "~HS\n") < 0)
   {
-    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to send HQES status command.");
+    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to send HS status command.");
     goto done;
   }
 
   if ((bytes = papplDeviceRead(device, line, sizeof(line) - 1)) < 0)
   {
-    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to read HQES status response.");
+    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to read HS status response.");
     goto done;
+  }
+
+  line[bytes] = '\0';
+
+  papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "HS returned '%s'.", line);
+
+  if (sscanf(line + 1, "%*d,%*d,%*d,%d", &length) == 1 && length > 11)
+  {
+    // Auto-detect label length for ready media...
+    pappl_pr_driver_data_t	data;	// Driver data
+
+    papplPrinterGetDriverData(printer, &data);
+
+    // 11 dots for the space between labels
+    length = 2540 * (length - 11) / data.y_resolution[0];
+
+    if (abs(length - 15240) <= 100)
+    {
+      // 4x6 label
+      papplCopyString(data.media_default.size_name, "na_index-4x6_4x6in", sizeof(data.media_default.size_name));
+      data.media_default.size_width  = 10160;
+      data.media_default.size_length = 15240;
+    }
+    else if (abs(length - 20320) <= 100)
+    {
+      // 4x8 label
+      papplCopyString(data.media_default.size_name, "oe_4x8-label_4x8in", sizeof(data.media_default.size_name));
+      data.media_default.size_width  = 10160;
+      data.media_default.size_length = 20320;
+    }
+    else
+    {
+      // *xN label
+      data.media_default.size_length = length;
+      snprintf(data.media_default.size_name, sizeof(data.media_default.size_name), "oe_%gx%g-label_%gx%gin", data.media_default.size_width / 2540.0, data.media_default.size_length / 2540.0, data.media_default.size_width / 2540.0, data.media_default.size_length / 2540.0);
+    }
+
+    if (data.media_default.size_width != data.media_ready[0].size_width || data.media_default.size_length != data.media_ready[0].size_length)
+    {
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_INFO, "Label size changed to '%s'.", data.media_default.size_name);
+      papplPrinterSetDriverDefaults(printer, &data, 0, NULL);
+      papplPrinterSetReadyMedia(printer, 1, &data.media_default);
+    }
+  }
+
+  ret = true;
+
+  done:
+
+  papplPrinterCloseDevice(printer);
+
+  return (ret);
+}
+
+
+//
+// 'lprint_zpl_update_reasons()' - Update "printer-state-reasons" values.
+//
+
+static bool				// O - `true` on success, `false` on failure
+lprint_zpl_update_reasons(
+    pappl_printer_t *printer,		// I - Printer
+    pappl_job_t     *job,		// I - Current job or `NULL` if none
+    pappl_device_t  *device)		// I - Connection to device
+{
+  char			line[1025],	// Line from printer
+			*lineptr;	// Pointer into line
+  ssize_t		bytes;		// Bytes read
+  unsigned		errors = 0,	// Detected errors
+			warnings = 0;	// Detected warnings
+  pappl_preason_t	reasons;	// "printer-state-reasons" values
+
+
+  // Get the printer status...
+  if (papplDevicePuts(device, "~HQES\n") < 0)
+  {
+    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to send HQES status command.");
+    return (false);
+  }
+
+  if ((bytes = papplDeviceRead(device, line, sizeof(line) - 1)) < 0)
+  {
+    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to read HQES status response.");
+    return (false);
   }
 
   line[bytes] = '\0';
@@ -910,69 +1008,10 @@ lprint_zpl_status(
       papplLogPrinter(printer, PAPPL_LOGLEVEL_WARN, "At bin.");
   }
 
+  if (job && (reasons & PAPPL_PREASON_MEDIA_EMPTY))
+    reasons |= PAPPL_PREASON_MEDIA_NEEDED;
+
   papplPrinterSetReasons(printer, reasons, ~reasons);
 
-  // Query host status...
-  if (papplDevicePuts(device, "~HS\n") < 0)
-  {
-    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to send HS status command.");
-    goto done;
-  }
-
-  if ((bytes = papplDeviceRead(device, line, sizeof(line) - 1)) < 0)
-  {
-    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to read HS status response.");
-    goto done;
-  }
-
-  line[bytes] = '\0';
-
-  papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "HS returned '%s'.", line);
-
-  if (sscanf(line + 1, "%*d,%*d,%*d,%d", &length) == 1 && length > 11)
-  {
-    // Auto-detect label length for ready media...
-    pappl_pr_driver_data_t	data;	// Driver data
-
-    papplPrinterGetDriverData(printer, &data);
-
-    // 11 dots for the space between labels
-    length = 2540 * (length - 11) / data.y_resolution[0];
-
-    if (abs(length - 15240) <= 100)
-    {
-      // 4x6 label
-      papplCopyString(data.media_default.size_name, "na_index-4x6_4x6in", sizeof(data.media_default.size_name));
-      data.media_default.size_width  = 10160;
-      data.media_default.size_length = 15240;
-    }
-    else if (abs(length - 20320) <= 100)
-    {
-      // 4x8 label
-      papplCopyString(data.media_default.size_name, "oe_4x8-label_4x8in", sizeof(data.media_default.size_name));
-      data.media_default.size_width  = 10160;
-      data.media_default.size_length = 20320;
-    }
-    else
-    {
-      // *xN label
-      data.media_default.size_length = length;
-      snprintf(data.media_default.size_name, sizeof(data.media_default.size_name), "oe_%gx%g-label_%gx%gin", data.media_default.size_width / 2540.0, data.media_default.size_length / 2540.0, data.media_default.size_width / 2540.0, data.media_default.size_length / 2540.0);
-    }
-
-    if (data.media_default.size_width != data.media_ready[0].size_width || data.media_default.size_length != data.media_ready[0].size_length)
-    {
-      papplLogPrinter(printer, PAPPL_LOGLEVEL_INFO, "Label size changed to '%s'.", data.media_default.size_name);
-      papplPrinterSetDriverDefaults(printer, &data, 0, NULL);
-      papplPrinterSetReadyMedia(printer, 1, &data.media_default);
-    }
-  }
-
-  ret = true;
-
-  done:
-
-  papplPrinterCloseDevice(printer);
-
-  return (ret);
+  return (true);
 }
