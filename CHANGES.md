@@ -1,6 +1,15 @@
 LPrint Change History
 =====================
 
+v1.3.0 - Month DD, YYYY
+-----------------------
+
+- Added new dithering algorithm to better support barcode printing with shaded
+  content.
+- Updated ZPL driver to report 'media-needed' reason when out of labels during a
+  job.
+
+
 v1.2.0 - December 31, 2022
 --------------------------
 
