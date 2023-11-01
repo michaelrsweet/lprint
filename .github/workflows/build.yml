@@ -35,7 +35,7 @@ jobs:
     - name: install prerequisites
       run: brew install cppcheck libjpeg libpng libusb openssl@3 pkg-config
     - name: install PAPPL
-      run: git clone https://github.com/michaelrsweet/pappl.git && cd pappl && ./configure --enable-debug && make && sudo make install
+      run: git clone -b v1.4.x https://github.com/michaelrsweet/pappl.git && cd pappl && ./configure --enable-debug && make && sudo make install
     - name: configure
       run: ./configure --enable-debug --enable-maintainer --enable-sanitizer
     - name: make
