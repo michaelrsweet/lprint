@@ -43,12 +43,20 @@ hooks:
         plugs: [avahi-control, home, network, network-bind, network-manager, raw-usb]
 
 parts:
+    libcups3:
+        plugin: autotools
+        autotools-configure-parameters: [--disable-shared]
+        source: https://github.com/OpenPrinting/libcups/releases/download/v3.0b2/libcups-3.0b2.tar.gz
+        build-packages: [libavahi-client-dev, libssl-dev, zlib1g-dev]
+        stage-packages: [libavahi-client3]
+
     pappl:
         plugin: autotools
-        autotools-configure-parameters: [--disable-shared,--enable-libjpeg,--enable-libpng,--enable-libusb,--with-dnssd=avahi]
-        source: https://github.com/michaelrsweet/pappl/releases/download/v1.4.2/pappl-1.4.2.tar.gz
-        build-packages: [libavahi-client-dev, libcups2-dev, libcupsimage2-dev, libgnutls28-dev, libjpeg8-dev, libpam-dev, libpng-dev, libusb-1.0-0-dev, zlib1g-dev]
-        stage-packages: [libavahi-client3, libcups2, libcupsimage2, libjpeg8, libpng16-16, libusb-1.0-0]
+        autotools-configure-parameters: [--disable-shared,--enable-libjpeg,--enable-libpng,--enable-libusb]
+        source: https://github.com/michaelrsweet/pappl/releases/download/v1.4.3/pappl-1.4.3.tar.gz
+        after: [libcups3]
+        build-packages: [libavahi-client-dev, libjpeg8-dev, libpam-dev, libpng-dev, libssl-dev, libusb-1.0-0-dev, zlib1g-dev]
+        stage-packages: [libavahi-client3, libjpeg8, libpng16-16, libusb-1.0-0]
 
     hooks:
         plugin: dump
@@ -66,6 +74,4 @@ parts:
         plugin: autotools
         autotools-configure-parameters: [--prefix=/]
         source: .
-        after: [pappl, hooks, scripts]
-        build-packages: [libavahi-client-dev, libcups2-dev, libcupsimage2-dev, libgnutls28-dev, libpng-dev, libusb-1.0-0-dev, zlib1g-dev]
-        stage-packages: [libavahi-client3, libcups2, libcupsimage2, libpng16-16, libusb-1.0-0]
+        after: [libcups3, pappl, hooks, scripts]
