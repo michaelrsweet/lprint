@@ -364,6 +364,7 @@ lprint_epl2_rstartpage(
   int		ips;			// Inches per second
   lprint_dither_t *dither = (lprint_dither_t *)papplJobGetData(job);
 					// Dither buffer
+  int		darkness;		// Composite darkness value
   double	out_gamma = 1.0;	// Output gamma correction
 
 
@@ -380,7 +381,12 @@ lprint_epl2_rstartpage(
   papplDevicePuts(device, "\nN\n");
 
   // print-darkness
-  papplDevicePrintf(device, "D%d\n", 15 * options->print_darkness / 100);
+  if ((darkness = options->print_darkness + options->darkness_configured) < 0)
+    darkness = 0;
+  else if (darkness > 100)
+    darkness = 100;
+
+  papplDevicePrintf(device, "D%d\n", 15 * darkness / 100);
 
   // print-speed
   if ((ips = options->print_speed / 2540) > 0)

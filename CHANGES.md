@@ -8,6 +8,7 @@ v1.3.0 - Month DD, YYYY
   content.
 - Updated ZPL driver to report 'media-needed' reason when out of labels during a
   job.
+- Fixed darkness calculations for EPL and ZPL printers (Issue #104)
 
 
 v1.2.0 - December 31, 2022

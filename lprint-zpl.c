@@ -592,6 +592,7 @@ lprint_zpl_rstartjob(
     pappl_device_t     *device)		// I - Output device
 {
   pappl_pr_driver_data_t data;		// Driver data
+  int			darkness;	// Composite darkness value
   lprint_zpl_t	*zpl = (lprint_zpl_t *)calloc(1, sizeof(lprint_zpl_t));
 					// ZPL driver data
 
@@ -640,8 +641,13 @@ lprint_zpl_rstartjob(
   else if (data.tear_offset_configured > 0)
     papplDevicePrintf(device, "~TA%03d\n", data.tear_offset_configured);
 
-  // printer-darkness
-  papplDevicePrintf(device, "~SD%02u\n", 30 * data.darkness_configured / 100);
+  // print-darkness / printer-darkness-configured
+  if ((darkness = options->print_darkness + options->darkness_configured) < 0)
+    darkness = 0;
+  else if (darkness > 100)
+    darkness = 100;
+
+  papplDevicePrintf(device, "~SD%02u\n", 30 * darkness / 100);
 
   return (true);
 }
@@ -677,9 +683,6 @@ lprint_zpl_rstartpage(
 
   if (!lprintDitherAlloc(&zpl->dither, job, options, CUPS_CSPACE_K, out_gamma))
     return (false);
-
-  // print-darkness
-  papplDevicePrintf(device, "~MD%d\n", 30 * options->print_darkness / 100);
 
   // print-speed
   if ((ips = options->print_speed / 2540) > 0)
