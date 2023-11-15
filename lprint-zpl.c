@@ -561,7 +561,7 @@ lprint_zpl_rendpage(
   else
     papplDevicePuts(device, "^MTD\n");	// Direct thermal
 
-  papplDevicePrintf(device, "^PQ%d, 0, 0, N\n", options->copies);
+  papplDevicePrintf(device, "^PQ1, 0, 0, N\n");
   papplDevicePuts(device, "^FO0,0^XGR:LPRINT.GRF,1,1^FS\n^XZ\n");
   papplDevicePuts(device, "^XA\n^IDR:LPRINT.GRF^FS\n^XZ\n");
 

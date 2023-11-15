@@ -8,6 +8,7 @@ v1.3.0 - Month DD, YYYY
   content.
 - Updated ZPL driver to report 'media-needed' reason when out of labels during a
   job.
+- Fixed copies support for ZPL printers (Issue #100)
 - Fixed darkness calculations for EPL and ZPL printers (Issue #104)
 
 
