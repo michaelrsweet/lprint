@@ -100,7 +100,7 @@ lprintDitherAlloc(
   }
 
   // Allocate memory...
-  if ((dither->input[0] = calloc(4 * dither->in_width, sizeof(lprint_pixel_t))) == NULL)
+  if ((dither->input[0] = calloc(4 * dither->in_width, sizeof(unsigned char))) == NULL)
   {
     papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to allocate input buffer.");
     return (false);
@@ -169,7 +169,7 @@ lprintDitherLine(
 {
   unsigned	x,			// Current column
 		count;			// Remaining count
-  lprint_pixel_t *current,		// Current line
+  unsigned char	*current,		// Current line
 		*prev,			// Previous line
 		*next;			// Next line
   unsigned char	*dline,			// Dither line
@@ -182,7 +182,7 @@ lprintDitherLine(
   count = dither->in_width;
   next  = dither->input[y & 3];
 
-  memset(next, 0, count * sizeof(lprint_pixel_t));
+  memset(next, 0, count);
 
   if (line)
   {
@@ -193,7 +193,7 @@ lprintDitherLine(
 	  {
 	    // Convert to 8-bit black...
 	    if (byte & bit)
-	      next->value = 255;
+	      *next = 255;
 
 	    if (bit > 1)
 	    {
@@ -214,12 +214,11 @@ lprintDitherLine(
 	    for (line += dither->in_left; count > 0; count --, next ++, line ++)
 	    {
 	      if (*line < LPRINT_WHITE)
-		next->value = 255;
+		*next = 255;
 	      else if (*line > LPRINT_BLACK)
-		next->value = 0;
+		*next = 0;
 	      else
-		next->value = 255 - *line;
-
+		*next = 255 - *line;
 	    }
 	  }
 	  else
@@ -228,40 +227,17 @@ lprintDitherLine(
 	    for (line += dither->in_left; count > 0; count --, next ++, line ++)
 	    {
 	      if (*line < LPRINT_WHITE)
-		next->value = 255;
+		*next = 255;
 	      else if (*line > LPRINT_BLACK)
-		next->value = 0;
+		*next = 0;
 	      else
-		next->value = *line;
+		*next = *line;
 	    }
 	  }
 	  break;
 
       default : // Something else...
 	  return (false);
-    }
-
-    // Then look for runs of repeated pixels
-    for (count = dither->in_width, prev = dither->input[(y - 2) & 3], current = dither->input[(y - 1) & 3], next = dither->input[y & 3]; count > 0; count --, prev ++, current ++, next ++)
-    {
-      // Update repetition flags...
-      if (count > 1 && current[0].value == current[1].value)
-      {
-        current[0].repeat |= LPRINT_REPEAT_H;
-        current[1].repeat |= LPRINT_REPEAT_H;
-      }
-
-      if (prev->value == current->value)
-      {
-        prev->repeat    |= LPRINT_REPEAT_V;
-        current->repeat |= LPRINT_REPEAT_V;
-      }
-
-      if (current->value == next->value)
-      {
-        current->repeat |= LPRINT_REPEAT_V;
-        next->repeat    |= LPRINT_REPEAT_V;
-      }
     }
   }
 
@@ -272,38 +248,26 @@ lprintDitherLine(
   // Dither...
   for (x = 0, count = dither->in_width, prev = dither->input[(y - 2) & 3], current = dither->input[(y - 1) & 3], next = dither->input[y & 3], outptr = dither->output, byte = dither->out_white, bit = 128, dline = dither->dither[y & 15]; count > 0; x ++, count --, prev ++, current ++, next ++)
   {
-    if (current->value)
+    if (*current)
     {
       // Not pure white/blank...
-      if (current->value == 255)
+      if (*current == 255)
       {
         // 100% black...
         byte ^= bit;
       }
       else
       {
-        // Something potentially to threshold:
-        //
-        // - this pixel borders a 100% black run
-        // - this pixel is a 1 dot wide line between whitespace
-        // - this pixel is a 1 dot wide line between other 1 dot
-        //   wide lines (striped)
-        //
-        // Otherwise use dithering...
-        if ((!(current->repeat & LPRINT_REPEAT_H) && x > 0 && current[-1].value == 255 && current[-1].repeat) ||
-            (!(current->repeat & LPRINT_REPEAT_H) && count > 1 && current[1].value == 255 && current[1].repeat) ||
-            (prev->value == 255 && prev->repeat) ||
-            (next->value == 255 && next->repeat) ||
-            (!(current->repeat & LPRINT_REPEAT_H) && (x == 0 || !current[-1].value) && (count == 1 || !current[1].value)) ||
-            ((current->repeat & LPRINT_REPEAT_H) && !prev->value && prev->repeat && !next->value && next->repeat) ||
-            (current->repeat == LPRINT_REPEAT_V && (x == 0 || current[-1].repeat == LPRINT_REPEAT_V || current[-1].value == 255) && (count == 1 || current[1].repeat == LPRINT_REPEAT_V || current[1].value == 255)) ||
-            (current->repeat == LPRINT_REPEAT_H && (prev->repeat == LPRINT_REPEAT_H || prev->value == 255) && (next->repeat == LPRINT_REPEAT_V || next->value == 255)))
+        // Only dither if this pixel does not border 100% white or black...
+	if ((x > 0 && (current[-1] == 255 || current[-1] == 0)) ||
+	    (count > 1 && (current[1] == 255 || current[1] == 0)) ||
+	    *prev == 255 || *prev == 0 || *next == 255 || *next == 0)
         {
           // Threshold
-          if (current->value > 127)
+          if (*current > 127)
 	    byte ^= bit;
         }
-        else if (current->value > dline[x & 15])
+        else if (*current > dline[x & 15])
         {
           // Dither anything else
 	  byte ^= bit;

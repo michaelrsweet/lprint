@@ -55,43 +55,48 @@
 #    define cups_len_t int
 #    define cups_page_header_t cups_page_header2_t
 #    define cupsArrayNew cupsArrayNew3
-#    define cupsArrayGetCount cupsArrayCount
-#    define cupsArrayGetElement(a,n) cupsArrayIndex(a,(int)n)
-#    define cupsArrayGetFirst cupsArrayFirst
-#    define cupsArrayGetLast cupsArrayLast
-#    define cupsArrayGetNext cupsArrayNext
-#    define cupsArrayGetPrev cupsArrayPrev
-#    define cupsGetUser cupsUser
 #    define cupsLangGetName(lang)	lang->language
 #    define cupsRasterReadHeader cupsRasterReadHeader2
 #    define cupsRasterWriteHeader cupsRasterWriteHeader2
 #    define cupsTempFd(prefix,suffix,buffer,bufsize) cupsTempFd(buffer,bufsize)
-#    define httpAddrConnect httpAddrConnect2
-#    define httpAddrGetFamily httpAddrFamily
-#    define httpAddrGetLength httpAddrLength
-#    define httpAddrGetString httpAddrString
-#    define httpAddrIsLocalhost httpAddrLocalhost
 #    define httpConnect httpConnect2
 #    define httpDecode64(out,outlen,in,end) httpDecode64_2(out,outlen,in)
 #    define httpEncode64(out,outlen,in,inlen,url) httpEncode64_2(out,outlen,in,inlen)
 #    define httpGetDateString httpGetDateString2
 #    define httpRead httpRead2
 #    define httpReconnect httpReconnect2
-#    define httpSetEncryption(http,e) (httpEncryption(http,e)>=0)
 #    define httpStatusString httpStatus
 #    define httpWrite httpWrite2
 #    define httpWriteResponse(http,code) (httpWriteResponse(http,code) == 0)
-#    define ippGetFirstAttribute ippFirstAttribute
-#    define ippGetNextAttribute ippNextAttribute
 #    define IPP_NUM_CAST (int)
+#    if CUPS_VERSION_MINOR < 3
+#      define HTTP_STATUS_FOUND (http_status_t)302
+#    endif // CUPS_VERSION_MINOR < 3
+#    if CUPS_VERSION_MINOR < 5
+#      define cupsArrayGetCount cupsArrayCount
+#      define cupsArrayGetElement(a,n) cupsArrayIndex(a,(int)n)
+#      define cupsArrayGetFirst cupsArrayFirst
+#      define cupsArrayGetLast cupsArrayLast
+#      define cupsArrayGetNext cupsArrayNext
+#      define cupsArrayGetPrev cupsArrayPrev
+#      define cupsGetUser cupsUser
+#      define httpAddrConnect httpAddrConnect2
+#      define httpAddrGetFamily httpAddrFamily
+#      define httpAddrGetLength httpAddrLength
+#      define httpAddrGetString httpAddrString
+#      define httpAddrIsLocalhost httpAddrLocalhost
+#      define httpSetEncryption(http,e) (httpEncryption(http,e)>=0)
+#      define ippGetFirstAttribute ippFirstAttribute
+#      define ippGetNextAttribute ippNextAttribute
 typedef cups_array_func_t cups_array_cb_t;
 typedef cups_acopy_func_t cups_acopy_cb_t;
 typedef cups_afree_func_t cups_afree_cb_t;
 typedef cups_raster_iocb_t cups_raster_cb_t;
 typedef ipp_copycb_t ipp_copy_cb_t;
-#    if CUPS_VERSION_MINOR < 3
-#      define HTTP_STATUS_FOUND (http_status_t)302
-#    endif // CUPS_VERSION_MINOR < 3
+#    else
+#      define httpDecode64 httpDecode64_3
+#      define httpEncode64 httpEncode64_3
+#    endif // CUPS_VERSION_MINOR < 5
 #  else
 #    define cups_len_t size_t
 #    define cups_utf8_t char
@@ -121,16 +126,10 @@ enum
   LPRINT_REPEAT_ALL = 0x03
 };
 
-typedef struct lprint_pixel_s		// Pixel for dithering
-{
-  unsigned char	repeat,			// Repetition flags
-		value;			// Value
-} lprint_pixel_t;
-
 typedef struct lprint_dither_s		// Dithering state
 {
   pappl_dither_t dither;		// Dither matrix to use
-  lprint_pixel_t *input[4];		// Input lines for dithering (only 3 are needed, 4 makes it easier for ring buffer)
+  unsigned char	*input[4];		// Input lines for dithering (only 3 are needed, 4 makes it easier for ring buffer)
   unsigned	in_width,		// Width in pixels
 		in_height,		// Height in lines
 		in_left,		// Left (starting) pixel
