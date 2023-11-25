@@ -9,11 +9,6 @@
 
 #ifndef LPRINT_H
 #  define LPRINT_H
-
-//
-// Include necessary headers...
-//
-
 #  include "config.h"
 #  include <pappl/pappl.h>
 #  include <math.h>
@@ -119,13 +114,6 @@ typedef ipp_copycb_t ipp_copy_cb_t;
 // Types...
 //
 
-enum
-{
-  LPRINT_REPEAT_H = 0x01,
-  LPRINT_REPEAT_V = 0x02,
-  LPRINT_REPEAT_ALL = 0x03
-};
-
 typedef struct lprint_dither_s		// Dithering state
 {
   pappl_dither_t dither;		// Dither matrix to use
@@ -151,10 +139,13 @@ extern bool	lprintDitherAlloc(lprint_dither_t *dither, pappl_job_t *job, pappl_p
 extern void	lprintDitherFree(lprint_dither_t *dither);
 extern bool	lprintDitherLine(lprint_dither_t *dither, unsigned y, const unsigned char *line);
 
+extern bool	lprintBrother(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern bool	lprintDYMO(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern bool	lprintEPL2(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
+extern bool	lprintSEIKO(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern bool	lprintTestFilterCB(pappl_job_t *job, pappl_device_t *device, void *data);
 extern const char *lprintTestPageCB(pappl_printer_t *printer, char *buffer, size_t bufsize);
+extern bool	lprintTSPL(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern bool	lprintZPL(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern void	lprintZPLQueryDriver(pappl_system_t *system, const char *device_uri, char *name, size_t namesize);
 

@@ -9,10 +9,6 @@
 // information.
 //
 
-//
-// Include necessary headers...
-//
-
 #include "lprint.h"
 
 

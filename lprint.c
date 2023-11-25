@@ -1,14 +1,10 @@
 //
 // Main entry for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2022 by Michael R Sweet.
+// Copyright © 2019-2023 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
-//
-
-//
-// Include necessary headers...
 //
 
 #include "lprint.h"
@@ -54,8 +50,11 @@ static pappl_system_t	*system_cb(int num_options, cups_option_t *options, void *
 
 static pappl_pr_driver_t	lprint_drivers[] =
 {					// Driver list
+#include "lprint-brother.h"
 #include "lprint-dymo.h"
 #include "lprint-epl2.h"
+#include "lprint-seiko.h"
+#include "lprint-tspl.h"
 #include "lprint-zpl.h"
 };
 static char			lprint_spooldir[1024],
@@ -74,7 +73,7 @@ main(int  argc,				// I - Number of command-line arguments
 {
   return (papplMainloop(argc, argv,
                         LPRINT_VERSION,
-                        "Copyright &copy; 2019-2021 by Michael R Sweet. All Rights Reserved.",
+                        "Copyright &copy; 2019-2023 by Michael R Sweet. All Rights Reserved.",
                         (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])),
                         lprint_drivers, autoadd_cb, driver_cb,
                         /*subcmd_name*/NULL, /*subcmd_cb*/NULL,

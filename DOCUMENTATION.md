@@ -1,8 +1,8 @@
 LPrint Documentation
 ====================
 
-LPrint v1.2.1 - January 2, 2023
-Copyright 2019-2022 by Michael R Sweet
+LPrint v1.3.0 - Month DD, 2023
+Copyright 2019-2023 by Michael R Sweet
 
 LPrint is licensed under the Apache License Version 2.0.  See the files
 "LICENSE" and "NOTICE" for more information.

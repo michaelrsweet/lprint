@@ -1,7 +1,7 @@
 #
 # Makefile for LPrint, a Label Printer Application
 #
-# Copyright © 2019-2022 by Michael R Sweet
+# Copyright © 2019-2023 by Michael R Sweet
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -89,12 +89,15 @@ MAN5		=	\
 			man/lprint.conf.5
 
 OBJS		=	\
+			lprint.o \
+			lprint-brother.o \
 			lprint-common.o \
 			lprint-dymo.o \
 			lprint-epl2.o \
+			lprint-seiko.o \
 			lprint-testpage.o \
-			lprint-zpl.o \
-			lprint.o
+			lprint-tspl.o \
+			lprint-zpl.o
 TARGETS		=	\
 			lprint
 
@@ -187,8 +190,11 @@ resheaders:
 # Dependencies...
 $(OBJS) $(TESTOBJS):	config.h lprint.h Makefile
 lprint.o:	\
+		lprint-brother.h \
 		lprint-dymo.h \
 		lprint-epl2.h \
+		lprint-seiko.h \
+		lprint-tspl.h \
 		lprint-zpl.h \
 		static-resources/lprint-png.h \
 		static-resources/lprint-large-png.h \
@@ -222,6 +228,6 @@ macos:
 	    --identifier org.msweet.lprint \
 	    --version $(LPRINT_VERSION) \
 	    --scripts macos-scripts \
-	    --min-os-version 10.14 \
+	    --min-os-version 11.0 \
 	    --sign "$${PKGSIGN_IDENTITY}" --timestamp \
 	    lprint-$(LPRINT_VERSION)-macos.pkg
