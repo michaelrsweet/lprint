@@ -211,7 +211,7 @@ write_line(
   unsigned char		*out_ptr,	// Pointer into output line
 			*dptr,		// Pointer into dither output
 			dbit;		// Bit in dither output
-  lprint_pixel_t	*in_ptr;	// Pointer into input line
+  unsigned char		*in_ptr;	// Pointer into input line
 
 
   // Provide a color-coded version of the dithered output, with blue showing
@@ -222,22 +222,12 @@ write_line(
     if (*dptr & dbit)
     {
       // Black or dark blue
-      if (in_ptr->value < 255)
+      if (*in_ptr < 255)
       {
-	if (in_ptr->repeat)
-	{
-	  // Dark blue for repeated gray that came out black
-	  *out_ptr++ = 0;
-	  *out_ptr++ = 0;
-	  *out_ptr++ = 127 - in_ptr->value / 4;
-	}
-	else
-	{
-	  // Dark yellow for gray that came out black
-	  *out_ptr++ = 79 - in_ptr->value / 8;
-	  *out_ptr++ = 79 - in_ptr->value / 8;
-	  *out_ptr++ = 31;
-	}
+	// Dark yellow for gray that came out black
+	*out_ptr++ = 79 - *in_ptr / 8;
+	*out_ptr++ = 79 - *in_ptr / 8;
+	*out_ptr++ = 31;
       }
       else
       {
@@ -247,22 +237,12 @@ write_line(
         *out_ptr++ = 0;
       }
     }
-    else if (in_ptr->value)
+    else if (*in_ptr)
     {
-      if (in_ptr->repeat)
-      {
-	// Light blue for repeated gray that came out white
-	*out_ptr++ = 191;
-	*out_ptr++ = 191;
-	*out_ptr++ = 255 - in_ptr->value / 8;
-      }
-      else
-      {
-	// Yellow for gray that came out white
-	*out_ptr++ = 255 - in_ptr->value / 4;
-	*out_ptr++ = 255 - in_ptr->value / 4;
-	*out_ptr++ = 127;
-      }
+      // Yellow for gray that came out white
+      *out_ptr++ = 255 - *in_ptr / 4;
+      *out_ptr++ = 255 - *in_ptr / 4;
+      *out_ptr++ = 127;
     }
     else
     {
