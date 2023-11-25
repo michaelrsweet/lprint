@@ -6,6 +6,9 @@ v1.3.0 - Month DD, YYYY
 
 - Added new dithering algorithm to better support barcode printing with shaded
   content.
+- Added basic Brother printer support (Issue #15)
+- Added basic TSPL printer support (Issue #54)
+- Added basic SEIKO printer support (Issue #58)
 - Updated ZPL driver to report 'media-needed' reason when out of labels during a
   job.
 - Fixed copies support for ZPL printers (Issue #100)

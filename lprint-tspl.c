@@ -127,7 +127,7 @@ lprintTSPL(
   data->status_cb     = lprint_tspl_status;
 
   // Vendor-specific format...
-  data->format = "application/vnd.tsc-tspl";
+  data->format = LPRINT_TSPL_MIMETYPE;
 
   // Set resolution...
   data->num_resolution = 1;
@@ -151,27 +151,10 @@ lprintTSPL(
   data->source[0]  = "main-roll";
 
   papplCopyString(data->media_ready[0].size_name, "na_index-4x6_4x6in", sizeof(data->media_ready[0].size_name));
+  papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
 
   data->num_type = 1;
   data->type[0]  = "labels";
-
-  // Update the ready media...
-  for (i = 0; i < data->num_source; i ++)
-  {
-    pwg_media_t *pwg = pwgMediaForPWG(data->media_ready[i].size_name);
-
-    data->media_ready[i].bottom_margin = data->bottom_top;
-    data->media_ready[i].left_margin   = data->left_right;
-    data->media_ready[i].right_margin  = data->left_right;
-    data->media_ready[i].size_width    = pwg->width;
-    data->media_ready[i].size_length   = pwg->length;
-    data->media_ready[i].top_margin    = data->bottom_top;
-    papplCopyString(data->media_ready[i].source, data->source[i], sizeof(data->media_ready[i].source));
-    papplCopyString(data->media_ready[i].type, data->type[0], sizeof(data->media_ready[i].type));
-  }
-
-  // By default use media from the main source...
-  data->media_default = data->media_ready[0];
 
   // Darkness/density settings...
   data->darkness_configured = 50;
@@ -356,7 +339,7 @@ lprint_tspl_rstartpage(
 
   // Start the page image...
   papplDevicePuts(device, "CLS\n");
-  papplDevicePrintf(device, "BITMAP 0,0,%u,%u,1,", options->header.cupsWidth, options->header.cupsHeight);
+  papplDevicePrintf(device, "BITMAP 0,0,%u,%u,1,", tspl->dither.out_width, options->header.cupsHeight);
 
   return (true);
 }

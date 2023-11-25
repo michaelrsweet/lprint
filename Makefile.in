@@ -94,7 +94,7 @@ OBJS		=	\
 			lprint-common.o \
 			lprint-dymo.o \
 			lprint-epl2.o \
-			lprint-seiko.o \
+			lprint-sii.o \
 			lprint-testpage.o \
 			lprint-tspl.o \
 			lprint-zpl.o
@@ -193,7 +193,7 @@ lprint.o:	\
 		lprint-brother.h \
 		lprint-dymo.h \
 		lprint-epl2.h \
-		lprint-seiko.h \
+		lprint-sii.h \
 		lprint-tspl.h \
 		lprint-zpl.h \
 		static-resources/lprint-png.h \

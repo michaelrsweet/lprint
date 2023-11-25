@@ -197,7 +197,9 @@ lprintDYMO(
       data->source[1]  = "alternate-roll";
 
       papplCopyString(data->media_ready[0].size_name, "oe_address-label_1.125x3.5in", sizeof(data->media_ready[0].size_name));
+      papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
       papplCopyString(data->media_ready[1].size_name, "oe_address-label_1.125x3.5in", sizeof(data->media_ready[1].size_name));
+      papplCopyString(data->media_ready[1].type, "labels", sizeof(data->media_ready[0].type));
     }
     else
     {
@@ -205,6 +207,7 @@ lprintDYMO(
       data->source[0]  = "main-roll";
 
       papplCopyString(data->media_ready[0].size_name, "oe_address-label_1.125x3.5in", sizeof(data->media_ready[0].size_name));
+      papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
     }
   }
 
@@ -213,25 +216,7 @@ lprintDYMO(
   data->num_type = 1;
   data->type[0]  = "labels";
 
-  // Update the ready media...
-  for (i = 0; i < data->num_source; i ++)
-  {
-    pwg_media_t *pwg = pwgMediaForPWG(data->media_ready[i].size_name);
-
-    data->media_ready[i].bottom_margin = data->bottom_top;
-    data->media_ready[i].left_margin   = data->left_right;
-    data->media_ready[i].right_margin  = data->left_right;
-    data->media_ready[i].size_width    = pwg->width;
-    data->media_ready[i].size_length   = pwg->length;
-    data->media_ready[i].top_margin    = data->bottom_top;
-    data->media_ready[i].tracking      = PAPPL_MEDIA_TRACKING_WEB;
-    papplCopyString(data->media_ready[i].source, data->source[i], sizeof(data->media_ready[i].source));
-    papplCopyString(data->media_ready[i].type, data->type[0], sizeof(data->media_ready[i].type));
-  }
-
-  // By default use media from the main source...
-  data->media_default = data->media_ready[0];
-
+  // Darkness/density support...
   data->darkness_configured = 50;
   data->darkness_supported  = 4;
 

@@ -176,9 +176,8 @@ lprintEPL2(
     data->num_media = (int)(sizeof(lprint_epl2_2inch_media) / sizeof(lprint_epl2_2inch_media[0]));
     memcpy(data->media, lprint_epl2_2inch_media, sizeof(lprint_epl2_2inch_media));
 
-    papplCopyString(data->media_default.size_name, "oe_2x3-label_2x3in", sizeof(data->media_default.size_name));
-    data->media_default.size_width  = 2 * 2540;
-    data->media_default.size_length = 3 * 2540;
+    papplCopyString(data->media_ready[0].size_name, "oe_2x3-label_2x3in", sizeof(data->media_ready[0].size_name));
+    papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
   }
   else
   {
@@ -186,9 +185,8 @@ lprintEPL2(
     data->num_media = (int)(sizeof(lprint_epl2_4inch_media) / sizeof(lprint_epl2_4inch_media[0]));
     memcpy(data->media, lprint_epl2_4inch_media, sizeof(lprint_epl2_4inch_media));
 
-    papplCopyString(data->media_default.size_name, "na_index-4x6_4x6in", sizeof(data->media_default.size_name));
-    data->media_default.size_width  = 4 * 2540;
-    data->media_default.size_length = 6 * 2540;
+    papplCopyString(data->media_ready[0].size_name, "na_index-4x6_4x6in", sizeof(data->media_ready[0].size_name));
+    papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
   }
 
   data->bottom_top = data->left_right = 1;
@@ -200,17 +198,6 @@ lprintEPL2(
   data->type[0]  = "continuous";
   data->type[1]  = "labels";
   data->type[2]  = "labels-continuous";
-
-  data->media_default.bottom_margin = data->bottom_top;
-  data->media_default.left_margin   = data->left_right;
-  data->media_default.right_margin  = data->left_right;
-  papplCopyString(data->media_default.source, "main-roll", sizeof(data->media_default.source));
-  data->media_default.top_margin = data->bottom_top;
-  data->media_default.top_offset = 0;
-  data->media_default.tracking   = PAPPL_MEDIA_TRACKING_MARK;
-  papplCopyString(data->media_default.type, "labels", sizeof(data->media_default.type));
-
-  data->media_ready[0] = data->media_default;
 
   data->mode_configured = PAPPL_LABEL_MODE_TEAR_OFF;
   data->mode_supported = PAPPL_LABEL_MODE_APPLICATOR | PAPPL_LABEL_MODE_CUTTER | PAPPL_LABEL_MODE_CUTTER_DELAYED | PAPPL_LABEL_MODE_KIOSK | PAPPL_LABEL_MODE_PEEL_OFF | PAPPL_LABEL_MODE_PEEL_OFF_PREPEEL | PAPPL_LABEL_MODE_REWIND | PAPPL_LABEL_MODE_RFID | PAPPL_LABEL_MODE_TEAR_OFF;
