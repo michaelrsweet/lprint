@@ -114,9 +114,6 @@ lprintTSPL(
     ipp_t                  **attrs,	// O - Pointer to driver attributes
     void                   *cbdata)	// I - Callback data (not used)
 {
-  int	i;				// Looping var
-
-
   // Print callbacks...
   data->printfile_cb  = lprint_tspl_printfile;
   data->rendjob_cb    = lprint_tspl_rendjob;
