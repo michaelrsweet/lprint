@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -14,6 +14,9 @@
 		273A4980276BB83B00C3B44E /* lprint-epl2.c in Sources */ = {isa = PBXBuildFile; fileRef = 273A497F276BB83B00C3B44E /* lprint-epl2.c */; };
 		273A4982276BCE3100C3B44E /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 273A4981276BCE3100C3B44E /* libjpeg.a */; };
 		275C79822772301C00BB595D /* lprint-testpage.c in Sources */ = {isa = PBXBuildFile; fileRef = 275C79812772301C00BB595D /* lprint-testpage.c */; };
+		27712E402B12A48B0032AE30 /* lprint-tspl.c in Sources */ = {isa = PBXBuildFile; fileRef = 27712E3B2B12A48B0032AE30 /* lprint-tspl.c */; };
+		27712E412B12A48B0032AE30 /* lprint-brother.c in Sources */ = {isa = PBXBuildFile; fileRef = 27712E3D2B12A48B0032AE30 /* lprint-brother.c */; };
+		27712E422B12A48B0032AE30 /* lprint-sii.c in Sources */ = {isa = PBXBuildFile; fileRef = 27712E3E2B12A48B0032AE30 /* lprint-sii.c */; };
 		277343A82964619E00380814 /* libcups3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343A72964619E00380814 /* libcups3.a */; };
 		277343AB296461CB00380814 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343A9296461CB00380814 /* libssl.a */; };
 		277343AC296461CB00380814 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343AA296461CB00380814 /* libcrypto.a */; };
@@ -92,6 +95,12 @@
 		273A4981276BCE3100C3B44E /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libjpeg.a; path = ../../../../../usr/local/lib/libjpeg.a; sourceTree = "<group>"; };
 		275C79802770055400BB595D /* lprint-epl2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-epl2.h"; path = "../lprint-epl2.h"; sourceTree = "<group>"; };
 		275C79812772301C00BB595D /* lprint-testpage.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-testpage.c"; path = "../lprint-testpage.c"; sourceTree = "<group>"; };
+		27712E3A2B12A48B0032AE30 /* lprint-sii.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-sii.h"; path = "../lprint-sii.h"; sourceTree = "<group>"; };
+		27712E3B2B12A48B0032AE30 /* lprint-tspl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-tspl.c"; path = "../lprint-tspl.c"; sourceTree = "<group>"; };
+		27712E3C2B12A48B0032AE30 /* lprint-brother.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-brother.h"; path = "../lprint-brother.h"; sourceTree = "<group>"; };
+		27712E3D2B12A48B0032AE30 /* lprint-brother.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-brother.c"; path = "../lprint-brother.c"; sourceTree = "<group>"; };
+		27712E3E2B12A48B0032AE30 /* lprint-sii.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-sii.c"; path = "../lprint-sii.c"; sourceTree = "<group>"; };
+		27712E3F2B12A48B0032AE30 /* lprint-tspl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-tspl.h"; path = "../lprint-tspl.h"; sourceTree = "<group>"; };
 		277343A72964619E00380814 /* libcups3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcups3.a; path = ../../../../../usr/local/lib/libcups3.a; sourceTree = "<group>"; };
 		277343A9296461CB00380814 /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = ../../../../../usr/local/lib/libssl.a; sourceTree = "<group>"; };
 		277343AA296461CB00380814 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = ../../../../../usr/local/lib/libcrypto.a; sourceTree = "<group>"; };
@@ -210,14 +219,20 @@
 				27FBEEFF23969DF900BB195A /* config.h */,
 				27FBEEBD2396988200BB195A /* lprint.h */,
 				27FBEEC92396988300BB195A /* lprint.c */,
+				27712E3C2B12A48B0032AE30 /* lprint-brother.h */,
+				27712E3D2B12A48B0032AE30 /* lprint-brother.c */,
 				2715B53025FD7FC200C0BBF6 /* lprint-common.c */,
-				2715B53125FD7FC200C0BBF6 /* lprint-dymo.c */,
 				2715B52F25FD7FC200C0BBF6 /* lprint-dymo.h */,
-				273A497F276BB83B00C3B44E /* lprint-epl2.c */,
+				2715B53125FD7FC200C0BBF6 /* lprint-dymo.c */,
 				275C79802770055400BB595D /* lprint-epl2.h */,
+				273A497F276BB83B00C3B44E /* lprint-epl2.c */,
+				27712E3A2B12A48B0032AE30 /* lprint-sii.h */,
+				27712E3E2B12A48B0032AE30 /* lprint-sii.c */,
 				275C79812772301C00BB595D /* lprint-testpage.c */,
-				2715B52D25FD7FC200C0BBF6 /* lprint-zpl.c */,
+				27712E3F2B12A48B0032AE30 /* lprint-tspl.h */,
+				27712E3B2B12A48B0032AE30 /* lprint-tspl.c */,
 				2715B52E25FD7FC200C0BBF6 /* lprint-zpl.h */,
+				2715B52D25FD7FC200C0BBF6 /* lprint-zpl.c */,
 				27EC68AE2967B1A400ABB3EE /* testdither.c */,
 				27FB485E23C0D91300BE0E47 /* Static Resources */,
 				27155EA4239697D4000D0567 /* Products */,
@@ -358,7 +373,8 @@
 		27155E9B239697D4000D0567 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1420;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
 				ORGANIZATIONNAME = "Michael R Sweet";
 				TargetAttributes = {
 					27155EA2239697D4000D0567 = {
@@ -403,6 +419,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27712E422B12A48B0032AE30 /* lprint-sii.c in Sources */,
+				27712E402B12A48B0032AE30 /* lprint-tspl.c in Sources */,
+				27712E412B12A48B0032AE30 /* lprint-brother.c in Sources */,
 				27EC68942967B17700ABB3EE /* lprint-common.c in Sources */,
 				27EC68AF2967B1A400ABB3EE /* testdither.c in Sources */,
 			);
@@ -450,6 +469,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -519,6 +539,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
