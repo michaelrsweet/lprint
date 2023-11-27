@@ -126,9 +126,6 @@ lprintDYMO(
     ipp_t                  **attrs,	// O - Pointer to driver attributes
     void                   *cbdata)	// I - Callback data (not used)
 {
-  int		i;			// Looping var
-
-
   data->printfile_cb  = lprint_dymo_printfile;
   data->rendjob_cb    = lprint_dymo_rendjob;
   data->rendpage_cb   = lprint_dymo_rendpage;

@@ -24,66 +24,59 @@ typedef struct lprint_brother_s		// Brother driver data
 // Local globals...
 //
 
-static const char * const lprint_brother_media[] =
-{					// Supported media sizes for labels
-  "oe_1.25x0.25-label_1.25x0.25in",
-  "oe_1.25x2.25-label_1.25x2.25in",
+static const char * const lprint_brother_ql_media[] =
+{					// Supported QL-* media sizes
+  "oe_dk1219-round_0.47x0.47in",
+  "oe_dk1204-multi-purpose_0.66x2.1in",
+  "oe_dk1203-file-folder_0.66x3.4in",
+  "oe_dk1209-small-address_1.1x2.4in",
+  "oe_dk1201-address_1.1x3.5in",
+  "oe_dk1208-large-address_1.4x3.5in",
+  "oe_dk1240-large-multi-purpose_1.9x4in",
+  "oe_dk1207-cd-dvd_2.2x2.2in",
+  "oe_dk1202-shipping_2.4x3.9in",
 
-  "oe_1.5x0.25-label_1.5x0.25in",
-  "oe_1.5x0.5-label_1.5x0.5in",
-  "oe_1.5x1-label_1.5x1in",
-  "oe_1.5x2-label_1.5x2in",
+  "na_index_4x6in",				// DK1241/1247
 
-  "oe_2x0.37-label_2x0.37in",
-  "oe_2x0.5-label_2x0.5in",
-  "oe_2x1-label_2x1in",
-  "oe_2x1.25-label_2x1.25in",
-  "oe_2x2-label_2x2in",
-  "oe_2x3-label_2x3in",
-  "oe_2x4-label_2x4in",
-  "oe_2x5.5-label_2x5.5in",
+// TODO: Translate queried size to roll_current_NNxNNin
+//  "roll_dk2113-continuous-film_2.4x600in",	// Black/Clear
+//  "roll_dk2205-continuous_2.4x1200in",		// Black on White
+//  "roll_dk2210-continuous_1.1x1200in",
+//  "roll_dk2211-continuous-film_1.1x600in",
+//  "roll_dk2212-continuous-film_2.4x600in",
+//  "roll_dk2214-continuous_0.47x1200in",
+//  "roll_dk2243-continuous_4x1200in",		// Black on White
+//  "roll_dk2246-continuous_4.07x1200in",		// Black on White
+//  "roll_dk2251-continuous_2.4x600in",		// Black/Red on White
+//  "roll_dk2606-continuous-film_2.4x600in",	// Black/Yellow
+//  "roll_dk4205-continuous-removable_2.4x1200in",// Black on White
+//  "roll_dk4605-continuous-removable_2.4x1200in",// Black/Yellow on White
+  "roll_max_2.5x3600in",
+  "roll_min_0.25x1in"
+};
 
-  "oe_2.25x0.5-label_2.25x0.5in",
-  "oe_2.25x1.25-label_2.25x1.25in",
-  "oe_30859-paint-can-label_2.25x3.125in",
-  "oe_2.25x4-label_2.25x4in",
-  "oe_2.25x5.5-label_2.25x5.5in",
+static const char * const lprint_brother_pt_media[] =
+{					// Supported PT-* media sizes
+  "oe_thin-1in-tape_0.25x1in",
+  "oe_thinner-1in-tape_0.375x1in",
+  "oe_medium-1in-tape_0.5x1in",
+  "oe_wider-1in-tape_0.75x1in",
+  "oe_wide-1in-tape_1x1in",
 
-  "oe_2.38x5.5-label_2.38x5.5in",
+  "oe_thin-2in-tape_0.25x2in",
+  "oe_thinner-2in-tape_0.375x2in",
+  "oe_medium-2in-tape_0.5x2in",
+  "oe_wider-2in-tape_0.75x2in",
+  "oe_wide-2in-tape_1x2in",
 
-  "oe_2.5x1-label_2.5x1in",
-  "oe_2.5x2-label_2.5x2in",
+  "oe_thin-3in-tape_0.25x3in",
+  "oe_thinner-3in-tape_0.375x3in",
+  "oe_medium-3in-tape_0.5x3in",
+  "oe_wider-3in-tape_0.75x3in",
+  "oe_wide-3in-tape_1x3in",
 
-  "oe_2.75x1.25-label_2.75x1.25in",
-
-  "oe_2.9x1-label_2.9x1in",
-
-  "oe_3x1-label_3x1in",
-  "oe_3x1.25-label_3x1.25in",
-  "oe_3x2-label_3x2in",
-  "oe_3x3-label_3x3in",
-  "na_index-3x5_3x5in",
-
-  "oe_3.25x2-label_3.25x2in",
-  "oe_3.25x5-label_3.25x5in",
-  "oe_3.25x5.5-label_3.25x5.5in",
-  "oe_3.25x5.83-label_3.25x5.83in",
-  "oe_3.25x7.83-label_3.25x7.83in",
-
-  "oe_3.5x1-label_3.5x1in",
-
-  "oe_4x1-label_4x1in",
-  "oe_4x2-label_4x2in",
-  "oe_4x3-label_4x3in",
-  "oe_4x4-label_4x4in",
-  "oe_4x5-label_4x5in",
-  "na_index-4x6_4x6in",
-  "oe_4x6.5-label_4x6.5in",
-  "oe_4x8-label_4x8in",
-  "oe_4x13-label_4x13in",
-
-  "roll_max_4x39.6in",
-  "roll_min_0.75x0.25in"
+  "roll_max_1x3600in",
+  "roll_min_0.25x1in"
 };
 
 
@@ -91,7 +84,6 @@ static const char * const lprint_brother_media[] =
 // Local functions...
 //
 
-static void	lprint_brother_init(pappl_job_t *job, lprint_brother_t *brother);
 static bool	lprint_brother_printfile(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
 static bool	lprint_brother_rendjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
 static bool	lprint_brother_rendpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page);
@@ -115,9 +107,6 @@ lprintBrother(
     ipp_t                  **attrs,	// O - Pointer to driver attributes
     void                   *cbdata)	// I - Callback data (not used)
 {
-  int	i;				// Looping var
-
-
   // Print callbacks...
   data->printfile_cb  = lprint_brother_printfile;
   data->rendjob_cb    = lprint_brother_rendjob;
@@ -128,72 +117,34 @@ lprintBrother(
   data->status_cb     = lprint_brother_status;
 
   // Vendor-specific format...
-  data->format = "application/vnd.tsc-brother";
-
-  // Set pages-per-minute based on 4x6 labels...
-  data->ppm = 60;
+  data->format = LPRINT_BROTHER_RAS_MIMETYPE;
 
   // Set resolution...
-  data->num_resolution = 1;
-
-  if (strstr(driver_name, "_203dpi") != NULL)
-    data->x_resolution[0] =  data->y_resolution[0] = 203;
-  else
-    data->x_resolution[0] =  data->y_resolution[0] = 300;
-
-  data->x_default = data->y_default = data->x_resolution[0];
+  data->num_resolution  = 1;
+  data->x_resolution[0] = data->y_resolution[0] = 180;
+  data->x_default       = data->y_default = data->x_resolution[0];
 
   // Basically borderless...
   data->left_right = 1;
   data->bottom_top = 1;
 
   // Supported media...
-  data->num_media = (int)(sizeof(lprint_brother_media) / sizeof(lprint_brother_media[0]));
-  memcpy(data->media, lprint_brother_media, sizeof(lprint_brother_media));
+//  data->num_media = (int)(sizeof(lprint_brother_media) / sizeof(lprint_brother_media[0]));
+//  memcpy(data->media, lprint_brother_media, sizeof(lprint_brother_media));
 
   data->num_source = 1;
   data->source[0]  = "main-roll";
 
-  papplCopyString(data->media_ready[0].size_name, "na_index-4x6_4x6in", sizeof(data->media_ready[0].size_name));
+  papplCopyString(data->media_ready[0].size_name, "oe_wide-2in-tape_1x2in", sizeof(data->media_ready[0].size_name));
+  papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
 
-  data->num_type = 1;
+  data->num_type = 4;
   data->type[0]  = "labels";
-
-  // Update the ready media...
-  for (i = 0; i < data->num_source; i ++)
-  {
-    pwg_media_t *pwg = pwgMediaForPWG(data->media_ready[i].size_name);
-
-    data->media_ready[i].bottom_margin = data->bottom_top;
-    data->media_ready[i].left_margin   = data->left_right;
-    data->media_ready[i].right_margin  = data->left_right;
-    data->media_ready[i].size_width    = pwg->width;
-    data->media_ready[i].size_length   = pwg->length;
-    data->media_ready[i].top_margin    = data->bottom_top;
-    papplCopyString(data->media_ready[i].source, data->source[i], sizeof(data->media_ready[i].source));
-    papplCopyString(data->media_ready[i].type, data->type[0], sizeof(data->media_ready[i].type));
-  }
-
-  // By default use media from the main source...
-  data->media_default = data->media_ready[0];
-
-  // Darkness/density settings...
-  data->darkness_configured = 50;
-  data->darkness_supported  = 16;
+  data->type[1]  = "continuous";
+  data->type[2]  = "continuous-film";
+  data->type[3]  = "continuous-removable";
 
   return (true);
-}
-
-
-//
-// 'lprint_brother_init()' - Initialize brother driver data based on the driver name...
-//
-
-static void
-lprint_brother_init(
-    pappl_job_t   *job,			// I - Job
-    lprint_brother_t *brother)		// O - Driver data
-{
 }
 
 
@@ -210,11 +161,8 @@ lprint_brother_printfile(
   int		fd;			// Input file
   ssize_t	bytes;			// Bytes read/written
   char		buffer[65536];		// Read/write buffer
-  lprint_brother_t	brother;			// Driver data
+//  lprint_brother_t	brother;			// Driver data
 
-
-  // Initialize driver data...
-  lprint_brother_init(job, &brother);
 
   // Reset the printer...
   lprint_brother_rstartjob(job, options, device);
@@ -314,9 +262,7 @@ lprint_brother_rstartjob(
 
   (void)options;
 
-  // Initialize driver data...
-  lprint_brother_init(job, brother);
-
+  // Save driver data...
   papplJobSetData(job, brother);
 
   // Reset the printer...
