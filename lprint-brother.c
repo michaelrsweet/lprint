@@ -24,6 +24,7 @@ typedef struct lprint_brother_s		// Brother driver data
 // Local globals...
 //
 
+#if 0
 static const char * const lprint_brother_ql_media[] =
 {					// Supported QL-* media sizes
   "oe_dk1219-round_0.47x0.47in",
@@ -78,6 +79,7 @@ static const char * const lprint_brother_pt_media[] =
   "roll_max_1x3600in",
   "roll_min_0.25x1in"
 };
+#endif // 0
 
 
 //
