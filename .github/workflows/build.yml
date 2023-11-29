@@ -15,10 +15,10 @@ jobs:
     - name: Checkout LPrint
       uses: actions/checkout@v4
 
-    - name: update build environment
+    - name: Update Build Environment
       run: sudo apt-get update --fix-missing -y
 
-    - name: install prerequisites
+    - name: Install Prerequisites
       run: sudo apt-get install -y avahi-daemon cppcheck libavahi-client-dev libgnutls28-dev libjpeg-dev libpam-dev libpng-dev libusb-1.0-0-dev zlib1g-dev
 
     - name: Checkout libcups3
@@ -62,7 +62,7 @@ jobs:
     - name: Checkout LPrint
       uses: actions/checkout@v4
 
-    - name: install prerequisites
+    - name: Install Prerequisites
       run: brew install cppcheck libjpeg libpng libusb openssl@3 pkg-config
 
     - name: Checkout libcups3
