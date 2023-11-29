@@ -12,31 +12,88 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout LPrint
+      uses: actions/checkout@v4
+
     - name: update build environment
       run: sudo apt-get update --fix-missing -y
+
     - name: install prerequisites
-      run: sudo apt-get install -y avahi-daemon cppcheck libavahi-client-dev libcups2-dev libcupsimage2-dev libgnutls28-dev libjpeg-dev libpam-dev libpng-dev libusb-1.0-0-dev zlib1g-dev
-    - name: install PAPPL
-      run: git clone -b v1.4.x https://github.com/michaelrsweet/pappl.git && cd pappl && ./configure --enable-debug && make && sudo make install
-    - name: configure
-      env:
-        CC: /usr/bin/gcc
+      run: sudo apt-get install -y avahi-daemon cppcheck libavahi-client-dev libgnutls28-dev libjpeg-dev libpam-dev libpng-dev libusb-1.0-0-dev zlib1g-dev
+
+    - name: Checkout libcups3
+      uses: actions/checkout@v4
+      with:
+        repository: OpenPrinting/libcups
+        path: libcups
+        submodules: recursive
+
+    - name: Configure libcups3
+      run: cd libcups; ./configure --enable-debug --disable-shared
+
+    - name: Build/Install libcups3
+      run: cd libcups; make && sudo make install
+
+    - name: Checkout PAPPL
+      uses: actions/checkout@v4
+      with:
+        repository: michaelrsweet/pappl
+        ref: v1.4.x
+        path: pappl
+        submodules: recursive
+
+    - name: Configure PAPPL
+      run: cd pappl; ./configure --enable-debug --disable-shared
+
+    - name: Build/Install PAPPL
+      run: cd pappl; make && sudo make install
+
+    - name: Configure LPrint
       run: ./configure --enable-debug --enable-maintainer
-    - name: make
-      run: make
+
+    - name: Build/Install LPrint
+      run: make && sudo make install
 
   build-macos:
 
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout LPrint
+      uses: actions/checkout@v4
+
     - name: install prerequisites
       run: brew install cppcheck libjpeg libpng libusb openssl@3 pkg-config
-    - name: install PAPPL
-      run: git clone -b v1.4.x https://github.com/michaelrsweet/pappl.git && cd pappl && ./configure --enable-debug && make && sudo make install
-    - name: configure
-      run: ./configure --enable-debug --enable-maintainer --enable-sanitizer
-    - name: make
-      run: make
+
+    - name: Checkout libcups3
+      uses: actions/checkout@v4
+      with:
+        repository: OpenPrinting/libcups
+        path: libcups
+        submodules: recursive
+
+    - name: Configure libcups3
+      run: cd libcups; ./configure --enable-debug --disable-shared
+
+    - name: Build/Install libcups3
+      run: cd libcups; make && sudo make install
+
+    - name: Checkout PAPPL
+      uses: actions/checkout@v4
+      with:
+        repository: michaelrsweet/pappl
+        ref: v1.4.x
+        path: pappl
+        submodules: recursive
+
+    - name: Configure PAPPL
+      run: cd pappl; ./configure --enable-debug --disable-shared
+
+    - name: Build/Install PAPPL
+      run: cd pappl; make && sudo make install
+
+    - name: Configure LPrint
+      run: ./configure --enable-debug --enable-maintainer
+
+    - name: Build/Install LPrint
+      run: make && sudo make install
