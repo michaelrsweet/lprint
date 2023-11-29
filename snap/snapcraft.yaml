@@ -46,14 +46,17 @@ parts:
     libcups3:
         plugin: autotools
         autotools-configure-parameters: [--disable-shared]
-        source: https://github.com/OpenPrinting/libcups/releases/download/v3.0b2/libcups-3.0b2.tar.gz
+        source-type: git
+        source: https://github.com/OpenPrinting/libcups.git
         build-packages: [libavahi-client-dev, libssl-dev, zlib1g-dev]
         stage-packages: [libavahi-client3]
 
     pappl:
         plugin: autotools
         autotools-configure-parameters: [--disable-shared,--enable-libjpeg,--enable-libpng,--enable-libusb]
-        source: https://github.com/michaelrsweet/pappl/releases/download/v1.4.3/pappl-1.4.3.tar.gz
+        source-type: git
+        source: https://github.com/michaelrsweet/pappl.git
+        source-branch: v1.4.x
         after: [libcups3]
         build-packages: [libavahi-client-dev, libjpeg8-dev, libpam-dev, libpng-dev, libssl-dev, libusb-1.0-0-dev, zlib1g-dev]
         stage-packages: [libavahi-client3, libjpeg8, libpng16-16, libusb-1.0-0]
