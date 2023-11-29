@@ -3751,6 +3751,24 @@ else $as_nop
 
 fi
 
+if $PKGCONFIG --exists cups3
+then :
+
+    CFLAGS="$CFLAGS $($PKGCONFIG --cflags cups3)"
+    LIBS="$LIBS $($PKGCONFIG --libs cups3)"
+
+elif $PKGCONFIG --exists cups
+then :
+
+    CFLAGS="$CFLAGS $($PKGCONFIG --cflags cups)"
+    LIBS="$LIBS $($PKGCONFIG --libs cups)"
+
+else $as_nop
+
+    as_fn_error $? "CUPS 2.4 or later is required for LPrint." "$LINENO" 5
+
+fi
+
 
 unitdir=""
 

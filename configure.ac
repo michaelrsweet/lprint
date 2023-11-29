@@ -106,6 +106,17 @@ AS_IF([$PKGCONFIG --exists pappl --atleast-version=1.1], [
     AC_MSG_ERROR([PAPPL 1.1 or later is required for LPrint.])
 ])
 
+dnl CUPS library...
+AS_IF([$PKGCONFIG --exists cups3], [
+    CFLAGS="$CFLAGS $($PKGCONFIG --cflags cups3)"
+    LIBS="$LIBS $($PKGCONFIG --libs cups3)"
+], [$PKGCONFIG --exists cups], [
+    CFLAGS="$CFLAGS $($PKGCONFIG --cflags cups)"
+    LIBS="$LIBS $($PKGCONFIG --libs cups)"
+], [
+    AC_MSG_ERROR([CUPS 2.4 or later is required for LPrint.])
+])
+
 
 dnl systemd support...
 unitdir=""
