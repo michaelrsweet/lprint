@@ -37,7 +37,7 @@ static const char * const lprint_brother_ql_media[] =
   "oe_dk1207-cd-dvd_2.2x2.2in",
   "oe_dk1202-shipping_2.4x3.9in",
 
-  "na_index_4x6in",				// DK1241/1247
+  "na_index-4x6_4x6in",				// DK1241/1247
 
 // TODO: Translate queried size to roll_current_NNxNNin
 //  "roll_dk2113-continuous-film_2.4x600in",	// Black/Clear

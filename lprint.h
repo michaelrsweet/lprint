@@ -103,6 +103,8 @@ typedef ipp_copycb_t ipp_copy_cb_t;
 // Constants...
 //
 
+#  define LPRINT_MAX_CUSTOM		32
+
 #  define LPRINT_TESTPAGE_MIMETYPE	"application/vnd.lprint-test"
 #  define LPRINT_TESTPAGE_HEADER	"T*E*S*T*P*A*G*E*"
 
@@ -133,6 +135,16 @@ typedef struct lprint_dither_s		// Dithering state
   unsigned	out_width;		// Output width in bytes
 } lprint_dither_t;
 
+typedef struct lprint_media_s		// Custom label sizes (per-printer)
+{
+#  ifndef _WIN32
+  pthread_rwlock_t rwlock;		// Reader/writer lock
+#  endif // !_WIN32
+  int		num_media;		// Number of custom media size names
+  char		media[LPRINT_MAX_CUSTOM][128];
+					// Custom media size names
+} lprint_media_t;
+
 
 //
 // Functions...
@@ -141,6 +153,11 @@ typedef struct lprint_dither_s		// Dithering state
 extern bool	lprintDitherAlloc(lprint_dither_t *dither, pappl_job_t *job, pappl_pr_options_t *options, cups_cspace_t out_cspace, double out_gamma);
 extern void	lprintDitherFree(lprint_dither_t *dither);
 extern bool	lprintDitherLine(lprint_dither_t *dither, unsigned y, const unsigned char *line);
+
+extern bool	lprintMediaLoad(pappl_printer_t *printer, pappl_pr_driver_data_t *data);
+extern bool	lprintMediaSave(pappl_printer_t *printer, pappl_pr_driver_data_t *data);
+extern bool	lprintMediaUI(pappl_client_t *client, pappl_system_t *system);
+extern void	lprintMediaUpdate(pappl_pr_driver_data_t *data);
 
 extern bool	lprintBrother(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern bool	lprintDYMO(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
