@@ -141,3 +141,4 @@
 "media.om_vhs-face_45x72mm" = "45 x 72mm VHS Face Label";
 "media.om_vhs-spine_18x141mm" = "18 x 141mm VHS Spine Label";
 "media.om_zip-disk_48x55mm" = "48 x 55mm Zip Disk Label";
+"Delete %s?" = "Delete %s";

@@ -314,10 +314,62 @@ lprintMediaLoad(
     pappl_printer_t        *printer,	// I - Printer
     pappl_pr_driver_data_t *data)	// I - Driver data
 {
-  (void)printer;
-  (void)data;
+  lprint_media_t	*media;		// Custom media
+  int			fd;		// Custom media file descriptor
+  cups_file_t		*fp;		// Custom media file
+  char			filename[1024],	// Custom media filename
+			line[256];	// Line from file
 
-  return (false);
+
+  // Allocate memory as needed...
+  if ((media = (lprint_media_t *)data->extension) == NULL)
+  {
+    if ((media = (lprint_media_t *)calloc(1, sizeof(lprint_media_t))) == NULL)
+      return (false);
+
+    data->extension = media;
+  }
+
+  // Load any existing custom media sizes...
+  if ((fd = papplPrinterOpenFile(printer, filename, sizeof(filename), /*directory*/NULL, "custom-media", "txt", "r")) < 0)
+    return (true);
+
+  if ((fp = cupsFileOpenFd(fd, "r")) == NULL)
+  {
+    close(fd);
+    return (true);
+  }
+
+  while (cupsFileGets(fp, line, sizeof(line)))
+  {
+    if (media->num_media >= LPRINT_MAX_CUSTOM)
+      break;
+
+    papplCopyString(media->media[media->num_media ++], line, sizeof(media->media[0]));
+  }
+
+  cupsFileClose(fp);
+
+  return (true);
+}
+
+
+//
+// 'lprintMediaMatch()' - Match the loaded media to one of the supported sizes.
+//
+
+const char *				// O - Matching media size or `NULL` if none
+lprintMediaMatch(
+    pappl_printer_t *printer,		// I - Printer
+    int             width,		// I - Width in hundredths of millimeters or `0` if unknown
+    int             length)		// I - Length in hundredths of millimeters
+{
+  // TODO: Implement media matching algorithm
+  (void)printer;
+  (void)width;
+  (void)length;
+
+  return (NULL);
 }
 
 
@@ -330,10 +382,37 @@ lprintMediaSave(
     pappl_printer_t        *printer,	// I - Printer
     pappl_pr_driver_data_t *data)	// I - Driver data
 {
-  (void)printer;
-  (void)data;
+  lprint_media_t	*media;		// Custom media
+  int			i,		// Looping var
+			fd;		// Custom media file descriptor
+  cups_file_t		*fp;		// Custom media file
+  char			filename[1024];	// Custom media filename
 
-  return (false);
+
+  // Get the custom media...
+  if ((media = (lprint_media_t *)data->extension) == NULL || media->num_media == 0)
+  {
+    // No custom media, delete any existing file...
+    papplPrinterOpenFile(printer, filename, sizeof(filename), /*directory*/NULL, "custom-media", "txt", "x");
+    return (true);
+  }
+
+  // Save custom media sizes...
+  if ((fd = papplPrinterOpenFile(printer, filename, sizeof(filename), /*directory*/NULL, "custom-media", "txt", "w")) < 0)
+    return (true);
+
+  if ((fp = cupsFileOpenFd(fd, "w")) == NULL)
+  {
+    close(fd);
+    return (true);
+  }
+
+  for (i = 0; i < media->num_media; i ++)
+    cupsFilePrintf(fp, "%s\n", media->media[i]);
+
+  cupsFileClose(fp);
+
+  return (true);
 }
 
 
@@ -343,25 +422,22 @@ lprintMediaSave(
 
 bool					// O - `true` on success, `false` on failure
 lprintMediaUI(
-    pappl_client_t *client,		// I - Client
-    pappl_system_t *system)		// I - System
+    pappl_client_t  *client,		// I - Client
+    pappl_printer_t *printer)		// I - Printer
 {
   int			i;		// Looping var
-  pappl_printer_t	*printer;	// Printer
   pappl_pr_driver_data_t data;		// Driver data
   lprint_media_t	*media;		// Custom label sizes, if any
   const char		*status = NULL;	// Status message, if any
 
 
+  fprintf(stderr, "lprintMediaUI(client=%p, printer=%p(%s))\n", client, printer, printer ? papplPrinterGetName(printer) : "null");
+
+  // Only allow access as appropriate...
   if (!papplClientHTMLAuthorize(client))
     return (true);
 
-  if ((printer = papplSystemFindPrinter(system, "/ipp/print", 1, NULL)) == NULL)
-  {
-    // TODO: Error
-    return (true);
-  }
-
+  // Get the driver data...
   papplPrinterGetDriverData(printer, &data);
   media = (lprint_media_t *)data.extension;
 
@@ -502,7 +578,7 @@ lprintMediaUI(
     if (changed)
     {
       // Rebuild media size list and save...
-      lprintMediaUpdate(&data);
+      lprintMediaUpdate(printer, &data);
       papplPrinterSetDriverData(printer, &data, NULL);
       lprintMediaSave(printer, &data);
     }
@@ -550,11 +626,14 @@ lprintMediaUI(
 
 void
 lprintMediaUpdate(
+    pappl_printer_t        *printer,	// I - Printer
     pappl_pr_driver_data_t *data)	// I - Driver data
 {
   int			i, j;		// Looping vars
   lprint_media_t	*media;		// Custom label sizes
 
+
+  (void)printer;
 
   // Find the first custom size in the media list...
   for (i = 0; i < data->num_media; i ++)

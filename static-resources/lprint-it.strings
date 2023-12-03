@@ -141,14 +141,4 @@
 "media.om_vhs-face_45x72mm" = "45 x 72mm VHS Face Label";
 "media.om_vhs-spine_18x141mm" = "18 x 141mm VHS Spine Label";
 "media.om_zip-disk_48x55mm" = "48 x 55mm Zip Disk Label";
-"Changes saved." = "Changes saved.";
-"Current Media:" = "Current Media:";
 "Delete %s?" = "Delete %s";
-"Deleted custom label size." = "Deleted custom label size.";
-"Height" = "Height";
-"Invalid form data." = "Invalid form data.";
-"Invalid form submission." = "Invalid form submission.";
-"Label Separator:" = "Label Separator:";
-"New Custom Size" = "New Custom Size";
-"Save Changes" = "Save Changes";
-"Width" = "Width";

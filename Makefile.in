@@ -181,6 +181,8 @@ resheaders:
 	    echo "Generating $$file-png.h from $$file.png..."; \
 	    pappl-makeresheader static-resources/$$file.png >static-resources/$$file-png.h; \
 	done
+	echo "Generating lprint-css.h from lprint.css..."
+	pappl-makeresheader static-resources/lprint.css >static-resources/lprint-css.h
 	for lang in $(LANGUAGES); do \
 	    echo "Generating lprint-$$lang-strings.h from lprint-$$lang.strings..."; \
 	    pappl-makeresheader static-resources/lprint-$$lang.strings >static-resources/lprint-$$lang-strings.h; \
@@ -196,6 +198,7 @@ lprint.o:	\
 		lprint-sii.h \
 		lprint-tspl.h \
 		lprint-zpl.h \
+		static-resources/lprint-css.h \
 		static-resources/lprint-png.h \
 		static-resources/lprint-large-png.h \
 		static-resources/lprint-small-png.h \

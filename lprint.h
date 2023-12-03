@@ -155,9 +155,10 @@ extern void	lprintDitherFree(lprint_dither_t *dither);
 extern bool	lprintDitherLine(lprint_dither_t *dither, unsigned y, const unsigned char *line);
 
 extern bool	lprintMediaLoad(pappl_printer_t *printer, pappl_pr_driver_data_t *data);
+extern const char *lprintMediaMatch(pappl_printer_t *printer, int width, int length);
 extern bool	lprintMediaSave(pappl_printer_t *printer, pappl_pr_driver_data_t *data);
-extern bool	lprintMediaUI(pappl_client_t *client, pappl_system_t *system);
-extern void	lprintMediaUpdate(pappl_pr_driver_data_t *data);
+extern bool	lprintMediaUI(pappl_client_t *client, pappl_printer_t *printer);
+extern void	lprintMediaUpdate(pappl_printer_t *printer, pappl_pr_driver_data_t *data);
 
 extern bool	lprintBrother(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern bool	lprintDYMO(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);

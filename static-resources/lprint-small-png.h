@@ -1,4 +1,4 @@
-/* lprint-small.png */
+/* static-resources/lprint-small.png */
 static unsigned char lprint_small_png[] = {
 137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,
 0,0,0,48,0,0,0,48,8,6,0,0,0,87,2,249,

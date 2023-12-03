@@ -13,6 +13,7 @@
 #include "static-resources/lprint-es-strings.h"
 #include "static-resources/lprint-fr-strings.h"
 #include "static-resources/lprint-it-strings.h"
+#include "static-resources/lprint-css.h"
 #include "static-resources/lprint-png.h"
 #include "static-resources/lprint-large-png.h"
 #include "static-resources/lprint-small-png.h"
@@ -36,6 +37,7 @@ typedef struct lprint_device_s
 
 static const char	*autoadd_cb(const char *device_info, const char *device_uri, const char *device_id, void *cbdata);
 static lprint_device_t	*copy_cb(lprint_device_t *src);
+static void		create_cb(pappl_printer_t *printer, void *cbdata);
 static bool		driver_cb(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 static void		free_cb(lprint_device_t *src);
 static int		match_id(int num_did, cups_option_t *did, const char *match_id);
@@ -168,6 +170,36 @@ copy_cb(lprint_device_t *src)		// I - Original device entry
   }
 
   return (dst);
+}
+
+
+//
+// 'create_cb()' - Printer creation callback.
+//
+
+static void
+create_cb(pappl_printer_t *printer,	// I - Printer
+          void            *cbdata)	// I - Callback data (not used)
+{
+  char			resource[1024];	// Resource path
+  pappl_pr_driver_data_t data;		// Driver data
+
+
+  (void)cbdata;
+
+  fprintf(stderr, "create_cb(printer=%p(%s), cbdata=%p)\n", printer, printer ? papplPrinterGetName(printer) : "null", cbdata);
+
+  // Add custom label media page to replace the standard ready media page...
+  papplSystemRemoveResource(papplPrinterGetSystem(printer), papplPrinterGetPath(printer, "media", resource, sizeof(resource)));
+  papplSystemAddResourceCallback(papplPrinterGetSystem(printer), resource, "text/html", (pappl_resource_cb_t)lprintMediaUI, printer);
+  fprintf(stderr, "create_cb: Added new media page for '%s'.\n", resource);
+
+  // Load custom media sizes and report them...
+  papplPrinterGetDriverData(printer, &data);
+  if (!lprintMediaLoad(printer, &data))
+    fputs("create_cb: lprintMediaLoad returned false.\n", stderr);
+  lprintMediaUpdate(printer, &data);
+  papplPrinterSetDriverData(printer, &data, NULL);
 }
 
 
@@ -582,17 +614,18 @@ system_cb(
   papplSystemSetMIMECallback(system, mime_cb, NULL);
   papplSystemAddMIMEFilter(system, LPRINT_TESTPAGE_MIMETYPE, "image/pwg-raster", lprintTestFilterCB, NULL);
 
-  papplSystemSetPrinterDrivers(system, (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])), lprint_drivers, autoadd_cb, /*create_cb*/NULL, driver_cb, system);
+  papplSystemSetPrinterDrivers(system, (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])), lprint_drivers, autoadd_cb, create_cb, driver_cb, system);
 
   papplSystemAddResourceData(system, "/favicon.png", "image/png", lprint_small_png, sizeof(lprint_small_png));
   papplSystemAddResourceData(system, "/navicon.png", "image/png", lprint_png, sizeof(lprint_png));
-  papplSystemAddResourceString(system, "/de.strings", "text/strings", lprint_de_strings);
-  papplSystemAddResourceString(system, "/en.strings", "text/strings", lprint_en_strings);
-  papplSystemAddResourceString(system, "/es.strings", "text/strings", lprint_es_strings);
-  papplSystemAddResourceString(system, "/fr.strings", "text/strings", lprint_fr_strings);
-  papplSystemAddResourceString(system, "/it.strings", "text/strings", lprint_it_strings);
+  papplSystemAddResourceString(system, "/style.css", "text/css", lprint_css);
+  papplSystemAddStringsData(system, "/de.strings", "de", lprint_de_strings);
+  papplSystemAddStringsData(system, "/en.strings", "en", lprint_en_strings);
+  papplSystemAddStringsData(system, "/es.strings", "es", lprint_es_strings);
+  papplSystemAddStringsData(system, "/fr.strings", "fr", lprint_fr_strings);
+  papplSystemAddStringsData(system, "/it.strings", "it", lprint_it_strings);
 
-  papplSystemSetFooterHTML(system, "Copyright &copy; 2019-2022 by Michael R Sweet. All rights reserved.");
+  papplSystemSetFooterHTML(system, "Copyright &copy; 2019-2023 by Michael R Sweet. All rights reserved.");
   papplSystemSetSaveCallback(system, (pappl_save_cb_t)papplSystemSaveState, (void *)lprint_statefile);
   papplSystemSetVersions(system, (int)(sizeof(versions) / sizeof(versions[0])), versions);
 
