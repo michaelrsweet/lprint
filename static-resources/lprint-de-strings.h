@@ -143,5 +143,4 @@ static const char * const lprint_de_strings =
 "\"media.om_vhs-face_45x72mm\" = \"45 x 72mm VHS Face Label\";\n"
 "\"media.om_vhs-spine_18x141mm\" = \"18 x 141mm VHS Spine Label\";\n"
 "\"media.om_zip-disk_48x55mm\" = \"48 x 55mm Zip Disk Label\";\n"
-"\"Delete %s?\" = \"Delete %s\";\n"
 ;
