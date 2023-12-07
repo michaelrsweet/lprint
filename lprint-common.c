@@ -23,6 +23,7 @@
 // Local functions...
 //
 
+static void	free_cmedia(pappl_printer_t *printer, pappl_pr_driver_data_t *data);
 static char	*localize_keyword(pappl_client_t *client, const char *attrname, const char *keyword, char *buffer, size_t bufsize);
 static void	media_chooser(pappl_client_t *client, pappl_pr_driver_data_t *driver_data, const char *title, const char *name, pappl_media_col_t *media);
 
@@ -329,6 +330,7 @@ lprintMediaLoad(
       return (false);
 
     data->extension = cmedia;
+    data->delete_cb = free_cmedia;
   }
 
   // Load any existing custom media sizes...
@@ -437,6 +439,13 @@ lprintMediaUI(
 
   // Get the driver data...
   papplPrinterGetDriverData(printer, &data);
+
+  fprintf(stderr, "lprintMediaUI: data.extension=%p\n", data.extension);
+  if (!data.extension)
+  {
+    lprintMediaLoad(printer, &data);
+    fprintf(stderr, "lprintMediaUI: AFTER data.extension=%p\n", data.extension);
+  }
   cmedia = (lprint_cmedia_t *)data.extension;
 
   if (papplClientGetMethod(client) == HTTP_STATE_POST)
@@ -500,7 +509,7 @@ lprintMediaUI(
 	    }
 
             snprintf(name, sizeof(name), "ready%d", i);
-            pwgFormatSizeName(ready->size_name, sizeof(ready->size_name), "custom_", name, ready->size_width, ready->size_length, custom_units);
+            pwgFormatSizeName(ready->size_name, sizeof(ready->size_name), "custom", name, ready->size_width, ready->size_length, custom_units);
             papplCopyString(cmedia->custom_name[i], ready->size_name, sizeof(cmedia->custom_name[i]));
 	  }
         }
@@ -579,12 +588,12 @@ lprintMediaUI(
 			"          </table>"
 			"        </form>\n"
 			"        <script>function show_hide_custom(name) {\n"
-			"  let selelem = document.getElementById('custom');\n"
-			"  let divelem = document.getElementById(name + '-custom');\n"
-			"  if (selelem.checked)\n"
-			"    divelem.style.display = 'inline-block';\n"
-			"  else\n"
-			"    divelem.style.display = 'none';\n"
+		        "  let selelem = document.forms['form'][name + '-size'];\n"
+		        "  let divelem = document.getElementById(name + '-custom');\n"
+		        "  if (selelem.selectedIndex == 0)\n"
+		        "    divelem.style = 'display: inline-block;';\n"
+		        "  else\n"
+		        "    divelem.style = 'display: none;';\n"
 			"}</script>\n", papplClientGetLocString(client, "Save Changes"));
 
   papplClientHTMLPrinterFooter(client);
@@ -622,6 +631,23 @@ lprintMediaUpdate(
   }
 
   data->num_media = i;
+
+  fprintf(stderr, "lprintMediaUpdate: num_media=%d\n", data->num_media);
+  for (i = 0; i < data->num_media; i ++)
+    fprintf(stderr, "lprintMediaUpdate: media[%d]='%s'\n", i, data->media[i]);
+}
+
+
+//
+// 'free_cmedia()' - Free custom media information.
+//
+
+static void
+free_cmedia(
+    pappl_printer_t        *printer,	// I - Printer (unused)
+    pappl_pr_driver_data_t *data)	// I - Driver data
+{
+  free(data->extension);
 }
 
 
@@ -653,10 +679,18 @@ localize_keyword(
     pwg_media_t *pwg = pwgMediaForPWG(keyword);
 					// PWG media size info
 
-    if ((pwg->width % 100) == 0 && (pwg->width % 2540) != 0)
-      snprintf(buffer, bufsize, "%d x %dmm Custom Label", pwg->width / 100, pwg->length / 100);
+    fprintf(stderr, "localize_keyword: keyword='%s', pwg=%p(%dx%d)\n", keyword, pwg, pwg ? pwg->width : 0, pwg ? pwg->length : 0);
+    if (pwg)
+    {
+      if ((pwg->width % 100) == 0 && (pwg->width % 2540) != 0)
+	snprintf(buffer, bufsize, "%d x %dmm Custom Label", pwg->width / 100, pwg->length / 100);
+      else
+	snprintf(buffer, bufsize, "%g x %gʺ Custom Label", pwg->width / 2540.0, pwg->length / 2540.0);
+    }
     else
-      snprintf(buffer, bufsize, "%g x %gʺ Custom Label", pwg->width / 2540.0, pwg->length / 2540.0);
+    {
+      snprintf(buffer, bufsize, "Invalid '%s'", keyword);
+    }
   }
   else
   {

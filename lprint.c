@@ -196,10 +196,11 @@ create_cb(pappl_printer_t *printer,	// I - Printer
 
   // Load custom media sizes and report them...
   papplPrinterGetDriverData(printer, &data);
-  if (!lprintMediaLoad(printer, &data))
-    fputs("create_cb: lprintMediaLoad returned false.\n", stderr);
+  lprintMediaLoad(printer, &data);
   lprintMediaUpdate(printer, &data);
   papplPrinterSetDriverData(printer, &data, NULL);
+
+  fprintf(stderr, "create_cb: data.extension=%p\n", data.extension);
 }
 
 
