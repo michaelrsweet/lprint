@@ -135,15 +135,11 @@ typedef struct lprint_dither_s		// Dithering state
   unsigned	out_width;		// Output width in bytes
 } lprint_dither_t;
 
-typedef struct lprint_media_s		// Custom label sizes (per-printer)
+typedef struct lprint_cmedia_s		// Custom label sizes (per-printer/source)
 {
-#  ifndef _WIN32
-  pthread_rwlock_t rwlock;		// Reader/writer lock
-#  endif // !_WIN32
-  int		num_media;		// Number of custom media size names
-  char		media[LPRINT_MAX_CUSTOM][128];
+  char		custom_name[PAPPL_MAX_SOURCE][128];
 					// Custom media size names
-} lprint_media_t;
+} lprint_cmedia_t;
 
 
 //

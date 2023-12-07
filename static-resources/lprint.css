@@ -203,44 +203,6 @@ label.switch input {
   height: 0;
 }
 
-.radio-list input[type="radio"] {
-  display: none;
-}
-.radio-list label.radio-label {
-  background-color: #eee;
-  border: 1px solid rgba(0,0,0,0.2);
-  border-bottom: none;
-  cursor: pointer;
-  display: inline-block;
-  padding: 2px 10px;
-  width: 14em;
-  transition: all 0.2s ease-in-out;
-}
-.radio-list input[type="radio"]:checked + label.radio-label {
-  background-color: #777;
-  color: white;
-}
-.radio-list:first-child label.radio-label {
-  border-radius: 5px 5px 0 0;
-}
-.radio-list:nth-last-child(2) label.radio-label {
-  border-bottom: 1px solid rgba(0,0,0,0.2);
-  border-radius: 0 0 5px 5px;
-}
-button.radio-action {
-  background: none;
-  border: none;
-  color: black;
-  float: right;
-}
-.radio-list input[type="radio"]:checked + label.radio-label button.radio-action {
-  color: white;
-}
-button.radio-action:hover, button.radio-action:active {
-  background: #777;
-  color: #eee;
-}
-
 img.password-show, img.password-hide {
   cursor: pointer;
   margin-left: -25px;
@@ -595,26 +557,6 @@ table.meter th {
   div.switch input:checked + label {
     background-color: #ddd;
     color: #333;
-  }
-
-  .radio-list label.radio-label {
-    background-color: #333;
-    border: 1px solid rgba(191,191,191,0.2);
-  }
-  .radio-list input[type="radio"]:checked + label.radio-label {
-    background-color: rgba(112,112,112,0.5);
-    color: #ccc;
-  }
-  .radio-list:nth-last-child(2) label.radio-label {
-    border-bottom: 1px solid rgba(191,191,191,0.2);
-  }
-  .radio-list input[type="radio"]:checked + label.radio-label button.radio-action, button.radio-action {
-    color: #ccc;
-  }
-  button.radio-action:hover, button.radio-action:active {
-    background: rgba(112,112,112, 0.75);
-    border: none;
-    color: #eee;
   }
 
   table.list {

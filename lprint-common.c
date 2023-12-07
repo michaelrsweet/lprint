@@ -24,7 +24,7 @@
 //
 
 static char	*localize_keyword(pappl_client_t *client, const char *attrname, const char *keyword, char *buffer, size_t bufsize);
-static void	media_chooser(pappl_client_t *client, pappl_pr_driver_data_t *driver_data, pappl_media_col_t *media);
+static void	media_chooser(pappl_client_t *client, pappl_pr_driver_data_t *driver_data, const char *title, const char *name, pappl_media_col_t *media);
 
 
 //
@@ -314,20 +314,21 @@ lprintMediaLoad(
     pappl_printer_t        *printer,	// I - Printer
     pappl_pr_driver_data_t *data)	// I - Driver data
 {
-  lprint_media_t	*media;		// Custom media
+  lprint_cmedia_t	*cmedia;	// Custom media
   int			fd;		// Custom media file descriptor
   cups_file_t		*fp;		// Custom media file
   char			filename[1024],	// Custom media filename
 			line[256];	// Line from file
+  int			i;		// Looping var
 
 
   // Allocate memory as needed...
-  if ((media = (lprint_media_t *)data->extension) == NULL)
+  if ((cmedia = (lprint_cmedia_t *)data->extension) == NULL)
   {
-    if ((media = (lprint_media_t *)calloc(1, sizeof(lprint_media_t))) == NULL)
+    if ((cmedia = (lprint_cmedia_t *)calloc(1, sizeof(lprint_cmedia_t))) == NULL)
       return (false);
 
-    data->extension = media;
+    data->extension = cmedia;
   }
 
   // Load any existing custom media sizes...
@@ -340,13 +341,8 @@ lprintMediaLoad(
     return (true);
   }
 
-  while (cupsFileGets(fp, line, sizeof(line)))
-  {
-    if (media->num_media >= LPRINT_MAX_CUSTOM)
-      break;
-
-    papplCopyString(media->media[media->num_media ++], line, sizeof(media->media[0]));
-  }
+  for (i = 0; i < data->num_source && cupsFileGets(fp, line, sizeof(line)); i ++)
+    papplCopyString(cmedia->custom_name[i], line, sizeof(cmedia->custom_name[i]));
 
   cupsFileClose(fp);
 
@@ -382,7 +378,7 @@ lprintMediaSave(
     pappl_printer_t        *printer,	// I - Printer
     pappl_pr_driver_data_t *data)	// I - Driver data
 {
-  lprint_media_t	*media;		// Custom media
+  lprint_cmedia_t	*cmedia;	// Custom media
   int			i,		// Looping var
 			fd;		// Custom media file descriptor
   cups_file_t		*fp;		// Custom media file
@@ -390,7 +386,7 @@ lprintMediaSave(
 
 
   // Get the custom media...
-  if ((media = (lprint_media_t *)data->extension) == NULL || media->num_media == 0)
+  if ((cmedia = (lprint_cmedia_t *)data->extension) == NULL)
   {
     // No custom media, delete any existing file...
     papplPrinterOpenFile(printer, filename, sizeof(filename), /*directory*/NULL, "custom-media", "txt", "x");
@@ -407,8 +403,8 @@ lprintMediaSave(
     return (true);
   }
 
-  for (i = 0; i < media->num_media; i ++)
-    cupsFilePrintf(fp, "%s\n", media->media[i]);
+  for (i = 0; i < data->num_source; i ++)
+    cupsFilePrintf(fp, "%s\n", cmedia->custom_name[i]);
 
   cupsFileClose(fp);
 
@@ -427,7 +423,9 @@ lprintMediaUI(
 {
   int			i;		// Looping var
   pappl_pr_driver_data_t data;		// Driver data
-  lprint_media_t	*media;		// Custom label sizes, if any
+  lprint_cmedia_t	*cmedia;	// Custom label sizes, if any
+  char			name[128],	// Form variable name
+			text[256];	// Localized text
   const char		*status = NULL;	// Status message, if any
 
 
@@ -439,152 +437,122 @@ lprintMediaUI(
 
   // Get the driver data...
   papplPrinterGetDriverData(printer, &data);
-  media = (lprint_media_t *)data.extension;
+  cmedia = (lprint_cmedia_t *)data.extension;
 
   if (papplClientGetMethod(client) == HTTP_STATE_POST)
   {
     int			num_form = 0;	// Number of form variable
     cups_option_t	*form = NULL;	// Form variables
-    const char		*value;		// Value of form variable
-    bool		changed = false;// Did the media list change?
-    int			num_ready = 0;	// Number of ready media
 
     if ((num_form = papplClientGetForm(client, &form)) == 0)
     {
       status = papplClientGetLocString(client, "Invalid form data.");
     }
-    else if ((value = cupsGetOption("delete", num_form, form)) != NULL && media)
-    {
-      // Delete a custom size...
-      for (i = 0; i < media->num_media; i ++)
-      {
-        if (!strcmp(media->media[i], value))
-        {
-          // Forget this custom size...
-          changed = true;
-          media->num_media --;
-          if (i < media->num_media)
-            memmove(media->media[i], media->media[i + 1], (media->num_media - i) * sizeof(media->media[0]));
-          status = papplClientGetLocString(client, "Deleted custom label size.");
-          break;
-        }
-      }
-    }
-    else if (!papplClientIsValidForm(client, num_form, form) || (value = cupsGetOption("ready-size", num_form, form)) == NULL)
+    else if (!papplClientIsValidForm(client, num_form, form))
     {
       status = papplClientGetLocString(client, "Invalid form submission.");
     }
     else
     {
-      // Configure the current ready media...
+      bool		changed = false;// Did the custom media list change?
       pwg_media_t	*pwg = NULL;	// PWG media info
-      const char	*custom_width,	// Custom media width
+      pappl_media_col_t	*ready;		// Current ready media
+      const char	*value,		// Value of form variable
+			*custom_width,	// Custom media width
 			*custom_length,	// Custom media length
 			*custom_units;	// Custom media units
 
-      // Update ready media...
       memset(data.media_ready, 0, sizeof(data.media_ready));
-
-      // size
-      if (!strcmp(value, "custom"))
+      for (i = 0, ready = data.media_ready; i < data.num_source; i ++, ready ++)
       {
-	// Custom size...
-	custom_width  = cupsGetOption("ready-custom-width", num_form, form);
-	custom_length = cupsGetOption("ready-custom-length", num_form, form);
-	custom_units  = cupsGetOption("ready-custom-units", num_form, form);
+        // size
+        snprintf(name, sizeof(name), "ready%d-size", i);
+        if ((value = cupsGetOption(name, num_form, form)) == NULL)
+          continue;
 
-	if (custom_width && custom_length)
-	{
-	  if (!custom_units || !strcmp(custom_units, "in"))
-	    pwg = pwgMediaForSize((int)(2540.0 * strtod(custom_width, NULL)), (int)(2540.0 * strtod(custom_length, NULL)));
-	  else
-	    pwg = pwgMediaForSize((int)(100.0 * strtod(custom_width, NULL)), (int)(100.0 * strtod(custom_length, NULL)));
-	}
+        ready->size_name[0] = '\0';
+        ready->size_width   = 0;
+        ready->size_length  = 0;
 
-	value = pwg->pwg;
-      }
-      else
-      {
-	// Standard size...
-	pwg = pwgMediaForPWG(value);
-      }
+        if (!strcmp(value, "custom"))
+        {
+          // Custom size...
+          snprintf(name, sizeof(name), "ready%d-custom-width", i);
+          custom_width = cupsGetOption(name, num_form, form);
+          snprintf(name, sizeof(name), "ready%d-custom-length", i);
+          custom_length = cupsGetOption(name, num_form, form);
+          snprintf(name, sizeof(name), "ready%d-custom-units", i);
+          custom_units = cupsGetOption(name, num_form, form);
 
-      papplLogClient(client, PAPPL_LOGLEVEL_DEBUG, "ready-size='%s',%d,%d", pwg ? pwg->pwg : "unknown", pwg ? pwg->width : 0, pwg ? pwg->length : 0);
+          if (custom_width && custom_length && custom_units)
+          {
+            changed = true;
 
-      if (pwg)
-      {
-	papplCopyString(data.media_ready[0].size_name, value, sizeof(data.media_ready[0].size_name));
-	data.media_ready[0].size_width  = pwg->width;
-	data.media_ready[0].size_length = pwg->length;
-      }
+            if (!strcmp(custom_units, "in"))
+            {
+	      ready->size_width  = (int)(2540.0 * strtod(custom_width, NULL));
+	      ready->size_length = (int)(2540.0 * strtod(custom_length, NULL));
+	    }
+	    else
+	    {
+	      ready->size_width  = (int)(100.0 * strtod(custom_width, NULL));
+	      ready->size_length = (int)(100.0 * strtod(custom_length, NULL));
+	    }
 
-      // source
-      papplCopyString(data.media_ready[0].source, data.source[0], sizeof(data.media_ready[0].source));
-
-      // margins
-      data.media_ready[0].bottom_margin = data.media_ready[0].top_margin   = data.bottom_top;
-      data.media_ready[0].left_margin   = data.media_ready[0].right_margin = data.left_right;
-
-      // tracking
-      if ((value = cupsGetOption("ready-tracking", num_form, form)) == NULL || !strcmp(value, "gap"))
-        data.media_ready[0].tracking = PAPPL_MEDIA_TRACKING_GAP;
-      else if (!strcmp(value, "continuous"))
-        data.media_ready[0].tracking = PAPPL_MEDIA_TRACKING_CONTINUOUS;
-      else
-        data.media_ready[0].tracking = PAPPL_MEDIA_TRACKING_MARK;
-
-      // type
-      papplCopyString(data.media_ready[0].type, "labels", sizeof(data.media_ready[0].type));
-
-      num_ready ++;
-
-      // Update custom media...
-      if (!strncmp(data.media_ready[0].size_name, "custom_", 7))
-      {
-        // Add/update the selected custom size...
-	for (i = 0; i < media->num_media; i ++)
-	{
-	  if (!strcmp(media->media[i], data.media_ready[0].size_name))
-	    break;
-	}
-
-	if (i < media->num_media)
-	{
-	  // Existing custom size...
-	  if (i)
-	  {
-	    // Move current media to the top of the list...
-	    changed = true;
-	    memmove(media->media[1], media->media[0], i * sizeof(media->media[0]));
-	    papplCopyString(media->media[0], data.media_ready[0].size_name, sizeof(media->media[0]));
+            snprintf(name, sizeof(name), "ready%d", i);
+            pwgFormatSizeName(ready->size_name, sizeof(ready->size_name), "custom_", name, ready->size_width, ready->size_length, custom_units);
+            papplCopyString(cmedia->custom_name[i], ready->size_name, sizeof(cmedia->custom_name[i]));
 	  }
-	}
-	else
-	{
-	  // Insert new custom size...
-	  changed = true;
-	  if (media->num_media >= LPRINT_MAX_CUSTOM)
-	    media->num_media = LPRINT_MAX_CUSTOM - 1;
+        }
+        else if ((pwg = pwgMediaForPWG(value)) != NULL)
+        {
+          // Standard size...
+          papplCopyString(ready->size_name, pwg->pwg, sizeof(ready->size_name));
+          ready->size_width  = pwg->width;
+          ready->size_length = pwg->length;
+        }
 
-	  memmove(media->media[1], media->media[0], media->num_media * sizeof(media->media[0]));
-	  papplCopyString(media->media[0], data.media_ready[0].size_name, sizeof(media->media[0]));
-	  media->num_media ++;
-	}
+        papplLogClient(client, PAPPL_LOGLEVEL_DEBUG, "ready%d-size='%s',%d,%d", i, ready->size_name, ready->size_width, ready->size_length);
+
+        // source
+        papplCopyString(ready->source, data.source[i], sizeof(ready->source));
+
+        // xxx-margin
+	ready->bottom_margin = ready->top_margin = data.bottom_top;
+	ready->left_margin = ready->right_margin = data.left_right;
+
+        // tracking
+        snprintf(name, sizeof(name), "ready%d-tracking", i);
+        if ((value = cupsGetOption(name, num_form, form)) != NULL)
+        {
+          if (!strcmp(value, "continuous"))
+            ready->tracking = PAPPL_MEDIA_TRACKING_CONTINUOUS;
+          else if (!strcmp(value, "gap"))
+            ready->tracking = PAPPL_MEDIA_TRACKING_GAP;
+          else if (!strcmp(value, "mark"))
+            ready->tracking = PAPPL_MEDIA_TRACKING_MARK;
+          else
+            ready->tracking = PAPPL_MEDIA_TRACKING_WEB;
+        }
+
+        // type
+        snprintf(name, sizeof(name), "ready%d-type", i);
+        if ((value = cupsGetOption(name, num_form, form)) != NULL)
+          papplCopyString(ready->type, value, sizeof(ready->type));
       }
 
-      status = papplClientGetLocString(client, "Changes saved.");
-    }
+      if (changed)
+      {
+	// Rebuild media size list and save...
+	lprintMediaUpdate(printer, &data);
+	papplPrinterSetDriverData(printer, &data, NULL);
+	lprintMediaSave(printer, &data);
+      }
 
-    if (changed)
-    {
-      // Rebuild media size list and save...
-      lprintMediaUpdate(printer, &data);
-      papplPrinterSetDriverData(printer, &data, NULL);
-      lprintMediaSave(printer, &data);
-    }
+      papplPrinterSetReadyMedia(printer, data.num_source, data.media_ready);
 
-    if (num_ready > 0)
-      papplPrinterSetReadyMedia(printer, num_ready, data.media_ready);
+      status = "Changes saved.";
+    }
 
     cupsFreeOptions(num_form, form);
   }
@@ -599,7 +567,11 @@ lprintMediaUI(
 		      "          <table class=\"form\">\n"
 		      "            <tbody>\n");
 
-  media_chooser(client, &data, data.media_ready);
+  for (i = 0; i < data.num_source; i ++)
+  {
+    snprintf(name, sizeof(name), "ready%d", i);
+    media_chooser(client, &data, localize_keyword(client, "media-source", data.source[i], text, sizeof(text)), name, data.media_ready + i);
+  }
 
   papplClientHTMLPrintf(client,
 			"              <tr><th></th><td><input type=\"submit\" value=\"%s\"></td></tr>\n"
@@ -630,24 +602,23 @@ lprintMediaUpdate(
     pappl_pr_driver_data_t *data)	// I - Driver data
 {
   int			i, j;		// Looping vars
-  lprint_media_t	*media;		// Custom label sizes
+  lprint_cmedia_t	*cmedia;	// Custom label sizes
 
 
   (void)printer;
 
-  // Find the first custom size in the media list...
+  // Find the last size in the media list...
   for (i = 0; i < data->num_media; i ++)
   {
-    if (!strncmp(data->media[i], "custom_", 7))
+    if (!strncmp(data->media[i], "custom_", 7) && strncmp(data->media[i], "custom_min_", 11) && strncmp(data->media[i], "custom_max_", 11))
       break;
   }
 
   // Then copy any custom sizes over...
-  media = (lprint_media_t *)data->extension;
-  if (media)
+  if ((cmedia = (lprint_cmedia_t *)data->extension) != NULL)
   {
-    for (j = 0; j < media->num_media && i < PAPPL_MAX_MEDIA; i ++, j ++)
-      data->media[i] = media->media[j];
+    for (j = 0; j < data->num_source && i < PAPPL_MAX_MEDIA; i ++, j ++)
+      data->media[i] = cmedia->custom_name[j];
   }
 
   data->num_media = i;
@@ -717,6 +688,8 @@ static void
 media_chooser(
     pappl_client_t         *client,	// I - Client
     pappl_pr_driver_data_t *driver_data,// I - Driver data
+    const char             *title,	// I - Title for field
+    const char             *name,	// I - Form name/prefix
     pappl_media_col_t      *media)	// I - Current media values
 {
   int		i,			// Looping vars
@@ -729,10 +702,11 @@ media_chooser(
 
 
   // media-size
-  papplClientHTMLPrintf(client, "              <tr><th>%s</th><td>", papplClientGetLocString(client, "Current Media:"));
+  papplLocFormatString(papplClientGetLoc(client), text, sizeof(text), "%s Media", title);
+  papplClientHTMLPrintf(client, "              <tr><th>%s:</th><td>", text);
   for (i = 0; i < driver_data->num_media && (!min_size || !max_size); i ++)
   {
-    if (!strncmp(driver_data->media[i], "custom_m", 8) || !strncmp(driver_data->media[i], "roll_m", 6))
+    if (!strncmp(driver_data->media[i], "custom_", 7) || !strncmp(driver_data->media[i], "roll_", 5))
     {
       if (strstr(driver_data->media[i], "_min_"))
         min_size = driver_data->media[i];
@@ -740,31 +714,43 @@ media_chooser(
         max_size = driver_data->media[i];
     }
   }
+  if (min_size && max_size)
+  {
+    papplClientHTMLPrintf(client, "<select name=\"%s-size\" onChange=\"show_hide_custom('%s');\"><option value=\"custom\">%s</option>", name, name, papplClientGetLocString(client, "Custom Size"));
+    cur_index ++;
+  }
+  else
+    papplClientHTMLPrintf(client, "<select name=\"%s-size\">", name);
 
   for (i = 0; i < driver_data->num_media; i ++)
   {
-    if (!strncmp(driver_data->media[i], "custom_m", 8) || !strncmp(driver_data->media[i], "roll_m", 6))
-      continue;
+    if (!strncmp(driver_data->media[i], "custom_", 7) || !strncmp(driver_data->media[i], "roll_", 5))
+    {
+      if (strstr(driver_data->media[i], "_min_"))
+      {
+        min_size = driver_data->media[i];
+        continue;
+      }
+      else if (strstr(driver_data->media[i], "_max_"))
+      {
+        max_size = driver_data->media[i];
+        continue;
+      }
+    }
 
     if (!strcmp(driver_data->media[i], media->size_name))
       sel_index = cur_index;
 
-    papplClientHTMLPrintf(client, "<div class=\"radio-list\"><input type=\"radio\" name=\"ready-size\" id=\"%s\" value=\"%s\" onChange=\"show_hide_custom('ready');\"%s><label class=\"radio-label\" for=\"%s\">%s", driver_data->media[i], driver_data->media[i], sel_index == cur_index ? " checked" : "", driver_data->media[i], localize_keyword(client, "media", driver_data->media[i], text, sizeof(text)));
-    if (!strncmp(driver_data->media[i], "custom_", 7))
-    {
-      char	custom_delete[256];	// Delete confirmation prompt
-
-      papplClientHTMLPrintf(client, "<button class=\"radio-action\" type=\"submit\" name=\"delete\" value=\"%s\" onClick=\"return confirm('%s');\">" LPRINT_TRASH "</button>", driver_data->media[i], papplLocFormatString(papplClientGetLoc(client), custom_delete, sizeof(custom_delete), "Delete %s?", text));
-    }
-    papplClientHTMLPuts(client, "</label></div>");
+    papplClientHTMLPrintf(client, "<option value=\"%s\"%s>%s</option>", driver_data->media[i], sel_index == cur_index ? " selected" : "", localize_keyword(client, "media", driver_data->media[i], text, sizeof(text)));
     cur_index ++;
   }
+
   if (min_size && max_size)
   {
     int cur_width, min_width, max_width;// Current/min/max width
     int cur_length, min_length, max_length;
 					// Current/min/max length
-    double form_width, form_length;	// Current size values for form
+    const char *cur_units;		// Current units
 
     if ((pwg = pwgMediaForPWG(min_size)) != NULL)
     {
@@ -798,25 +784,18 @@ media_chooser(
     else if (cur_length > max_length)
       cur_length = max_length;
 
-    // For custom sizes, min width/length is based on inches while max
-    // width/length is based on millimeters, for simplicity...
-    if (strstr(media->size_name, "mm"))
-    {
-      form_width  = cur_width / 100.0;
-      form_length = cur_length / 100.0;
-    }
+    if ((cur_units = media->size_name + strlen(media->size_name) - 2) < media->size_name)
+      cur_units = "in";
+
+    if (!strcmp(cur_units, "mm"))
+      papplClientHTMLPrintf(client, "</select><div style=\"display: %s;\" id=\"%s-custom\"><input type=\"number\" name=\"%s-custom-width\" min=\"%.2f\" max=\"%.2f\" value=\"%.2f\" step=\".01\" placeholder=\"%s\">x<input type=\"number\" name=\"%s-custom-length\" min=\"%.2f\" max=\"%.2f\" value=\"%.2f\" step=\".01\" placeholder=\"%s\"><div class=\"switch\"><input type=\"radio\" id=\"%s-custom-units-in\" name=\"%s-custom-units\" value=\"in\"><label for=\"%s-custom-units-in\">in</label><input type=\"radio\" id=\"%s-custom-units-mm\" name=\"%s-custom-units\" value=\"mm\" checked><label for=\"%s-custom-units-mm\">mm</label></div></div>\n", sel_index == 0 ? "inline-block" : "none", name, name, min_width / 2540.0, max_width / 100.0, cur_width / 100.0, papplClientGetLocString(client, "Width"), name, min_length / 2540.0, max_length / 100.0, cur_length / 100.0, papplClientGetLocString(client, "Height"), name, name, name, name, name, name);
     else
-    {
-      form_width  = cur_width / 2540.0;
-      form_length = cur_length / 2540.0;
-    }
-
-    papplClientHTMLPrintf(client, "<div class=\"radio-list\"><input type=\"radio\" name=\"ready-size\" id=\"custom\" value=\"custom\" onChange=\"show_hide_custom('ready');\"><label class=\"radio-label\" for=\"custom\">%s</label></div>", papplClientGetLocString(client, "New Custom Size"));
-
-    papplClientHTMLPrintf(client, "<div class=\"custom\" style=\"display: none;\" id=\"ready-custom\"><input type=\"number\" name=\"ready-custom-width\" min=\"%.2f\" max=\"%.2f\" value=\"%.2f\" step=\".01\" placeholder=\"%s\">&nbsp;x&nbsp;<input type=\"number\" name=\"ready-custom-length\" min=\"%.2f\" max=\"%.2f\" value=\"%.2f\" step=\".01\" placeholder=\"%s\"><div class=\"switch\"><input type=\"radio\" id=\"ready-custom-units-in\" name=\"ready-custom-units\" value=\"in\"%s><label for=\"ready-custom-units-in\">in</label><input type=\"radio\" id=\"ready-custom-units-mm\" name=\"ready-custom-units\" value=\"mm\"%s><label for=\"ready-custom-units-mm\">mm</label></div></div>", min_width / 2540.0, max_width / 100.0, form_width, papplClientGetLocString(client, "Width"), min_length / 2540.0, max_length / 100.0, form_length, papplClientGetLocString(client, "Height"), strstr(media->size_name, "mm") == NULL ? " checked" : "", strstr(media->size_name, "mm") != NULL ? " checked" : "");
+      papplClientHTMLPrintf(client, "</select><div style=\"display: %s;\" id=\"%s-custom\"><input type=\"number\" name=\"%s-custom-width\" min=\"%.2f\" max=\"%.2f\" value=\"%.2f\" step=\".01\" placeholder=\"%s\">x<input type=\"number\" name=\"%s-custom-length\" min=\"%.2f\" max=\"%.2f\" value=\"%.2f\" step=\".01\" placeholder=\"%s\"><div class=\"switch\"><input type=\"radio\" id=\"%s-custom-units-in\" name=\"%s-custom-units\" value=\"in\" checked><label for=\"%s-custom-units-in\">in</label><input type=\"radio\" id=\"%s-custom-units-mm\" name=\"%s-custom-units\" value=\"mm\"><label for=\"%s-custom-units-mm\">mm</label></div></div>\n", sel_index == 0 ? "inline-block" : "none", name, name, min_width / 2540.0, max_width / 100.0, cur_width / 2540.0, papplClientGetLocString(client, "Width"), name, min_length / 2540.0, max_length / 100.0, cur_length / 2540.0, papplClientGetLocString(client, "Height"), name, name, name, name, name, name);
   }
-
-  papplClientHTMLPuts(client, "</td></tr>\n");
+  else
+  {
+    papplClientHTMLPuts(client, "</select>\n");
+  }
 
   // media-tracking (if needed)
   if (driver_data->tracking_supported)
@@ -830,14 +809,22 @@ media_chooser(
       "web"
     };
 
-    papplClientHTMLPrintf(client, "              <tr><th>%s</th><td><select name=\"ready-tracking\">", papplClientGetLocString(client, "Label Separator:"));
-    for (i = 0, tracking = PAPPL_MEDIA_TRACKING_CONTINUOUS; i <= (int)(sizeof(trackings) / sizeof(trackings[0])); i ++, tracking *= 2)
+    papplClientHTMLPrintf(client, "                <select name=\"%s-tracking\">", name);
+    for (i = 0, tracking = PAPPL_MEDIA_TRACKING_CONTINUOUS; tracking <= PAPPL_MEDIA_TRACKING_WEB; i ++, tracking *= 2)
     {
       if (!(driver_data->tracking_supported & tracking))
 	continue;
 
       papplClientHTMLPrintf(client, "<option value=\"%s\"%s>%s</option>", trackings[i], tracking == media->tracking ? " selected" : "", localize_keyword(client, "media-tracking", trackings[i], text, sizeof(text)));
     }
-    papplClientHTMLPuts(client, "</select></td></tr>\n");
+    papplClientHTMLPuts(client, "</select>\n");
   }
+
+  // media-type
+  papplClientHTMLPrintf(client, "                <select name=\"%s-type\">", name);
+  for (i = 0; i < driver_data->num_type; i ++)
+  {
+    papplClientHTMLPrintf(client, "<option value=\"%s\"%s>%s</option>", driver_data->type[i], !strcmp(driver_data->type[i], media->type) ? " selected" : "", localize_keyword(client, "media-type", driver_data->type[i], text, sizeof(text)));
+  }
+  papplClientHTMLPrintf(client, "</select></td></tr>\n");
 }
