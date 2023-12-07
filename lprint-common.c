@@ -431,7 +431,7 @@ lprintMediaUI(
   const char		*status = NULL;	// Status message, if any
 
 
-  fprintf(stderr, "lprintMediaUI(client=%p, printer=%p(%s))\n", client, printer, printer ? papplPrinterGetName(printer) : "null");
+  LPRINT_DEBUG("lprintMediaUI(client=%p, printer=%p(%s))\n", client, printer, printer ? papplPrinterGetName(printer) : "null");
 
   // Only allow access as appropriate...
   if (!papplClientHTMLAuthorize(client))
@@ -440,11 +440,11 @@ lprintMediaUI(
   // Get the driver data...
   papplPrinterGetDriverData(printer, &data);
 
-  fprintf(stderr, "lprintMediaUI: data.extension=%p\n", data.extension);
+  LPRINT_DEBUG("lprintMediaUI: data.extension=%p\n", data.extension);
   if (!data.extension)
   {
     lprintMediaLoad(printer, &data);
-    fprintf(stderr, "lprintMediaUI: AFTER data.extension=%p\n", data.extension);
+    LPRINT_DEBUG("lprintMediaUI: AFTER data.extension=%p\n", data.extension);
   }
   cmedia = (lprint_cmedia_t *)data.extension;
 
@@ -626,15 +626,18 @@ lprintMediaUpdate(
   // Then copy any custom sizes over...
   if ((cmedia = (lprint_cmedia_t *)data->extension) != NULL)
   {
-    for (j = 0; j < data->num_source && i < PAPPL_MAX_MEDIA; i ++, j ++)
-      data->media[i] = cmedia->custom_name[j];
+    for (j = 0; j < data->num_source && i < PAPPL_MAX_MEDIA; j ++)
+    {
+      if (cmedia->custom_name[j][0])
+        data->media[i ++] = cmedia->custom_name[j];
+    }
   }
 
   data->num_media = i;
 
-  fprintf(stderr, "lprintMediaUpdate: num_media=%d\n", data->num_media);
+  LPRINT_DEBUG("lprintMediaUpdate: num_media=%d\n", data->num_media);
   for (i = 0; i < data->num_media; i ++)
-    fprintf(stderr, "lprintMediaUpdate: media[%d]='%s'\n", i, data->media[i]);
+    LPRINT_DEBUG("lprintMediaUpdate: media[%d]='%s'\n", i, data->media[i]);
 }
 
 
@@ -679,7 +682,7 @@ localize_keyword(
     pwg_media_t *pwg = pwgMediaForPWG(keyword);
 					// PWG media size info
 
-    fprintf(stderr, "localize_keyword: keyword='%s', pwg=%p(%dx%d)\n", keyword, pwg, pwg ? pwg->width : 0, pwg ? pwg->length : 0);
+    LPRINT_DEBUG("localize_keyword: keyword='%s', pwg=%p(%dx%d)\n", keyword, pwg, pwg ? pwg->width : 0, pwg ? pwg->length : 0);
     if (pwg)
     {
       if ((pwg->width % 100) == 0 && (pwg->width % 2540) != 0)
@@ -750,7 +753,7 @@ media_chooser(
   }
   if (min_size && max_size)
   {
-    papplClientHTMLPrintf(client, "<select name=\"%s-size\" onChange=\"show_hide_custom('%s');\"><option value=\"custom\">%s</option>", name, name, papplClientGetLocString(client, "Custom Size"));
+    papplClientHTMLPrintf(client, "<select name=\"%s-size\" onChange=\"show_hide_custom('%s');\"><option value=\"custom\">%s</option>", name, name, papplClientGetLocString(client, "New Custom Size"));
     cur_index ++;
   }
   else

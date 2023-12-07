@@ -187,12 +187,12 @@ create_cb(pappl_printer_t *printer,	// I - Printer
 
   (void)cbdata;
 
-  fprintf(stderr, "create_cb(printer=%p(%s), cbdata=%p)\n", printer, printer ? papplPrinterGetName(printer) : "null", cbdata);
+  LPRINT_DEBUG("create_cb(printer=%p(%s), cbdata=%p)\n", printer, printer ? papplPrinterGetName(printer) : "null", cbdata);
 
   // Add custom label media page to replace the standard ready media page...
   papplSystemRemoveResource(papplPrinterGetSystem(printer), papplPrinterGetPath(printer, "media", resource, sizeof(resource)));
   papplSystemAddResourceCallback(papplPrinterGetSystem(printer), resource, "text/html", (pappl_resource_cb_t)lprintMediaUI, printer);
-  fprintf(stderr, "create_cb: Added new media page for '%s'.\n", resource);
+  LPRINT_DEBUG("create_cb: Added new media page for '%s'.\n", resource);
 
   // Load custom media sizes and report them...
   papplPrinterGetDriverData(printer, &data);
@@ -200,7 +200,7 @@ create_cb(pappl_printer_t *printer,	// I - Printer
   lprintMediaUpdate(printer, &data);
   papplPrinterSetDriverData(printer, &data, NULL);
 
-  fprintf(stderr, "create_cb: data.extension=%p\n", data.extension);
+  LPRINT_DEBUG("create_cb: data.extension=%p\n", data.extension);
 }
 
 
