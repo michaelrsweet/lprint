@@ -108,7 +108,7 @@ typedef ipp_copycb_t ipp_copy_cb_t;
 #  define LPRINT_TESTPAGE_MIMETYPE	"application/vnd.lprint-test"
 #  define LPRINT_TESTPAGE_HEADER	"T*E*S*T*P*A*G*E*"
 
-#  define LPRINT_BROTHER_RAS_MIMETYPE	"application/vnd.brother-raster"
+#  define LPRINT_BROTHER_PT_CBP_MIMETYPE "application/vnd.brother-pt-cbp"
 #  define LPRINT_EPL2_MIMETYPE		"application/vnd.eltron-epl"
 #  define LPRINT_SLP_MIMETYPE		"application/vnd.sii-slp"
 #  define LPRINT_TSPL_MIMETYPE		"application/vnd.tsc-tspl"

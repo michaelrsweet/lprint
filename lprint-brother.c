@@ -24,7 +24,6 @@ typedef struct lprint_brother_s		// Brother driver data
 // Local globals...
 //
 
-#if 0
 static const char * const lprint_brother_ql_media[] =
 {					// Supported QL-* media sizes
   "oe_dk1219-round_0.47x0.47in",
@@ -39,19 +38,19 @@ static const char * const lprint_brother_ql_media[] =
 
   "na_index-4x6_4x6in",				// DK1241/1247
 
-// TODO: Translate queried size to roll_current_NNxNNin
-//  "roll_dk2113-continuous-film_2.4x600in",	// Black/Clear
-//  "roll_dk2205-continuous_2.4x1200in",		// Black on White
-//  "roll_dk2210-continuous_1.1x1200in",
-//  "roll_dk2211-continuous-film_1.1x600in",
-//  "roll_dk2212-continuous-film_2.4x600in",
-//  "roll_dk2214-continuous_0.47x1200in",
-//  "roll_dk2243-continuous_4x1200in",		// Black on White
-//  "roll_dk2246-continuous_4.07x1200in",		// Black on White
-//  "roll_dk2251-continuous_2.4x600in",		// Black/Red on White
-//  "roll_dk2606-continuous-film_2.4x600in",	// Black/Yellow
-//  "roll_dk4205-continuous-removable_2.4x1200in",// Black on White
-//  "roll_dk4605-continuous-removable_2.4x1200in",// Black/Yellow on White
+  "roll_dk2113-continuous-film_2.4x600in",	// Black/Clear
+  "roll_dk2205-continuous_2.4x1200in",		// Black on White
+  "roll_dk2210-continuous_1.1x1200in",
+  "roll_dk2211-continuous-film_1.1x600in",
+  "roll_dk2212-continuous-film_2.4x600in",
+  "roll_dk2214-continuous_0.47x1200in",
+  "roll_dk2243-continuous_4x1200in",		// Black on White
+  "roll_dk2246-continuous_4.07x1200in",		// Black on White
+  "roll_dk2251-continuous_2.4x600in",		// Black/Red on White
+  "roll_dk2606-continuous-film_2.4x600in",	// Black/Yellow
+  "roll_dk4205-continuous-removable_2.4x1200in",// Black on White
+  "roll_dk4605-continuous-removable_2.4x1200in",// Black/Yellow on White
+
   "roll_max_2.5x3600in",
   "roll_min_0.25x1in"
 };
@@ -79,13 +78,13 @@ static const char * const lprint_brother_pt_media[] =
   "roll_max_1x3600in",
   "roll_min_0.25x1in"
 };
-#endif // 0
 
 
 //
 // Local functions...
 //
 
+static bool	lprint_brother_get_status(pappl_printer_t *printer, pappl_device_t *device);
 static bool	lprint_brother_printfile(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
 static bool	lprint_brother_rendjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
 static bool	lprint_brother_rendpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page);
@@ -119,32 +118,114 @@ lprintBrother(
   data->status_cb     = lprint_brother_status;
 
   // Vendor-specific format...
-  data->format = LPRINT_BROTHER_RAS_MIMETYPE;
+  data->format = LPRINT_BROTHER_PT_CBP_MIMETYPE;
 
-  // Set resolution...
-  data->num_resolution  = 1;
-  data->x_resolution[0] = data->y_resolution[0] = 180;
-  data->x_default       = data->y_default = data->x_resolution[0];
+  if (!strncmp(driver_name, "brother_ql-", 11))
+  {
+    // QL-series...
 
-  // Basically borderless...
-  data->left_right = 1;
-  data->bottom_top = 1;
+    // Set resolution...
+    // TODO: Add support for 300x600dpi mode for QL-570/580N/700/8xx
+    data->num_resolution  = 1;
+    data->x_resolution[0] = data->y_resolution[0] = 300;
+    data->x_default       = data->y_default = data->x_resolution[0];
 
-  // Supported media...
-//  data->num_media = (int)(sizeof(lprint_brother_media) / sizeof(lprint_brother_media[0]));
-//  memcpy(data->media, lprint_brother_media, sizeof(lprint_brother_media));
+    // Basically borderless...
+    data->left_right = 1;
+    data->bottom_top = 1;
+
+    // Supported media...
+    data->num_media = (int)(sizeof(lprint_brother_ql_media) / sizeof(lprint_brother_ql_media[0]));
+    memcpy(data->media, lprint_brother_ql_media, sizeof(lprint_brother_ql_media));
+
+    papplCopyString(data->media_ready[0].size_name, "roll_dk2205-continuous_2.4x3.9in", sizeof(data->media_ready[0].size_name));
+    papplCopyString(data->media_ready[0].type, "continuous", sizeof(data->media_ready[0].type));
+
+    data->num_type = 2;
+    data->type[0]  = "labels";
+    data->type[1]  = "continuous";
+  }
+  else
+  {
+    // PT-series...
+
+    // Set resolution...
+    data->num_resolution  = 1;
+    data->x_resolution[0] = data->y_resolution[0] = 180;
+    data->x_default       = data->y_default = data->x_resolution[0];
+
+    // Basically borderless...
+    data->left_right = 1;
+    data->bottom_top = 1;
+
+    // Supported media...
+    data->num_media = (int)(sizeof(lprint_brother_pt_media) / sizeof(lprint_brother_pt_media[0]));
+    memcpy(data->media, lprint_brother_pt_media, sizeof(lprint_brother_pt_media));
+
+    data->num_source = 1;
+    data->source[0]  = "main-roll";
+
+    papplCopyString(data->media_ready[0].size_name, "oe_wide-2in-tape_1x2in", sizeof(data->media_ready[0].size_name));
+    papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
+
+    data->num_type = 2;
+    data->type[0]  = "continuous";
+    data->type[1]  = "continuous-film";
+    data->type[2]  = "continuous-removable";
+  }
 
   data->num_source = 1;
   data->source[0]  = "main-roll";
 
-  papplCopyString(data->media_ready[0].size_name, "oe_wide-2in-tape_1x2in", sizeof(data->media_ready[0].size_name));
-  papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
 
-  data->num_type = 4;
-  data->type[0]  = "labels";
-  data->type[1]  = "continuous";
-  data->type[2]  = "continuous-film";
-  data->type[3]  = "continuous-removable";
+  return (true);
+}
+
+
+//
+// 'lprint_brother_get_status()' - Query the printer status information...
+//
+
+static bool				// O - `true` on success, `false` on failure
+lprint_brother_get_status(
+    pappl_printer_t *printer,		// I - Printer
+    pappl_device_t  *device)		// I - Device
+{
+  unsigned char	buffer[32];		// Status buffer
+
+
+  if (!papplDevicePuts(device, "\033iS"))
+    return (false);
+
+  if (papplDeviceRead(device, buffer, sizeof(buffer)) < (ssize_t)sizeof(buffer))
+    return (false);
+
+  fprintf(stderr, "lprint_brother_get_status: Print Head Mark = %02x\n", buffer[0]);
+  fprintf(stderr, "lprint_brother_get_status: Size = %02x\n", buffer[1]);
+  fprintf(stderr, "lprint_brother_get_status: Reserved = %02x\n", buffer[2]);
+  fprintf(stderr, "lprint_brother_get_status: Series Code = %02x\n", buffer[3]);
+  fprintf(stderr, "lprint_brother_get_status: Model Code = %02x %02x\n", buffer[4], buffer[5]);
+  fprintf(stderr, "lprint_brother_get_status: Reserved = %02x\n", buffer[6]);
+  fprintf(stderr, "lprint_brother_get_status: Reserved = %02x\n", buffer[7]);
+  fprintf(stderr, "lprint_brother_get_status: Error Info 1 = %02x\n", buffer[8]);
+  fprintf(stderr, "lprint_brother_get_status: Error Info 2 = %02x\n", buffer[9]);
+  fprintf(stderr, "lprint_brother_get_status: Media Width = %02x\n", buffer[10]);
+  fprintf(stderr, "lprint_brother_get_status: Media Type = %02x\n", buffer[11]);
+  fprintf(stderr, "lprint_brother_get_status: Reserved = %02x\n", buffer[12]);
+  fprintf(stderr, "lprint_brother_get_status: Reserved = %02x\n", buffer[13]);
+  fprintf(stderr, "lprint_brother_get_status: Reserved = %02x\n", buffer[14]);
+  fprintf(stderr, "lprint_brother_get_status: Mode = %02x\n", buffer[15]);
+  fprintf(stderr, "lprint_brother_get_status: Reserved = %02x\n", buffer[16]);
+  fprintf(stderr, "lprint_brother_get_status: Media Length = %02x\n", buffer[17]);
+  fprintf(stderr, "lprint_brother_get_status: Status Type = %02x\n", buffer[18]);
+  fprintf(stderr, "lprint_brother_get_status: Phase Type = %02x\n", buffer[19]);
+  fprintf(stderr, "lprint_brother_get_status: Phase Number = %02x %02x\n", buffer[20], buffer[21]);
+  fprintf(stderr, "lprint_brother_get_status: Notification # = %02x\n", buffer[22]);
+  fprintf(stderr, "lprint_brother_get_status: Reserved = %02x\n", buffer[23]);
+  fprintf(stderr, "lprint_brother_get_status: Tape Color = %02x\n", buffer[24]);
+  fprintf(stderr, "lprint_brother_get_status: Text Color = %02x\n", buffer[25]);
+  fprintf(stderr, "lprint_brother_get_status: Hardware Info = %02x %02x %02x %02x\n", buffer[26], buffer[27], buffer[28], buffer[29]);
+  fprintf(stderr, "lprint_brother_get_status: Reserved = %02x %02x\n", buffer[30], buffer[31]);
 
   return (true);
 }
@@ -258,9 +339,11 @@ lprint_brother_rstartjob(
     pappl_pr_options_t *options,	// I - Job options
     pappl_device_t     *device)		// I - Output device
 {
-  lprint_brother_t		*brother = (lprint_brother_t *)calloc(1, sizeof(lprint_brother_t));
+  lprint_brother_t *brother = (lprint_brother_t *)calloc(1, sizeof(lprint_brother_t));
 					// Brother driver data
-
+  const char	*driver_name = papplPrinterGetDriverName(papplJobGetPrinter(job));
+					// Driver name
+  char		buffer[400];		// Reset buffer
 
   (void)options;
 
@@ -268,9 +351,18 @@ lprint_brother_rstartjob(
   papplJobSetData(job, brother);
 
   // Reset the printer...
+  memset(buffer, 0, sizeof(buffer));
+  if (driver_name && !strncmp(driver_name, "brother_qt-", 11))
+    papplDeviceWrite(device, buffer, 100);
+  else
+    papplDeviceWrite(device, buffer, sizeof(buffer));
 
+  // Get status information...
+  if (!lprint_brother_get_status(papplJobGetPrinter(job), device))
+    return (false);
 
-  return (true);
+  // Reset and set raster mode...
+  return (papplDevicePuts(device, "\033@\033ia\001"));
 }
 
 
@@ -294,7 +386,7 @@ lprint_brother_rstartpage(
 
   (void)page;
 
-  if (!lprintDitherAlloc(&brother->dither, job, options, CUPS_CSPACE_K, 1.0))
+  if (!lprintDitherAlloc(&brother->dither, job, options, CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0))
     return (false);
 
   return (true);
