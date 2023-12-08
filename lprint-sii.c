@@ -52,31 +52,31 @@ typedef struct lprint_sii_s		// SII driver data
 
 static const char * const lprint_sii_media[] =
 {					// Supported media sizes for labels
-  "om_4-part-label_48x96mm",
-  "om_8mm-spine_9x66mm",
   "om_35mm-slide_9x37mm",
-  "om_address-large_35x83mm",
-  "om_address-small_24x83mm",
-  "om_cut-hanging-13_32x78mm",
-  "om_cut-hanging-15_32x40mm",
-  "om_diskette_48x64mm",
-  "om_euro-file-folder_39x49mm",
-  "om_euro-folder-narrow_38x186mm",
-  "om_euro-folder-wide_48x186mm",
-  "om_euro-name-badge_38x67mm",
-  "om_euro-name-badge-large_48x79mm",
+  "om_8mm-spine_9x66mm",
   "om_file-folder_13x81mm",
-  "om_jewelry_27x48mm",
-  "om_media-badge_48x64mm",
-  "om_multi-purpose_24x44mm",
-  "om_retail-label_32x37mm",
   "om_return_16x43mm",
+  "om_vhs-spine_18x141mm",
   "om_round_22x24mm",
+  "om_multi-purpose_24x44mm",
+  "om_address-small_24x83mm",
+  "om_jewelry_27x48mm",
+  "om_retail-label_32x37mm",
+  "om_cut-hanging-15_32x40mm",
+  "om_cut-hanging-13_32x78mm",
+  "om_address-large_35x83mm",
+  "om_euro-name-badge_38x67mm",
+  "om_euro-folder-narrow_38x186mm",
+  "om_euro-file-folder_39x49mm",
+  "om_vhs-face_45x72mm",
+  "om_zip-disk_48x55mm",
+  "om_diskette_48x64mm",
+  "om_media-badge_48x64mm",
+  "om_euro-name-badge-large_48x79mm",
+  "om_4-part-label_48x96mm",
   "om_shipping_48x96mm",
   "om_top-coated-paper_48x140mm",
-  "om_vhs-face_45x72mm",
-  "om_vhs-spine_18x141mm",
-  "om_zip-disk_48x55mm",
+  "om_euro-folder-wide_48x186mm",
   "roll_max_48x186mm",
   "roll_min_9x13mm"
 };
@@ -94,7 +94,6 @@ static bool	lprint_sii_rendpage(pappl_job_t *job, pappl_pr_options_t *options, p
 static bool	lprint_sii_rstartjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
 static bool	lprint_sii_rstartpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page);
 static bool	lprint_sii_rwriteline(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned y, const unsigned char *line);
-static bool	lprint_sii_status(pappl_printer_t *printer);
 
 
 //
@@ -118,7 +117,6 @@ lprintSII(
   data->rstartjob_cb  = lprint_sii_rstartjob;
   data->rstartpage_cb = lprint_sii_rstartpage;
   data->rwriteline_cb = lprint_sii_rwriteline;
-  data->status_cb     = lprint_sii_status;
 
   // Vendor-specific format...
   data->format = LPRINT_SLP_MIMETYPE;
@@ -247,7 +245,7 @@ lprint_sii_printfile(
   // Copy the raw file...
   papplJobSetImpressions(job, 1);
 
-  if ((fd  = open(papplJobGetFilename(job), O_RDONLY)) < 0)
+  if ((fd = open(papplJobGetFilename(job), O_RDONLY)) < 0)
   {
     papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to open print file \"%s\": %s", papplJobGetFilename(job), strerror(errno));
     return (false);
@@ -371,6 +369,8 @@ lprint_sii_rstartpage(
   if (!lprintDitherAlloc(&siidata->dither, job, options, CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0))
     return (false);
 
+  papplDevicePrintf(device, "%c%c", LPRINT_SLP_CMD_MARGIN, (int)(12.7 * (lprint_sii_get_max_width(driver_name) - options->header.cupsWidth) / options->header.HWResolution[0]));
+
   siidata->blanks = 0;
 
   // Set darkness...
@@ -452,20 +452,6 @@ lprint_sii_rwriteline(
   // Output bitmap data...
   papplDevicePrintf(device, "%c%c", LPRINT_SLP_CMD_PRINT, (char)siidata->dither.out_width);
   papplDeviceWrite(device, siidata->dither.output, siidata->dither.out_width);
-
-  return (true);
-}
-
-
-//
-// 'lprint_sii_status()' - Get current printer status.
-//
-
-static bool				// O - `true` on success, `false` on failure
-lprint_sii_status(
-    pappl_printer_t *printer)		// I - Printer
-{
-  (void)printer;
 
   return (true);
 }
