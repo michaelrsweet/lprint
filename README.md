@@ -33,7 +33,7 @@ LPrint depends on:
 
 - A POSIX-compliant "make" program (both GNU and BSD make are known to work),
 - A C99 compiler (both Clang and GCC are known to work),
-- [PAPPL](https://www.msweet.org/pappl) 1.1 or later.
+- [PAPPL](https://www.msweet.org/pappl) 1.2 or later.
 - [CUPS](https://openprinting.github.io/cups) 2.2 or later (for libcups).
 
 
@@ -43,6 +43,8 @@ Supported Printers
 The following printers are currently supported:
 
 - DYMO LabelWriter printers
+- Seiko Instruments SLP printers
+- TSPL printers
 - Zebra/Eltron EPL2 printers
 - Zebra ZPL printers
 

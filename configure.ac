@@ -99,11 +99,11 @@ AC_PATH_TOOL([PKGCONFIG], [pkg-config])
 
 
 dnl PAPPL library...
-AS_IF([$PKGCONFIG --exists pappl --atleast-version=1.1], [
+AS_IF([$PKGCONFIG --exists pappl --atleast-version=1.2], [
     CFLAGS="$CFLAGS $($PKGCONFIG --cflags pappl)"
     LIBS="$LIBS $($PKGCONFIG --libs pappl)"
 ], [
-    AC_MSG_ERROR([PAPPL 1.1 or later is required for LPrint.])
+    AC_MSG_ERROR([PAPPL 1.2 or later is required for LPrint.])
 ])
 
 dnl CUPS library...
