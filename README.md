@@ -44,7 +44,7 @@ The following printers are currently supported:
 
 - DYMO LabelWriter printers
 - Seiko Instruments SLP printers
-- TSPL printers
+- TSPL printers such as the Rollo X1038
 - Zebra/Eltron EPL2 printers
 - Zebra ZPL printers
 
