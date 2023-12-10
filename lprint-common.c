@@ -359,15 +359,69 @@ lprintMediaLoad(
 const char *				// O - Matching media size or `NULL` if none
 lprintMediaMatch(
     pappl_printer_t *printer,		// I - Printer
+    int             source,		// I - "media-source" index (0-based)
     int             width,		// I - Width in hundredths of millimeters or `0` if unknown
     int             length)		// I - Length in hundredths of millimeters
 {
-  // TODO: Implement media matching algorithm
-  (void)printer;
-  (void)width;
-  (void)length;
+  pappl_pr_driver_data_t pdata;		// Printer driver data
+  lprint_cmedia_t	*cmedia;	// Custom media info
+  int			i;		// Looping var
+  pwg_media_t		*pwg;		// Current size info
+  const char		*ret = NULL;	// Return value
 
-  return (NULL);
+
+  papplPrinterGetDriverData(printer, &pdata);
+
+  for (i = 0; i < pdata.num_media; i ++)
+  {
+    if ((!strncmp(pdata.media[i], "custom_", 7) || !strncmp(pdata.media[i], "roll_", 5)) && (strstr(pdata.media[i], "_min_") != NULL || strstr(pdata.media[i], "_max_") != NULL))
+      continue;
+
+    if ((pwg = pwgMediaForPWG(pdata.media[i])) == NULL)
+      continue;
+
+    if ((pwg->width == width || !width) && (pwg->length == length || !length))
+    {
+      if (!ret || !strncmp(pdata.media[i], "custom_", 7) || !strncmp(pdata.media[i], "roll_", 5))
+        ret = pdata.media[i];
+    }
+  }
+
+  if (!ret)
+  {
+    if (!pdata.extension)
+      lprintMediaLoad(printer, &pdata);
+
+    if ((cmedia = (lprint_cmedia_t *)pdata.extension) != NULL)
+    {
+      if (length == 0)
+        pwgFormatSizeName(cmedia->custom_name[source], sizeof(cmedia->custom_name[source]), "roll", pdata.source[source], width, length, /*units*/NULL);
+      else
+        pwgFormatSizeName(cmedia->custom_name[source], sizeof(cmedia->custom_name[source]), "custom", pdata.source[source], width, length, /*units*/NULL);
+
+      lprintMediaUpdate(printer, &pdata);
+      lprintMediaSave(printer, &pdata);
+
+      ret = cmedia->custom_name[source];
+    }
+  }
+
+  if (ret && strcmp(pdata.media_ready[source].size_name, ret) && (pwg = pwgMediaForPWG(ret)) != NULL)
+  {
+    // Ready media has changed...
+    papplCopyString(pdata.media_ready[source].size_name, ret, sizeof(pdata.media_ready[source].size_name));
+    pdata.media_ready[source].size_width = pwg->width;
+    pdata.media_ready[source].size_width = pwg->length;
+
+    if (pwg->length == 0)
+      papplCopyString(pdata.media_ready[source].type, "continuous", sizeof(pdata.media_ready[source].type));
+    else
+      papplCopyString(pdata.media_ready[source].type, "label", sizeof(pdata.media_ready[source].type));
+
+    papplPrinterSetDriverData(printer, &pdata, NULL);
+  }
+
+  return (ret);
 }
 
 

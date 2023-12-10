@@ -16,7 +16,13 @@
 
 typedef struct lprint_brother_s		// Brother driver data
 {
+  bool		is_pt_series;		// Is this a PT-series printer?
+  bool		is_ql_800;		// Is this the QL-800 printer?
   lprint_dither_t dither;		// Dither buffer
+  int		count;			// Output count for print info
+  size_t	alloc_bytes,		// Allocated bytes for output buffer
+		num_bytes;		// Number of bytes in output buffer
+  unsigned char	*buffer;		// Output buffer
 } lprint_brother_t;
 
 
@@ -191,41 +197,66 @@ lprint_brother_get_status(
     pappl_printer_t *printer,		// I - Printer
     pappl_device_t  *device)		// I - Device
 {
-  unsigned char	buffer[32];		// Status buffer
+  unsigned char		buffer[32];	// Status buffer
+  pappl_preason_t	preasons;	// "printer-state-reasons" values
+  const char		*media;		// "media-ready" value
 
 
+  // Request status...
   if (!papplDevicePuts(device, "\033iS"))
     return (false);
 
+  // Read status buffer...
   if (papplDeviceRead(device, buffer, sizeof(buffer)) < (ssize_t)sizeof(buffer))
     return (false);
 
-  fprintf(stderr, "lprint_brother_get_status: Print Head Mark = %02x\n", buffer[0]);
-  fprintf(stderr, "lprint_brother_get_status: Size = %02x\n", buffer[1]);
-  fprintf(stderr, "lprint_brother_get_status: Reserved = %02x\n", buffer[2]);
-  fprintf(stderr, "lprint_brother_get_status: Series Code = %02x\n", buffer[3]);
-  fprintf(stderr, "lprint_brother_get_status: Model Code = %02x %02x\n", buffer[4], buffer[5]);
-  fprintf(stderr, "lprint_brother_get_status: Reserved = %02x\n", buffer[6]);
-  fprintf(stderr, "lprint_brother_get_status: Reserved = %02x\n", buffer[7]);
-  fprintf(stderr, "lprint_brother_get_status: Error Info 1 = %02x\n", buffer[8]);
-  fprintf(stderr, "lprint_brother_get_status: Error Info 2 = %02x\n", buffer[9]);
-  fprintf(stderr, "lprint_brother_get_status: Media Width = %02x\n", buffer[10]);
-  fprintf(stderr, "lprint_brother_get_status: Media Type = %02x\n", buffer[11]);
-  fprintf(stderr, "lprint_brother_get_status: Reserved = %02x\n", buffer[12]);
-  fprintf(stderr, "lprint_brother_get_status: Reserved = %02x\n", buffer[13]);
-  fprintf(stderr, "lprint_brother_get_status: Reserved = %02x\n", buffer[14]);
-  fprintf(stderr, "lprint_brother_get_status: Mode = %02x\n", buffer[15]);
-  fprintf(stderr, "lprint_brother_get_status: Reserved = %02x\n", buffer[16]);
-  fprintf(stderr, "lprint_brother_get_status: Media Length = %02x\n", buffer[17]);
-  fprintf(stderr, "lprint_brother_get_status: Status Type = %02x\n", buffer[18]);
-  fprintf(stderr, "lprint_brother_get_status: Phase Type = %02x\n", buffer[19]);
-  fprintf(stderr, "lprint_brother_get_status: Phase Number = %02x %02x\n", buffer[20], buffer[21]);
-  fprintf(stderr, "lprint_brother_get_status: Notification # = %02x\n", buffer[22]);
-  fprintf(stderr, "lprint_brother_get_status: Reserved = %02x\n", buffer[23]);
-  fprintf(stderr, "lprint_brother_get_status: Tape Color = %02x\n", buffer[24]);
-  fprintf(stderr, "lprint_brother_get_status: Text Color = %02x\n", buffer[25]);
-  fprintf(stderr, "lprint_brother_get_status: Hardware Info = %02x %02x %02x %02x\n", buffer[26], buffer[27], buffer[28], buffer[29]);
-  fprintf(stderr, "lprint_brother_get_status: Reserved = %02x %02x\n", buffer[30], buffer[31]);
+  LPRINT_DEBUG("lprint_brother_get_status: Print Head Mark = %02x\n", buffer[0]);
+  LPRINT_DEBUG("lprint_brother_get_status: Size = %02x\n", buffer[1]);
+  LPRINT_DEBUG("lprint_brother_get_status: Reserved = %02x\n", buffer[2]);
+  LPRINT_DEBUG("lprint_brother_get_status: Series Code = %02x\n", buffer[3]);
+  LPRINT_DEBUG("lprint_brother_get_status: Model Code = %02x %02x\n", buffer[4], buffer[5]);
+  LPRINT_DEBUG("lprint_brother_get_status: Reserved = %02x\n", buffer[6]);
+  LPRINT_DEBUG("lprint_brother_get_status: Reserved = %02x\n", buffer[7]);
+  LPRINT_DEBUG("lprint_brother_get_status: Error Info 1 = %02x\n", buffer[8]);
+  LPRINT_DEBUG("lprint_brother_get_status: Error Info 2 = %02x\n", buffer[9]);
+  LPRINT_DEBUG("lprint_brother_get_status: Media Width = %02x\n", buffer[10]);
+  LPRINT_DEBUG("lprint_brother_get_status: Media Type = %02x\n", buffer[11]);
+  LPRINT_DEBUG("lprint_brother_get_status: Reserved = %02x\n", buffer[12]);
+  LPRINT_DEBUG("lprint_brother_get_status: Reserved = %02x\n", buffer[13]);
+  LPRINT_DEBUG("lprint_brother_get_status: Reserved = %02x\n", buffer[14]);
+  LPRINT_DEBUG("lprint_brother_get_status: Mode = %02x\n", buffer[15]);
+  LPRINT_DEBUG("lprint_brother_get_status: Reserved = %02x\n", buffer[16]);
+  LPRINT_DEBUG("lprint_brother_get_status: Media Length = %02x\n", buffer[17]);
+  LPRINT_DEBUG("lprint_brother_get_status: Status Type = %02x\n", buffer[18]);
+  LPRINT_DEBUG("lprint_brother_get_status: Phase Type = %02x\n", buffer[19]);
+  LPRINT_DEBUG("lprint_brother_get_status: Phase Number = %02x %02x\n", buffer[20], buffer[21]);
+  LPRINT_DEBUG("lprint_brother_get_status: Notification # = %02x\n", buffer[22]);
+  LPRINT_DEBUG("lprint_brother_get_status: Reserved = %02x\n", buffer[23]);
+  LPRINT_DEBUG("lprint_brother_get_status: Tape Color = %02x\n", buffer[24]);
+  LPRINT_DEBUG("lprint_brother_get_status: Text Color = %02x\n", buffer[25]);
+  LPRINT_DEBUG("lprint_brother_get_status: Hardware Info = %02x %02x %02x %02x\n", buffer[26], buffer[27], buffer[28], buffer[29]);
+  LPRINT_DEBUG("lprint_brother_get_status: Reserved = %02x %02x\n", buffer[30], buffer[31]);
+
+  // Match ready media...
+  if ((media = lprintMediaMatch(printer, 0, 100 * buffer[10], 100 * buffer[17])) != NULL)
+    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Detected media is '%s'.", media);
+
+  // Convert error info to "printer-state-reasons" bits...
+  preasons = PAPPL_PREASON_NONE;
+  if (buffer[8] & 0x03)
+    preasons |= PAPPL_PREASON_MEDIA_EMPTY;
+  if (buffer[8] & 0xfc)
+    preasons |= PAPPL_PREASON_OTHER;
+  if (buffer[9] & 0x01)
+    preasons |= PAPPL_PREASON_MEDIA_NEEDED;
+  if (buffer[9] & 0x10)
+    preasons |= PAPPL_PREASON_COVER_OPEN;
+  if (buffer[9] & 0x40)
+    preasons |= PAPPL_PREASON_MEDIA_JAM;
+  if (buffer[9] & 0xae)
+    preasons |= PAPPL_PREASON_OTHER;
+
+  papplPrinterSetReasons(printer, preasons, ~preasons);
 
   return (true);
 }
@@ -293,6 +324,7 @@ lprint_brother_rendjob(
 
   (void)options;
 
+  free(brother->buffer);
   free(brother);
   papplJobSetData(job, NULL);
 
@@ -313,14 +345,37 @@ lprint_brother_rendpage(
 {
   lprint_brother_t	*brother = (lprint_brother_t *)papplJobGetData(job);
 					// Brother driver data
+  unsigned char	buffer[13];		// Print Information command buffer
 
-
-  (void)page;
 
   // Write last line
   lprint_brother_rwriteline(job, options, device, options->header.cupsHeight, NULL);
 
+  // Send print information...
+  buffer[ 0] = 0x1b;
+  buffer[ 1] = 'i';
+  buffer[ 2] = 'z';
+  buffer[ 3] = 0x0c;
+  buffer[ 4] = 0;
+  buffer[ 5] = options->media.size_width / 100;
+  buffer[ 6] = options->media.size_length / 100;
+  buffer[ 7] = brother->count & 255;
+  buffer[ 8] = (brother->count >> 8) & 255;
+  buffer[ 9] = (brother->count >> 16) & 255;
+  buffer[10] = (brother->count >> 24) & 255;
+  buffer[11] = page == 0 ? 0 : 1;
+  buffer[12] = 0;
+
+  if (!papplDeviceWrite(device, buffer, sizeof(buffer)))
+    return (false);
+
+  // Send label data...
+  if (brother->num_bytes > 0 && !papplDeviceWrite(device, brother->buffer, brother->num_bytes))
+    return (false);
+
   // Eject/cut
+  papplDevicePrintf(device, "\033iM%c\014", !strcmp(options->media.type, "continuous") ? 64 : 0);
+  papplDeviceFlush(device);
 
   // Free memory and return...
   lprintDitherFree(&brother->dither);
@@ -352,10 +407,19 @@ lprint_brother_rstartjob(
 
   // Reset the printer...
   memset(buffer, 0, sizeof(buffer));
-  if (driver_name && !strncmp(driver_name, "brother_qt-", 11))
+  if (driver_name && !strncmp(driver_name, "brother_pt-", 11))
+  {
+    // Send short reset sequence for PT-series tape printers
     papplDeviceWrite(device, buffer, 100);
+    brother->is_pt_series = true;
+  }
   else
+  {
+    // Send long reset sequence for QL-series label printers
     papplDeviceWrite(device, buffer, sizeof(buffer));
+
+    brother->is_ql_800 = !strcmp(driver_name, "brother_ql-800");
+  }
 
   // Get status information...
   if (!lprint_brother_get_status(papplJobGetPrinter(job), device))
@@ -379,15 +443,15 @@ lprint_brother_rstartpage(
 {
   lprint_brother_t *brother = (lprint_brother_t *)papplJobGetData(job);
 					// Brother driver data
-//  int		darkness = options->darkness_configured + options->print_darkness;
-					// Combined density
-
 
 
   (void)page;
 
   if (!lprintDitherAlloc(&brother->dither, job, options, CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0))
     return (false);
+
+  brother->count     = 0;
+  brother->num_bytes = 0;
 
   return (true);
 }
@@ -405,12 +469,62 @@ lprint_brother_rwriteline(
     unsigned            y,		// I - Line number
     const unsigned char *line)		// I - Line
 {
-  lprint_brother_t		*brother = (lprint_brother_t *)papplJobGetData(job);
+  lprint_brother_t	*brother = (lprint_brother_t *)papplJobGetData(job);
 					// Brother driver data
+  unsigned char		*bufptr;	// Pointer into page buffer
 
 
   if (!lprintDitherLine(&brother->dither, y, line))
     return (true);
+
+  if ((brother->alloc_bytes - brother->num_bytes) < (3 + brother->dither.out_width))
+  {
+    size_t temp_alloc = brother->alloc_bytes + brother->dither.out_width + 4096;
+				      // New allocated size
+    unsigned char *temp = realloc(brother->buffer, temp_alloc);
+				      // New buffer
+
+    if (!temp)
+    {
+      papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to allocate %lu bytes of memory memory.", (unsigned long)temp_alloc);
+      return (false);
+    }
+
+    brother->alloc_bytes = temp_alloc;
+    brother->buffer      = temp;
+  }
+
+  bufptr = brother->buffer + brother->num_bytes;
+
+  if (brother->is_ql_800 || brother->dither.output[0] || memcmp(brother->dither.output, brother->dither.output + 1, brother->dither.out_width - 1))
+  {
+    // Non-blank line...
+    // TODO: Add PackBits compression support
+    brother->count += 3 + brother->dither.out_width;
+
+    *bufptr++ = 'g';
+    if (brother->is_pt_series)
+    {
+      *bufptr++ = brother->dither.out_width & 255;
+      *bufptr++ = (brother->dither.out_width >> 8) & 255;
+    }
+    else
+    {
+      *bufptr++ = 0;
+      *bufptr++ = brother->dither.out_width;
+    }
+
+    memcpy(bufptr, brother->dither.output, brother->dither.out_width);
+    brother->num_bytes += 3 + brother->dither.out_width;
+  }
+  else
+  {
+    // Blank line
+    brother->count ++;
+
+    *bufptr = 'Z';
+    brother->num_bytes ++;
+  }
 
   return (true);
 }
