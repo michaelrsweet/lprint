@@ -183,6 +183,9 @@ lprintBrother(
   data->num_source = 1;
   data->source[0]  = "main-roll";
 
+  // 5 darkness/density settings
+  data->darkness_configured = 50;
+  data->darkness_supported  = 5;
 
   return (true);
 }
@@ -355,14 +358,21 @@ lprint_brother_rendpage(
   buffer[ 0] = 0x1b;
   buffer[ 1] = 'i';
   buffer[ 2] = 'z';
-  buffer[ 3] = 0x0c;
+  buffer[ 3] = !strcmp(options->media.type, "continuous") ? 0x04 : 0x0c;
   buffer[ 4] = 0;
   buffer[ 5] = options->media.size_width / 100;
   buffer[ 6] = options->media.size_length / 100;
+#if 1
+  buffer[ 7] = options->header.cupsHeight & 255;
+  buffer[ 8] = (options->header.cupsHeight >> 8) & 255;
+  buffer[ 9] = (options->header.cupsHeight >> 16) & 255;
+  buffer[10] = (options->header.cupsHeight >> 24) & 255;
+#else
   buffer[ 7] = brother->count & 255;
   buffer[ 8] = (brother->count >> 8) & 255;
   buffer[ 9] = (brother->count >> 16) & 255;
   buffer[10] = (brother->count >> 24) & 255;
+#endif // 1
   buffer[11] = page == 0 ? 0 : 1;
   buffer[12] = 0;
 
@@ -399,6 +409,8 @@ lprint_brother_rstartjob(
   const char	*driver_name = papplPrinterGetDriverName(papplJobGetPrinter(job));
 					// Driver name
   char		buffer[400];		// Reset buffer
+  int		darkness;		// Combined darkness
+
 
   (void)options;
 
@@ -422,11 +434,21 @@ lprint_brother_rstartjob(
   }
 
   // Get status information...
-  if (!lprint_brother_get_status(papplJobGetPrinter(job), device))
-    return (false);
+  lprint_brother_get_status(papplJobGetPrinter(job), device);
+//  if (!lprint_brother_get_status(papplJobGetPrinter(job), device))
+//    return (false);
 
   // Reset and set raster mode...
-  return (papplDevicePuts(device, "\033@\033ia\001"));
+  if (!papplDevicePuts(device, "\033@\033ia\001"))
+    return (false);
+
+  // print-darkness / printer-darkness-configured
+  if ((darkness = options->print_darkness + options->darkness_configured) < 0)
+    darkness = 0;
+  else if (darkness > 100)
+    darkness = 100;
+
+  return (papplDevicePrintf(device, "\033iD%c", 4 * darkness / 100 + 1));
 }
 
 

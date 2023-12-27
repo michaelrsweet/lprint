@@ -55,10 +55,15 @@ Commands
   - n=2: TIFF PackBits compression
 - Set Number of Pages: ESC i A {n}
   - n=1-255 (number of pages)
+- Set Darkness: ESC i D {darkness}
+  - darkness=1-5 (1 is lightest, 5 is darkest)
 - Set Modes: ESC i M {n}
-  - n=64: auto-cut
   - n=0: no auto-cut
+  - n=64: auto-cut
+  - n=128: mirror print
 - Set Expanded Modes: ESC i K {n}
+  - n=0: normal resolution printing
+  - n=1: draft resolution printing
   - n=8: cut at end
   - n=64: higher resolution printing
 
