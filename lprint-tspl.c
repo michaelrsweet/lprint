@@ -1,7 +1,7 @@
 //
 // TSPL driver for LPrint, a Label Printer Application
 //
-// Copyright © 2023 by Michael R Sweet.
+// Copyright © 2023-2024 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -150,8 +150,11 @@ lprintTSPL(
   papplCopyString(data->media_ready[0].size_name, "na_index-4x6_4x6in", sizeof(data->media_ready[0].size_name));
   papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
 
-  data->num_type = 1;
+  data->num_type = 2;
   data->type[0]  = "labels";
+  data->type[1]  = "continuous";
+
+  data->tracking_supported = PAPPL_MEDIA_TRACKING_GAP | PAPPL_MEDIA_TRACKING_MARK | PAPPL_MEDIA_TRACKING_CONTINUOUS;
 
   // Darkness/density settings...
   data->darkness_configured = 50;
@@ -331,6 +334,22 @@ lprint_tspl_rstartpage(
         break;
   }
 
+  switch (options->media.tracking)
+  {
+    default :
+        break;
+
+    case PAPPL_MEDIA_TRACKING_CONTINUOUS :
+        papplDevicePuts(device, "GAP 0 mm,0 mm\n");
+        break;
+    case PAPPL_MEDIA_TRACKING_MARK :
+        papplDevicePuts(device, "BLINE 3 mm,0 mm\n");
+        break;
+    case PAPPL_MEDIA_TRACKING_GAP :
+        papplDevicePuts(device, "GAP 3 mm,0 mm\n");
+        break;
+  }
+
   papplDevicePrintf(device, "DENSITY %d\n", (darkness * 15 + 50) / 100);
   papplDevicePrintf(device, "SPEED %d\n", speed);
 
@@ -377,8 +396,6 @@ lprint_tspl_status(
     pappl_printer_t *printer)		// I - Printer
 {
   (void)printer;
-
-  // TODO: Implement status polling
 
   return (true);
 }
