@@ -274,6 +274,8 @@ lprintZPL(
     papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
   }
 
+  data->media_ready[0].tracking = PAPPL_MEDIA_TRACKING_GAP;
+
   data->bottom_top = data->left_right = 1;
 
   data->num_source = 1;
@@ -281,7 +283,7 @@ lprintZPL(
 
   data->top_offset_supported[0] = -1500;
   data->top_offset_supported[1] = 1500;
-  data->tracking_supported      = PAPPL_MEDIA_TRACKING_MARK | PAPPL_MEDIA_TRACKING_WEB | PAPPL_MEDIA_TRACKING_CONTINUOUS;
+  data->tracking_supported      = PAPPL_MEDIA_TRACKING_MARK | PAPPL_MEDIA_TRACKING_WEB | PAPPL_MEDIA_TRACKING_GAP | PAPPL_MEDIA_TRACKING_CONTINUOUS;
 
   data->num_type = 3;
   data->type[0]  = "continuous";
