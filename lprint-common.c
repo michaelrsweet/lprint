@@ -380,7 +380,7 @@ lprintMediaMatch(
     if ((pwg = pwgMediaForPWG(pdata.media[i])) == NULL)
       continue;
 
-    if ((pwg->width == width || !width) && (pwg->length == length || !length))
+    if ((abs(pwg->width - width) <= 100 || !width) && (abs(pwg->length - length) <= 100 || !length))
     {
       if (!ret || !strncmp(pdata.media[i], "custom_", 7) || !strncmp(pdata.media[i], "roll_", 5))
         ret = pdata.media[i];

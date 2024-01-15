@@ -828,36 +828,16 @@ lprint_zpl_status(
 
     papplPrinterGetDriverData(printer, &data);
 
-    // 11 dots for the space between labels
-    length = 2540 * (length - 11) / data.y_resolution[0];
+    // Round the length to the nearest dot and snap to the nearest 1/4"...
+    length = (2540 * length + data.y_resolution[0] / 2) / data.y_resolution[0];
 
-    if (abs(length - 15240) <= 100)
-    {
-      // 4x6 label
-      papplCopyString(data.media_default.size_name, "na_index-4x6_4x6in", sizeof(data.media_default.size_name));
-      data.media_default.size_width  = 10160;
-      data.media_default.size_length = 15240;
-    }
-    else if (abs(length - 20320) <= 100)
-    {
-      // 4x8 label
-      papplCopyString(data.media_default.size_name, "oe_4x8-label_4x8in", sizeof(data.media_default.size_name));
-      data.media_default.size_width  = 10160;
-      data.media_default.size_length = 20320;
-    }
-    else
-    {
-      // *xN label
-      data.media_default.size_length = length;
-      snprintf(data.media_default.size_name, sizeof(data.media_default.size_name), "oe_%gx%g-label_%gx%gin", data.media_default.size_width / 2540.0, data.media_default.size_length / 2540.0, data.media_default.size_width / 2540.0, data.media_default.size_length / 2540.0);
-    }
+    if ((length % 635) <= 100)
+      length += length % 635;
+    else if ((length % 635) >= 535)
+      length += 635 - (length % 635);
 
-    if (data.media_default.size_width != data.media_ready[0].size_width || data.media_default.size_length != data.media_ready[0].size_length)
-    {
-      papplLogPrinter(printer, PAPPL_LOGLEVEL_INFO, "Label size changed to '%s'.", data.media_default.size_name);
-      papplPrinterSetDriverDefaults(printer, &data, 0, NULL);
-      papplPrinterSetReadyMedia(printer, 1, &data.media_default);
-    }
+    // Lookup size
+    lprintMediaMatch(printer, 0, 0, length);
   }
 
   ret = true;
