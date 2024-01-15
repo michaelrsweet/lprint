@@ -430,7 +430,7 @@ lprint_brother_rstartjob(
     // Send long reset sequence for QL-series label printers
     papplDeviceWrite(device, buffer, sizeof(buffer));
 
-    brother->is_ql_800 = !strcmp(driver_name, "brother_ql-800");
+    brother->is_ql_800 = driver_name && !strcmp(driver_name, "brother_ql-800");
   }
 
   // Get status information...
