@@ -688,6 +688,7 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 with_systemd
+enable_experimental
 enable_debug
 enable_maintainer
 enable_sanitizer
@@ -1323,6 +1324,7 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --enable-experimental   turn on experimental drivers, default=no
   --enable-debug          turn on debugging, default=no
   --enable-maintainer     turn on maintainer mode, default=no
   --enable-sanitizer      build with AddressSanitizer, default=no
@@ -3950,6 +3952,21 @@ fi
 
 fi
 
+
+
+# Check whether --enable-experimental was given.
+if test ${enable_experimental+y}
+then :
+  enableval=$enable_experimental;
+fi
+
+if test x$enable_experimental = xyes
+then :
+
+    printf "%s\n" "#define LPRINT_EXPERIMENTAL 1" >>confdefs.h
+
+
+fi
 
 
 # Check whether --enable-debug was given.

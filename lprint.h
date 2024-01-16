@@ -108,7 +108,9 @@ typedef ipp_copycb_t ipp_copy_cb_t;
 #  define LPRINT_TESTPAGE_MIMETYPE	"application/vnd.lprint-test"
 #  define LPRINT_TESTPAGE_HEADER	"T*E*S*T*P*A*G*E*"
 
-#  define LPRINT_BROTHER_PT_CBP_MIMETYPE "application/vnd.brother-pt-cbp"
+#  ifdef LPRINT_EXPERIMENTAL
+#    define LPRINT_BROTHER_PT_CBP_MIMETYPE "application/vnd.brother-pt-cbp"
+#  endif // LPRINT_EXPERIMENTAL
 #  define LPRINT_EPL2_MIMETYPE		"application/vnd.eltron-epl"
 #  define LPRINT_SLP_MIMETYPE		"application/vnd.sii-slp"
 #  define LPRINT_TSPL_MIMETYPE		"application/vnd.tsc-tspl"
@@ -156,7 +158,9 @@ extern bool	lprintMediaSave(pappl_printer_t *printer, pappl_pr_driver_data_t *da
 extern bool	lprintMediaUI(pappl_client_t *client, pappl_printer_t *printer);
 extern void	lprintMediaUpdate(pappl_printer_t *printer, pappl_pr_driver_data_t *data);
 
+#  ifdef LPRINT_EXPERIMENTAL
 extern bool	lprintBrother(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
+#  endif // LPRINT_EXPERIMENTAL
 extern bool	lprintDYMO(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern bool	lprintEPL2(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern bool	lprintSII(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);

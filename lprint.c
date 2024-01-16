@@ -52,7 +52,9 @@ static pappl_system_t	*system_cb(int num_options, cups_option_t *options, void *
 
 static pappl_pr_driver_t	lprint_drivers[] =
 {					// Driver list
-#include "lprint-brother.h"
+#ifdef LPRINT_EXPERIMENTAL
+#  include "lprint-brother.h"
+#endif // LPRINT_EXPERIMENTAL
 #include "lprint-dymo.h"
 #include "lprint-epl2.h"
 #include "lprint-sii.h"
@@ -273,9 +275,12 @@ driver_cb(
   data->testpage_cb = lprintTestPageCB;
 
   // Use the corresponding sub-driver callback to set things up...
+#ifdef LPRINT_EXPERIMENTAL
   if (!strncmp(driver_name, "brother_", 8))
     ret = lprintBrother(system, driver_name, device_uri, device_id, data, attrs, cbdata);
-  else if (!strncmp(driver_name, "dymo_", 5))
+  else
+#endif // LPRINT_EXPERIMENTAL
+  if (!strncmp(driver_name, "dymo_", 5))
     ret = lprintDYMO(system, driver_name, device_uri, device_id, data, attrs, cbdata);
   else if (!strncmp(driver_name, "epl2_", 5))
     ret = lprintEPL2(system, driver_name, device_uri, device_id, data, attrs, cbdata);

@@ -10,6 +10,7 @@
 		2715B53225FD7FC200C0BBF6 /* lprint-zpl.c in Sources */ = {isa = PBXBuildFile; fileRef = 2715B52D25FD7FC200C0BBF6 /* lprint-zpl.c */; };
 		2715B53325FD7FC200C0BBF6 /* lprint-common.c in Sources */ = {isa = PBXBuildFile; fileRef = 2715B53025FD7FC200C0BBF6 /* lprint-common.c */; };
 		2715B53425FD7FC200C0BBF6 /* lprint-dymo.c in Sources */ = {isa = PBXBuildFile; fileRef = 2715B53125FD7FC200C0BBF6 /* lprint-dymo.c */; };
+		271DBD422B56EB3A00475159 /* lprint-brother.c in Sources */ = {isa = PBXBuildFile; fileRef = 27712E3D2B12A48B0032AE30 /* lprint-brother.c */; };
 		272FF1992966330F008C4F4F /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 272FF1982966330F008C4F4F /* Security.framework */; };
 		273A4980276BB83B00C3B44E /* lprint-epl2.c in Sources */ = {isa = PBXBuildFile; fileRef = 273A497F276BB83B00C3B44E /* lprint-epl2.c */; };
 		273A4982276BCE3100C3B44E /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 273A4981276BCE3100C3B44E /* libjpeg.a */; };
@@ -26,7 +27,6 @@
 		277343B42964620400380814 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 277343B32964620400380814 /* Cocoa.framework */; };
 		277BC9BE23D88C930022AC4D /* libpam.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FBEEEF2396995C00BB195A /* libpam.tbd */; };
 		2790DD5625FB037A00686B4C /* libpappl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2790DD5525FB037A00686B4C /* libpappl.a */; };
-		27E485952B55DFCC00202288 /* lprint-brother.c in Sources */ = {isa = PBXBuildFile; fileRef = 27712E3D2B12A48B0032AE30 /* lprint-brother.c */; };
 		27E485962B55DFCC00202288 /* lprint-sii.c in Sources */ = {isa = PBXBuildFile; fileRef = 27712E3E2B12A48B0032AE30 /* lprint-sii.c */; };
 		27E485972B55DFCC00202288 /* lprint-tspl.c in Sources */ = {isa = PBXBuildFile; fileRef = 27712E3B2B12A48B0032AE30 /* lprint-tspl.c */; };
 		27EC68942967B17700ABB3EE /* lprint-common.c in Sources */ = {isa = PBXBuildFile; fileRef = 2715B53025FD7FC200C0BBF6 /* lprint-common.c */; };
@@ -410,7 +410,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27FBEEE52396988300BB195A /* lprint.c in Sources */,
-				27E485952B55DFCC00202288 /* lprint-brother.c in Sources */,
+				271DBD422B56EB3A00475159 /* lprint-brother.c in Sources */,
 				2715B53325FD7FC200C0BBF6 /* lprint-common.c in Sources */,
 				2715B53425FD7FC200C0BBF6 /* lprint-dymo.c in Sources */,
 				273A4980276BB83B00C3B44E /* lprint-epl2.c in Sources */,

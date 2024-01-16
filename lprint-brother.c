@@ -1,13 +1,14 @@
 //
 // Brother driver for LPrint, a Label Printer Application
 //
-// Copyright © 2023 by Michael R Sweet.
+// Copyright © 2023-2024 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
 //
 
 #include "lprint.h"
+#ifdef LPRINT_EXPERIMENTAL
 
 
 //
@@ -564,3 +565,4 @@ lprint_brother_status(
 
   return (true);
 }
+#endif // LPRINT_EXPERIMENTAL

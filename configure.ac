@@ -162,6 +162,13 @@ AC_ARG_WITH([systemd], AS_HELP_STRING([--with-systemd[=PATH]], [install systemd 
 ])
 
 
+dnl Support for experimental drivers...
+AC_ARG_ENABLE([experimental], AS_HELP_STRING([--enable-experimental], [turn on experimental drivers, default=no]))
+AS_IF([test x$enable_experimental = xyes], [
+    AC_DEFINE([LPRINT_EXPERIMENTAL])
+])
+
+
 dnl Extra compiler options...
 AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [turn on debugging, default=no]))
 AC_ARG_ENABLE([maintainer], AS_HELP_STRING([--enable-maintainer], [turn on maintainer mode, default=no]))
