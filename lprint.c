@@ -1,7 +1,7 @@
 //
 // Main entry for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2023 by Michael R Sweet.
+// Copyright © 2019-2024 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -75,7 +75,7 @@ main(int  argc,				// I - Number of command-line arguments
 {
   return (papplMainloop(argc, argv,
                         LPRINT_VERSION,
-                        "Copyright &copy; 2019-2023 by Michael R Sweet. All Rights Reserved.",
+                        "Copyright &copy; 2019-2024 by Michael R Sweet. All Rights Reserved.",
                         (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])),
                         lprint_drivers, autoadd_cb, driver_cb,
                         /*subcmd_name*/NULL, /*subcmd_cb*/NULL,
@@ -243,9 +243,9 @@ driver_cb(
   data->kind = PAPPL_KIND_LABEL;
 
   // Color values...
-  data->color_supported   = PAPPL_COLOR_MODE_AUTO | PAPPL_COLOR_MODE_MONOCHROME | PAPPL_COLOR_MODE_BI_LEVEL;
-  data->color_default     = PAPPL_COLOR_MODE_MONOCHROME;
-  data->raster_types      = PAPPL_PWG_RASTER_TYPE_BLACK_1 | PAPPL_PWG_RASTER_TYPE_BLACK_8 | PAPPL_PWG_RASTER_TYPE_SGRAY_8;
+  data->color_supported = PAPPL_COLOR_MODE_AUTO | PAPPL_COLOR_MODE_MONOCHROME | PAPPL_COLOR_MODE_BI_LEVEL;
+  data->color_default   = PAPPL_COLOR_MODE_MONOCHROME;
+  data->raster_types    = PAPPL_PWG_RASTER_TYPE_BLACK_1 | PAPPL_PWG_RASTER_TYPE_BLACK_8 | PAPPL_PWG_RASTER_TYPE_SGRAY_8;
 
   // "print-quality-default" value...
   data->quality_default = IPP_QUALITY_NORMAL;
@@ -298,7 +298,8 @@ driver_cb(
     data->media_ready[i].size_length   = pwg->length;
     data->media_ready[i].top_margin    = data->bottom_top;
     papplCopyString(data->media_ready[i].source, data->source[i], sizeof(data->media_ready[i].source));
-    papplCopyString(data->media_ready[i].type, data->type[0], sizeof(data->media_ready[i].type));
+    if (!data->media_ready[i].type[0])
+      papplCopyString(data->media_ready[i].type, data->type[0], sizeof(data->media_ready[i].type));
   }
 
   // By default use media from the main source...
@@ -626,7 +627,7 @@ system_cb(
   papplSystemAddStringsData(system, "/fr.strings", "fr", lprint_fr_strings);
   papplSystemAddStringsData(system, "/it.strings", "it", lprint_it_strings);
 
-  papplSystemSetFooterHTML(system, "Copyright &copy; 2019-2023 by Michael R Sweet. All rights reserved.");
+  papplSystemSetFooterHTML(system, "Copyright &copy; 2019-2024 by Michael R Sweet. All rights reserved.");
   papplSystemSetSaveCallback(system, (pappl_save_cb_t)papplSystemSaveState, (void *)lprint_statefile);
   papplSystemSetVersions(system, (int)(sizeof(versions) / sizeof(versions[0])), versions);
 

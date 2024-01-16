@@ -149,6 +149,7 @@ lprintTSPL(
 
   papplCopyString(data->media_ready[0].size_name, "na_index-4x6_4x6in", sizeof(data->media_ready[0].size_name));
   papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
+  data->media_ready[0].tracking = PAPPL_MEDIA_TRACKING_GAP;
 
   data->num_type = 2;
   data->type[0]  = "labels";
