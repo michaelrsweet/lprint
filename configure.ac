@@ -1,7 +1,7 @@
 dnl
 dnl Configuration script for LPrint, a Label Printer Application
 dnl
-dnl Copyright © 2019-2023 by Michael R Sweet
+dnl Copyright © 2019-2024 by Michael R Sweet
 dnl
 dnl Licensed under Apache License v2.0.  See the file "LICENSE" for more
 dnl information.
@@ -106,15 +106,37 @@ AS_IF([$PKGCONFIG --exists pappl --atleast-version=1.2], [
     AC_MSG_ERROR([PAPPL 1.2 or later is required for LPrint.])
 ])
 
+
 dnl CUPS library...
+AC_PATH_TOOL([CUPSCONFIG], [cups-config])
+AC_MSG_CHECKING([for CUPS library v2.4 or higher])
 AS_IF([$PKGCONFIG --exists cups3], [
+    CUPS_VERSION="$($PKGCONFIG --modversion cups3)"
+    AC_MSG_RESULT([yes, v$CUPS_VERSION])
+
     CFLAGS="$CFLAGS $($PKGCONFIG --cflags cups3)"
     LIBS="$LIBS $($PKGCONFIG --libs cups3)"
 ], [$PKGCONFIG --exists cups], [
+    CUPS_VERSION="$($PKGCONFIG --modversion cups)"
+    AC_MSG_RESULT([yes, v$CUPS_VERSION])
+
     CFLAGS="$CFLAGS $($PKGCONFIG --cflags cups)"
     LIBS="$LIBS $($PKGCONFIG --libs cups)"
-], [
+], [test "x$CUPSCONFIG" = x], [
+    AC_MSG_RESULT([no])
     AC_MSG_ERROR([CUPS 2.4 or later is required for LPrint.])
+], [
+    CUPS_VERSION="$($CUPSCONFIG --version)"
+    AS_CASE(["$CUPS_VERSION"],
+        [1.* | 2.0* | 2.1* | 2.2* | 2.3*], [
+            AC_MSG_RESULT(no)
+	    AC_MSG_ERROR([CUPS 2.4 or later is required for LPrint.])
+    ])
+
+    AC_MSG_RESULT([yes, v$CUPS_VERSION])
+    CFLAGS="$CFLAGS $($CUPSCONFIG --cflags)"
+    LDFLAGS="$LDFLAGSS $($CUPSCONFIG --ldflags)"
+    LIBS="$LIBS $($CUPSCONFIG --image --libs)"
 ])
 
 

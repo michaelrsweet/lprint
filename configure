@@ -621,6 +621,7 @@ WARNINGS
 OPTIM
 CSFLAGS
 unitdir
+CUPSCONFIG
 PKGCONFIG
 INSTALL
 ARFLAGS
@@ -3751,8 +3752,123 @@ else $as_nop
 
 fi
 
+
+if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}cups-config", so it can be a program name with args.
+set dummy ${ac_tool_prefix}cups-config; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_path_CUPSCONFIG+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  case $CUPSCONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_CUPSCONFIG="$CUPSCONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_path_CUPSCONFIG="$as_dir$ac_word$ac_exec_ext"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+CUPSCONFIG=$ac_cv_path_CUPSCONFIG
+if test -n "$CUPSCONFIG"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CUPSCONFIG" >&5
+printf "%s\n" "$CUPSCONFIG" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_path_CUPSCONFIG"; then
+  ac_pt_CUPSCONFIG=$CUPSCONFIG
+  # Extract the first word of "cups-config", so it can be a program name with args.
+set dummy cups-config; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_path_ac_pt_CUPSCONFIG+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  case $ac_pt_CUPSCONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_ac_pt_CUPSCONFIG="$ac_pt_CUPSCONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_path_ac_pt_CUPSCONFIG="$as_dir$ac_word$ac_exec_ext"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+ac_pt_CUPSCONFIG=$ac_cv_path_ac_pt_CUPSCONFIG
+if test -n "$ac_pt_CUPSCONFIG"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_pt_CUPSCONFIG" >&5
+printf "%s\n" "$ac_pt_CUPSCONFIG" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+  if test "x$ac_pt_CUPSCONFIG" = x; then
+    CUPSCONFIG=""
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+printf "%s\n" "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    CUPSCONFIG=$ac_pt_CUPSCONFIG
+  fi
+else
+  CUPSCONFIG="$ac_cv_path_CUPSCONFIG"
+fi
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for CUPS library v2.4 or higher" >&5
+printf %s "checking for CUPS library v2.4 or higher... " >&6; }
 if $PKGCONFIG --exists cups3
 then :
+
+    CUPS_VERSION="$($PKGCONFIG --modversion cups3)"
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes, v$CUPS_VERSION" >&5
+printf "%s\n" "yes, v$CUPS_VERSION" >&6; }
 
     CFLAGS="$CFLAGS $($PKGCONFIG --cflags cups3)"
     LIBS="$LIBS $($PKGCONFIG --libs cups3)"
@@ -3760,12 +3876,39 @@ then :
 elif $PKGCONFIG --exists cups
 then :
 
+    CUPS_VERSION="$($PKGCONFIG --modversion cups)"
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes, v$CUPS_VERSION" >&5
+printf "%s\n" "yes, v$CUPS_VERSION" >&6; }
+
     CFLAGS="$CFLAGS $($PKGCONFIG --cflags cups)"
     LIBS="$LIBS $($PKGCONFIG --libs cups)"
 
+elif test "x$CUPSCONFIG" = x
+then :
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+    as_fn_error $? "CUPS 2.4 or later is required for LPrint." "$LINENO" 5
+
 else $as_nop
 
-    as_fn_error $? "CUPS 2.4 or later is required for LPrint." "$LINENO" 5
+    CUPS_VERSION="$($CUPSCONFIG --version)"
+    case "$CUPS_VERSION" in #(
+  1.* | 2.0* | 2.1* | 2.2* | 2.3*) :
+
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+	    as_fn_error $? "CUPS 2.4 or later is required for LPrint." "$LINENO" 5
+     ;; #(
+  *) :
+     ;;
+esac
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes, v$CUPS_VERSION" >&5
+printf "%s\n" "yes, v$CUPS_VERSION" >&6; }
+    CFLAGS="$CFLAGS $($CUPSCONFIG --cflags)"
+    LDFLAGS="$LDFLAGSS $($CUPSCONFIG --ldflags)"
+    LIBS="$LIBS $($CUPSCONFIG --image --libs)"
 
 fi
 
