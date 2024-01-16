@@ -2,7 +2,7 @@ LPrint Documentation
 ====================
 
 LPrint v1.3.0 - Month DD, 2023
-Copyright 2019-2023 by Michael R Sweet
+Copyright 2019-2024 by Michael R Sweet
 
 LPrint is licensed under the Apache License Version 2.0.  See the files
 "LICENSE" and "NOTICE" for more information.
@@ -27,7 +27,9 @@ Overview
 
 LPrint is a label printer application for macOS® and Linux®.  I wrote it in
 response to criticism that coming changes in CUPS will leave users of label
-printers in the cold - see Apple CUPS Github issue #5271.
+printers in the cold - see [Apple CUPS Github issue #5271][APPLE5271].
+
+[APPLE5271]: https://github.com/apple/cups/issues/5271
 
 Basically, LPrint is a print spooler optimized for label printing.  It accepts
 "raw" print data as well as PNG images (like those used for shipping labels by
@@ -38,14 +40,15 @@ rather than starting and stopping like CUPS does to support a wider variety of
 printers.
 
 LPrint supports the full range of options and features supported by the
-embedded drivers - currently most DYMO and Zebra EPL2/ZPL label printers.
-Whenever possible, LPrint will auto-detect the make and model of your printer
-and its installed capabilities.  And you can configure the default values of all
-options as well as manually configure the media that is loaded in each printer.
+embedded drivers - currently most DYMO, Seiko, TSPL, and Zebra EPL2/ZPL label
+printers.  Whenever possible, LPrint will auto-detect the make and model of your
+printer and its installed capabilities.  And you can configure the default
+values of all options as well as manually configure the media that is loaded in
+each printer.
 
-LPrint also offers a simple network server mode that makes any label printers
+LPrint also offers a simple network server mode that makes your label printers
 appear as IPP Everywhere™/AirPrint™/Mopria™ printers on your network.  Thus, any
-Android™, Chrome OS™, iOS®, Linux, macOS, or Windows 10/11 client can use any
+Android™, Chrome OS™, iOS®, Linux®, macOS®, or Windows® 10/11 client can use any
 label printer supported by LPrint.  And you can, of course, send jobs from
 LPrint to an LPrint server on the network.
 
@@ -67,7 +70,7 @@ it and start the server:
     sudo snap start lprint.lprint-server
 
 A package file is included with all source releases on Github for use on macOS
-10.14 and higher for both Intel and Apple Silicon.
+11 and higher for both Intel and Apple Silicon.
 
 If you need to install LPrint from source, you'll need a "make" program, a C99
 compiler (Clang and GCC work), the CUPS developer files, and the PAPPL developer
@@ -269,7 +272,8 @@ control the server operation:
 - "-o admin-group=GROUP": Specifies a group to use for remote authentication.
 - "-o auth-service=SERVICE": Specifies a PAM service for remote authentication.
 - "-o listen-hostname=HOSTNAME": Sets the network hostname to resolve for listen
-  addresses - "*" for the wildcard addresses.
+  addresses - "*" for the wildcard addresses, "localhost" to only listen for
+  local print requests.
 - "-o log-file=FILENAME": Specifies a log file.
 - "-o log-file=-": Specifies that log entries are written to the standard error.
 - "-o log-file=syslog": Specifies that log entries are sent to the system log.
