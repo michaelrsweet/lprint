@@ -16,3 +16,4 @@
 
 // Enable experimental drivers?
 /*#undef LPRINT_EXPERIMENTAL */
+#define LPRINT_EXPERIMENTAL 1

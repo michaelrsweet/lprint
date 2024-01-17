@@ -1,5 +1,5 @@
 //
-// Brother driver for LPrint, a Label Printer Application
+// Experimental Brother driver for LPrint, a Label Printer Application
 //
 // Copyright © 2023-2024 by Michael R Sweet.
 //

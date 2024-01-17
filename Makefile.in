@@ -92,6 +92,7 @@ OBJS		=	\
 			lprint.o \
 			lprint-brother.o \
 			lprint-common.o \
+			lprint-cpcl.o \
 			lprint-dymo.o \
 			lprint-epl2.o \
 			lprint-sii.o \
@@ -193,6 +194,7 @@ resheaders:
 $(OBJS) $(TESTOBJS):	config.h lprint.h Makefile
 lprint.o:	\
 		lprint-brother.h \
+		lprint-cpcl.h \
 		lprint-dymo.h \
 		lprint-epl2.h \
 		lprint-sii.h \

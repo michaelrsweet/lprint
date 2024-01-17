@@ -103,18 +103,18 @@ typedef ipp_copycb_t ipp_copy_cb_t;
 // Constants...
 //
 
-#  define LPRINT_MAX_CUSTOM		32
-
 #  define LPRINT_TESTPAGE_MIMETYPE	"application/vnd.lprint-test"
 #  define LPRINT_TESTPAGE_HEADER	"T*E*S*T*P*A*G*E*"
 
 #  ifdef LPRINT_EXPERIMENTAL
 #    define LPRINT_BROTHER_PT_CBP_MIMETYPE "application/vnd.brother-pt-cbp"
+#    define LPRINT_CPCL_MIMETYPE "application/vnd.zebra-cpcl"
 #  endif // LPRINT_EXPERIMENTAL
 #  define LPRINT_EPL2_MIMETYPE		"application/vnd.eltron-epl"
 #  define LPRINT_SLP_MIMETYPE		"application/vnd.sii-slp"
 #  define LPRINT_TSPL_MIMETYPE		"application/vnd.tsc-tspl"
 #  define LPRINT_ZPL_MIMETYPE		"application/vnd.zebra-zpl"
+
 
 
 //
@@ -160,6 +160,7 @@ extern void	lprintMediaUpdate(pappl_printer_t *printer, pappl_pr_driver_data_t *
 
 #  ifdef LPRINT_EXPERIMENTAL
 extern bool	lprintBrother(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
+extern bool	lprintCPCL(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *driver_data, ipp_t **driver_attrs, void *cbdata);
 #  endif // LPRINT_EXPERIMENTAL
 extern bool	lprintDYMO(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern bool	lprintEPL2(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
@@ -169,12 +170,6 @@ extern const char *lprintTestPageCB(pappl_printer_t *printer, char *buffer, size
 extern bool	lprintTSPL(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern bool	lprintZPL(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern void	lprintZPLQueryDriver(pappl_system_t *system, const char *device_uri, char *name, size_t namesize);
-
-// Future planned drivers that are not yet implemented
-//extern bool	lprintCPCL(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *driver_data, ipp_t **driver_attrs, void *data);
-//extern bool	lprintEPL1(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *driver_data, ipp_t **driver_attrs, void *data);
-//extern bool	lprintFGL(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *driver_data, ipp_t **driver_attrs, void *data);
-//extern bool	lprintPCL(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *driver_data, ipp_t **driver_attrs, void *data);
 
 
 #endif // !LPRINT_H

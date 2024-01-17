@@ -14,7 +14,7 @@
 // Local types...
 //
 
-typedef struct lprint_tspl_s		// tspl driver data
+typedef struct lprint_tspl_s		// TSPL driver data
 {
   lprint_dither_t dither;		// Dither buffer
 } lprint_tspl_t;

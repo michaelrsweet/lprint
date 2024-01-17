@@ -54,6 +54,7 @@ static pappl_pr_driver_t	lprint_drivers[] =
 {					// Driver list
 #ifdef LPRINT_EXPERIMENTAL
 #  include "lprint-brother.h"
+#  include "lprint-cpcl.h"
 #endif // LPRINT_EXPERIMENTAL
 #include "lprint-dymo.h"
 #include "lprint-epl2.h"

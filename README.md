@@ -49,12 +49,10 @@ The following printers are currently supported:
 - Zebra/Eltron EPL2 printers
 - Zebra ZPL printers
 
-Additional drivers for Brother PT/QL, Zebra CPCL, Zebra/Eltron EPL1, and
-Intellitech Intellibar (PCL) printers can be enabled using the
-`--enable-experimental` configure option, however they are untested and/or
-not fully functional.
-
-Others will be added as time and access to printers permits.
+Additional drivers for Brother PT/QL and Zebra CPCL printers can be enabled
+using the `--enable-experimental` configure option, however they are untested
+and/or not fully functional.  Other label printers will be added as time and
+access to printers permits.
 
 
 Standards

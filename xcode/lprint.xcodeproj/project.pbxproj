@@ -11,6 +11,7 @@
 		2715B53325FD7FC200C0BBF6 /* lprint-common.c in Sources */ = {isa = PBXBuildFile; fileRef = 2715B53025FD7FC200C0BBF6 /* lprint-common.c */; };
 		2715B53425FD7FC200C0BBF6 /* lprint-dymo.c in Sources */ = {isa = PBXBuildFile; fileRef = 2715B53125FD7FC200C0BBF6 /* lprint-dymo.c */; };
 		271DBD422B56EB3A00475159 /* lprint-brother.c in Sources */ = {isa = PBXBuildFile; fileRef = 27712E3D2B12A48B0032AE30 /* lprint-brother.c */; };
+		271DBD472B56ED0D00475159 /* lprint-cpcl.c in Sources */ = {isa = PBXBuildFile; fileRef = 271DBD432B56ED0D00475159 /* lprint-cpcl.c */; };
 		272FF1992966330F008C4F4F /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 272FF1982966330F008C4F4F /* Security.framework */; };
 		273A4980276BB83B00C3B44E /* lprint-epl2.c in Sources */ = {isa = PBXBuildFile; fileRef = 273A497F276BB83B00C3B44E /* lprint-epl2.c */; };
 		273A4982276BCE3100C3B44E /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 273A4981276BCE3100C3B44E /* libjpeg.a */; };
@@ -89,6 +90,8 @@
 		2715B52F25FD7FC200C0BBF6 /* lprint-dymo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-dymo.h"; path = "../lprint-dymo.h"; sourceTree = "<group>"; };
 		2715B53025FD7FC200C0BBF6 /* lprint-common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-common.c"; path = "../lprint-common.c"; sourceTree = "<group>"; };
 		2715B53125FD7FC200C0BBF6 /* lprint-dymo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-dymo.c"; path = "../lprint-dymo.c"; sourceTree = "<group>"; };
+		271DBD432B56ED0D00475159 /* lprint-cpcl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-cpcl.c"; path = "../lprint-cpcl.c"; sourceTree = "<group>"; };
+		271DBD4C2B56EDC000475159 /* lprint-cpcl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-cpcl.h"; path = "../lprint-cpcl.h"; sourceTree = "<group>"; };
 		2724350F23A441DB00B318AF /* lprint-default.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-default.1"; path = "../man/lprint-default.1"; sourceTree = "<group>"; };
 		2724351023A441DB00B318AF /* lprint-delete.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-delete.1"; path = "../man/lprint-delete.1"; sourceTree = "<group>"; };
 		2724351123A441DB00B318AF /* lprint-modify.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-modify.1"; path = "../man/lprint-modify.1"; sourceTree = "<group>"; };
@@ -225,6 +228,8 @@
 				27712E3C2B12A48B0032AE30 /* lprint-brother.h */,
 				27712E3D2B12A48B0032AE30 /* lprint-brother.c */,
 				2715B53025FD7FC200C0BBF6 /* lprint-common.c */,
+				271DBD4C2B56EDC000475159 /* lprint-cpcl.h */,
+				271DBD432B56ED0D00475159 /* lprint-cpcl.c */,
 				2715B52F25FD7FC200C0BBF6 /* lprint-dymo.h */,
 				2715B53125FD7FC200C0BBF6 /* lprint-dymo.c */,
 				275C79802770055400BB595D /* lprint-epl2.h */,
@@ -409,6 +414,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				271DBD472B56ED0D00475159 /* lprint-cpcl.c in Sources */,
 				27FBEEE52396988300BB195A /* lprint.c in Sources */,
 				271DBD422B56EB3A00475159 /* lprint-brother.c in Sources */,
 				2715B53325FD7FC200C0BBF6 /* lprint-common.c in Sources */,
