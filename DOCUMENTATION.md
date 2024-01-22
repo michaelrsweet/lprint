@@ -326,6 +326,12 @@ Similarly, on Linux the `systemctl` command is used:
 
     sudo systemctl restart lprint.service
 
+If you've run the server by hand, just use the "shutdown" sub-command and then
+run the server again:
+
+    sudo lprint shutdown
+    sudo lprint server
+
 > *Note:* When you install the LPrint snap on Linux or the package on macOS, the
 > server is automatically run as root.  When you install from source, a
 > `launchd` (macOS) or `systemd` (all others) service file is installed but not
