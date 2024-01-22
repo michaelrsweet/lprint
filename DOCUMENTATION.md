@@ -286,7 +286,8 @@ control the server operation:
   - 'dnssd-host': Use the hostname in printer DNS-SD names
   - 'no-multi-queue': Don't allow multiple queues
   - 'raw-socket': Enable raw socket (JetDirect) support for all printers
-  - 'usb-printer': Enable the IPP-USB gadget for the default printer
+  - 'usb-printer': Enable the IPP-USB gadget for the default printer (Raspberry
+    Pi)
   - 'no-web-interface': Disable the web interface
   - 'web-log': Enable web access of the log
   - 'web-network': Enable web-based network configuration
@@ -301,6 +302,29 @@ When using the LPrint snap you can set these options using the `snap set`
 command, for example:
 
     sudo snap set lprint auth-service=other
+
+When using the LPrint package for macOS, you can set these options by creating
+the "/Library/Application Support/lprint.conf" file and listing the options one
+per line, for example:
+
+    sudo vi "/Library/Application Support/lprint.conf"
+    i
+    auth-service=other
+    listen-hostname=localhost
+    :wq
+
+Other operating systems will look for the "lprint.conf" file in the "/etc" and
+"/usr/local/etc" directories.
+
+After changing these options you'll need to restart the server.  On macOS the
+`launchctl` command is used:
+
+    sudo launchctl stop org.msweet.lprint
+    sudo launchctl start org.msweet.lprint
+
+Similarly, on Linux the `systemctl` command is used:
+
+    sudo systemctl restart lprint.service
 
 > *Note:* When you install the LPrint snap on Linux or the package on macOS, the
 > server is automatically run as root.  When you install from source, a
