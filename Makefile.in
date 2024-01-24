@@ -79,6 +79,7 @@ MAN1		=	\
 			man/lprint-drivers.1 \
 			man/lprint-jobs.1 \
 			man/lprint-modify.1 \
+			man/lprint-options.1 \
 			man/lprint-printers.1 \
 			man/lprint-server.1 \
 			man/lprint-shutdown.1 \
