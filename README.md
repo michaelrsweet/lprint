@@ -10,7 +10,7 @@ connected via network or USB.  Features include:
   with the driverless printing support in Android™, Chrome OS™, iOS®, Linux®,
   macOS®, and Windows® 10/11 clients.
 - Each printer can support options such as label modes, tear-off offsets,
-  media tracking, media top offset, print darkness, resolution, roll selection,
+  media tracking, media offset, print darkness, resolution, roll selection,
   and speed.
 - Each printer can directly print "raw", Apple/PWG Raster, and/or PNG files.
 - Each printer automatically recovers from out-of-media, power loss, and

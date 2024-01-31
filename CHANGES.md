@@ -1,8 +1,8 @@
 LPrint Change History
 =====================
 
-v1.3.0 - Month DD, YYYY
------------------------
+v1.3.0 - January 31, 2024
+-------------------------
 
 - Added new dithering algorithm to better support barcode printing with shaded
   content.
