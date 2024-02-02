@@ -1,6 +1,12 @@
 LPrint Change History
 =====================
 
+v1.3.1 - Month DD, YYYY
+-----------------------
+
+- Fixed snap documentation for connecting LPrint to Avahi.
+
+
 v1.3.0 - January 31, 2024
 -------------------------
 

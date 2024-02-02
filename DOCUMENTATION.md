@@ -1,7 +1,7 @@
 LPrint Documentation
 ====================
 
-LPrint v1.3.0 - January 31, 2024
+LPrint v1.3.1 - Month DD, YYYY
 Copyright 2019-2024 by Michael R Sweet
 
 LPrint is licensed under the Apache License Version 2.0.  See the files
@@ -63,10 +63,10 @@ LPrint is published as a snap for Linux.  Run the following commands to install
 it and start the server:
 
     sudo snap install core         (if you haven't already done so)
-    sudo snap install avahi        (some Debian-based distros)
+    sudo snap install avahi
     sudo snap install lprint
     sudo snap connect lprint:raw-usb
-    sudo snap connect lprint:avahi-control
+    sudo snap connect lprint:avahi-control avahi:avahi-control
     sudo snap start lprint.lprint-server
 
 A package file is included with all source releases on Github for use on macOS
