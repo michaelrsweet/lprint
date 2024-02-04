@@ -313,9 +313,6 @@ lprint_tspl_rstartpage(
   else if (darkness > 100)
     darkness = 100;
 
-  if ((speed = options->print_speed / 2540) < 1)
-    speed = 1;
-
   papplDevicePrintf(device, "SIZE %d mm,%d mm\n", options->media.size_width / 100, options->media.size_length / 100);
 
   switch (options->orientation_requested)
@@ -352,7 +349,8 @@ lprint_tspl_rstartpage(
   }
 
   papplDevicePrintf(device, "DENSITY %d\n", (darkness * 15 + 50) / 100);
-  papplDevicePrintf(device, "SPEED %d\n", speed);
+  if ((speed = options->print_speed / 2540) > 0)
+    papplDevicePrintf(device, "SPEED %d\n", speed);
 
   // Start the page image...
   papplDevicePuts(device, "CLS\n");
