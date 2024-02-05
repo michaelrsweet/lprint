@@ -4,6 +4,7 @@ LPrint Change History
 v1.3.1 - Month DD, YYYY
 -----------------------
 
+- Updated "print-speed" support in TSPL driver (Issue #120 and #121)
 - Fixed lprint-modify man page (Issue #122)
 - Fixed snap documentation for connecting LPrint to Avahi.
 
