@@ -157,6 +157,10 @@ lprintTSPL(
 
   data->tracking_supported = PAPPL_MEDIA_TRACKING_GAP | PAPPL_MEDIA_TRACKING_MARK | PAPPL_MEDIA_TRACKING_CONTINUOUS;
 
+  data->speed_default = 0;
+  data->speed_supported[0] = 2540;
+  data->speed_supported[1] = 12 * 2540;
+
   // Darkness/density settings...
   data->darkness_configured = 50;
   data->darkness_supported  = 16;
