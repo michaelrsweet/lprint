@@ -24,12 +24,6 @@ lprint-modify \- modify a printer queue.
 .B \-u
 .I PRINTER-URI
 [
-.B \-m
-.I DRIVER-NAME
-] [
-.B \-v
-.I DEVICE-URI
-] [
 .B \-o
 .I OPTION=VALUE
 ]
@@ -41,12 +35,6 @@ The following options are recognized by
 .TP 5
 \fB\-d \fIPRINTER-NAME\fR
 Specifies the name of the print queue.
-.TP 5
-\fB\-m \fIDRIVER-NAME\fR
-Specifies the name of the print driver.
-See
-.BR lprint-drivers (1)
-for the command to list the available print drivers.
 .TP 5
 \fB\-o \fIOPTION=VALUE\fR
 Specifies the default value for the given option name.
@@ -80,12 +68,6 @@ Specifies the organizational unit, for example "Shipping Department".
 .TP 5
 \fB\-u \fIPRINTER-URI\fR
 Specifies an "ipp:" or "ipps:" URI for a remote printer.
-.TP 5
-\fB\-v \fIDEVICE-URI\fR
-Specifies the device for the print queue.
-The value can be a socket: URI such as "socket://11.22.33.44" or an snmp: or usb: URI as listed by the
-.BR lprint-devices (1)
-command.
 .SH SEE ALSO
 .BR lprint (1),
 .BR lprint-add (1),
