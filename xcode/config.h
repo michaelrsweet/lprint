@@ -8,10 +8,10 @@
 //
 
 // Version number
-#define LPRINT_VERSION "1.3.0"
+#define LPRINT_VERSION "1.3.1"
 #define LPRINT_MAJOR_VERSION 1
 #define LPRINT_MINOR_VERSION 3
-#define LPRINT_PATCH_VERSION 0
+#define LPRINT_PATCH_VERSION 1
 
 
 // Enable experimental drivers?
