@@ -162,6 +162,71 @@ AC_ARG_WITH([systemd], AS_HELP_STRING([--with-systemd[=PATH]], [install systemd 
 ])
 
 
+dnl Admin group
+AC_ARG_WITH([admin_group], AS_HELP_STRING([--with-admin-group=[GROUP]], [Set group which users are authenticated for remote configuration, default=none]), [
+    AS_IF([test $withval != yes -a $withval != no], [
+	ADMINGROUP=$withval
+    ], [
+	ADMINGROUP="none"
+    ])
+], [
+    ADMINGROUP="none"
+])
+AC_SUBST([ADMINGROUP])
+
+
+dnl PAM module for authentication
+AC_ARG_WITH([auth_service], AS_HELP_STRING([--with-auth-service=[SERVICE]], [Set PAM service to use for remote request authentication, default=none]), [
+    AS_IF([test $withval != yes -a $withval != no], [
+	AUTHSERV=$withval
+    ], [
+	AUTHSERV="none"
+    ])
+], [
+    AUTHSERV="none"
+])
+AC_SUBST([AUTHSERV])
+
+
+dnl Listening on specified address/hostname
+AC_ARG_WITH([listen_hostname], AS_HELP_STRING([--with-listen-hostname=[HOSTNAME]], [Set address/hostname where listen for connection, default=local IPv4 and IPv6 addresses]), [
+    AS_IF([test $withval != yes -a $withval != no], [
+	LISTENHOST="-o listen-hostname=$withval "
+    ], [
+	LISTENHOST=""
+    ])
+], [
+    LISTENHOST=""
+])
+AC_SUBST([LISTENHOST])
+
+
+dnl Log location
+AC_ARG_WITH([log_file], AS_HELP_STRING([--with-log-file=[LOCATION]], [Set location for logs: - (stderr), syslog (syslog service), FILENAME, default=-]), [
+    AS_IF([test $withval != yes -a $withval != no], [
+	LOGFILE="$withval"
+    ], [
+	LOGFILE="-"
+    ])
+], [
+    LOGFILE="-"
+])
+AC_SUBST([LOGFILE])
+
+
+dnl Server options
+AC_ARG_WITH([server_options], AS_HELP_STRING([--with-server-options=[SOPTIONS]], [Set default server options, default=multi-queue,web-interface]), [
+    AS_IF([test $withval != yes -a $withval != no], [
+	SOPTIONS="$withval"
+    ], [
+	SOPTIONS="multi-queue,web-interface"
+    ])
+], [
+    SOPTIONS="multi-queue,web-interface"
+])
+AC_SUBST([SOPTIONS])
+
+
 dnl Support for experimental drivers...
 AC_ARG_ENABLE([experimental], AS_HELP_STRING([--enable-experimental], [turn on experimental drivers, default=no]))
 AS_IF([test x$enable_experimental = xyes], [
