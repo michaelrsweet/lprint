@@ -5,7 +5,7 @@ LPrint Change History
 v1.3.2 - Month DD, YYYY
 -----------------------
 
--
+- Updated the default state file to match current PAPPL defaults (Issue #129)
 
 
 v1.3.1 - February 9, 2024

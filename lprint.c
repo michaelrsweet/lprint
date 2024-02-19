@@ -465,6 +465,7 @@ system_cb(
 			*logfile,	// Log file, if any
 			*spooldir,	// Spool directory, if any
 			*system_name;	// System name, if any
+  char			oldfile[1024];	// Old configuration filename
   pappl_loglevel_t	loglevel;	// Log level
   int			port = 0;	// Port number, if any
   pappl_soptions_t	soptions = PAPPL_SOPTIONS_MULTI_QUEUE | PAPPL_SOPTIONS_WEB_INTERFACE | PAPPL_SOPTIONS_WEB_LOG | PAPPL_SOPTIONS_WEB_SECURITY;
@@ -554,27 +555,31 @@ system_cb(
   if ((val = getenv("SNAP_DATA")) != NULL)
   {
     snprintf(lprint_spooldir, sizeof(lprint_spooldir), "%s/lprint.d", val);
-    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/lprint.conf", val);
+    snprintf(oldfile, sizeof(oldfile), "%s/lprint.conf", val);
+    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/lprint.state", val);
 
     if (!spooldir)
       spooldir = lprint_spooldir;
   }
   else if ((val = getenv("XDG_DATA_HOME")) != NULL)
   {
-    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/.lprint.conf", val);
+    snprintf(oldfile, sizeof(oldfile), "%s/.lprint.conf", val);
+    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/lprint.state", val);
   }
 #ifdef _WIN32
   else if ((val = getenv("USERPROFILE")) != NULL)
   {
     snprintf(lprint_spooldir, sizeof(lprint_spooldir), "%s/AppData/Local/lprint.d", val);
-    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/AppData/Local/lprint.ini", val);
+    snprintf(oldfile, sizeof(oldfile), "%s/AppData/Local/lprint.ini", val);
+    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/AppData/Local/lprint.state", val);
 
     if (!spooldir)
       spooldir = lprint_spooldir;
   }
   else
   {
-    papplCopyString(lprint_statefile, "/lprint.ini", sizeof(lprint_statefile));
+    papplCopyString(oldfile, "/lprint.ini", sizeof(oldfile));
+    papplCopyString(lprint_statefile, "/lprint.state", sizeof(lprint_statefile));
   }
 #else
   else if ((val = getenv("HOME")) != NULL)
@@ -586,14 +591,36 @@ system_cb(
     if (!spooldir)
       spooldir = lprint_spooldir;
 #  else
-    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/.lprint.conf", val);
+    snprintf(oldfile, sizeof(oldfile), "%s/.config", val);
+    if (access(oldfile, 0))
+    {
+      if (mkdir(oldfile, 0777))
+      {
+	perror(oldfile);
+	return (NULL);
+      }
+    }
+
+    snprintf(oldfile, sizeof(oldfile), "%s/.lprint.conf", val);
+    snprintf(lprint_statefile, sizeof(lprint_statefile), "%s/.config/lprint.state", val);
 #  endif // __APPLE__
   }
   else
   {
-    papplCopyString(lprint_statefile, "/etc/lprint.conf", sizeof(lprint_statefile));
+    papplCopyString(oldfile, "/etc/lprint.conf", sizeof(oldfile));
+#  ifdef __APPLE__
+    papplCopyString(lprint_statefile, "/private/var/lib/lprint.state", sizeof(lprint_statefile));
+#  else
+    papplCopyString(lprint_statefile, "/var/lib/lprint.state", sizeof(lprint_statefile));
+#  endif // __APPLE__
   }
 #endif // _WIN32
+
+  if (!access(oldfile, 0) && access(lprint_statefile, 0))
+  {
+    // Move old state file to new name...
+    rename(oldfile, lprint_statefile);
+  }
 
   if (spooldir && access(spooldir, 0))
   {
