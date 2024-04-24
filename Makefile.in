@@ -91,6 +91,7 @@ MAN5		=	\
 
 OBJS		=	\
 			lprint.o \
+			tiff-packbits.o \
 			lprint-brother.o \
 			lprint-common.o \
 			lprint-cpcl.o \
@@ -194,6 +195,7 @@ resheaders:
 # Dependencies...
 $(OBJS) $(TESTOBJS):	config.h lprint.h Makefile
 lprint.o:	\
+		tiff-packbits.h \
 		lprint-brother.h \
 		lprint-cpcl.h \
 		lprint-dymo.h \
