@@ -82,6 +82,9 @@ static const char * const lprint_tspl_media[] =
   "oe_4x8-label_4x8in",
   "oe_4x13-label_4x13in",
 
+  "om_105x220mm-label_105x220mm",
+  "om_105x250mm-label_105x250mm",
+
   "roll_max_4x39.6in",
   "roll_min_0.75x0.25in"
 };
