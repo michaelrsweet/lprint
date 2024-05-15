@@ -79,6 +79,7 @@ static const char * const lprint_tspl_media[] =
   "oe_4x5-label_4x5in",
   "na_index-4x6_4x6in",
   "oe_4x6.5-label_4x6.5in",
+  "oe_4x7.83-label_4x7.83in",
   "oe_4x8-label_4x8in",
   "oe_4x13-label_4x13in",
 

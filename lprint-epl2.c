@@ -91,6 +91,7 @@ static const char * const lprint_epl2_4inch_media[] =
   "oe_4x5-label_4x5in",
   "oe_4x6-label_4x6in",
   "oe_4x6.5-label_4x6.5in",
+  "oe_4x7.83-label_4x7.83in",
   "oe_4x13-label_4x13in",
 
 /*  "oe_6x1-label_6x1in",
