@@ -85,6 +85,7 @@ static const char * const lprint_it_strings =
 "\"media.oe_file-folder-label_0.5625x3.4375in\" = \"9/16 x 3-7 Etichetta cartella file\";\n"
 "\"media.oe_hanging-file-tab-insert_0.5625x2in\" = \"9/16 x 2 Etichetta di inserimento della scheda di file appeso\";\n"
 "\"media.oe_internet-postage-confirmation-label_2.3125x10.5in\" = \"2-5/16 x 10-1/2 Etichetta di conferma della posta\";\n"
+"\"om_diskette-label_54x70mm\" = \"54 x 70mm Etichetta per floppy\";\n"
 "\"media.oe_internet-postage-label_1.25x1.625in\" = \"Etichetta di posta elettronica 1-1/4 x 1-5/8\";\n"
 "\"media.oe_internet-postage-label_2.3125x7in\" = \"2-3/8 x 7 Etichetta di posta elettronica\";\n"
 "\"media.oe_lg-address-label_1.4x3.5in\" = \"1-4/10 x 3-1 Grande etichetta di indirizzo\";\n"

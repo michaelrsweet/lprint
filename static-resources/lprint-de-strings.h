@@ -85,6 +85,7 @@ static const char * const lprint_de_strings =
 "\"media.oe_file-folder-label_0.5625x3.4375in\" = \"9/16 x 3-7/16 File Folder Label\";\n"
 "\"media.oe_hanging-file-tab-insert_0.5625x2in\" = \"9/16 x 2 hängende Datei Tab Einfügen Etikett\";\n"
 "\"media.oe_internet-postage-confirmation-label_2.3125x10.5in\" = \"2-5/16 x 10-1/2 Internet Postage Confirmation Label\";\n"
+"\"om_diskette-label_54x70mm\" = \"54 x 70mm Disketten Etikett\";\n"
 "\"media.oe_internet-postage-label_1.25x1.625in\" = \"1-1/4 x 1-5/8 Internet-Postlabel\";\n"
 "\"media.oe_internet-postage-label_2.3125x7in\" = \"2-3/8 x 7 Internet Posting Label\";\n"
 "\"media.oe_lg-address-label_1.4x3.5in\" = \"1-4/10 x 3-1/2 Großes Adressat\";\n"
