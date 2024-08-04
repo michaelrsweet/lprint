@@ -126,6 +126,7 @@ static const char * const lprint_en_strings =
 "\"media.om_cut-hanging-13_32x78mm\" = \"32 x 78mm 1/3 Cut Hanging File Folder Label\";\n"
 "\"media.om_cut-hanging-15_32x40mm\" = \"32 x 40mm 1/5 Cut Hanging File Folder Label\";\n"
 "\"media.om_diskette_48x64mm\" = \"48 x 64mm Diskette Label\";\n"
+"\"media.om_diskette_54x70mm\" = \"54 x 70mm Diskette Label\";\n"
 "\"media.om_euro-file-folder_39x49mm\" = \"39 x 49mm Euro File Folder Label\";\n"
 "\"media.om_euro-folder-narrow_38x186mm\" = \"38 x 186mm Euro Narrow File Folder Label\";\n"
 "\"media.om_euro-folder-wide_48x186mm\" = \"48 x 186mm Euro Wide File Folder Label\";\n"

@@ -127,6 +127,7 @@ static const char * const lprint_it_strings =
 "\"media.om_cut-hanging-13_32x78mm\" = \"32 x 78mm 1/3 Etichetta della cartella di file sospesa di taglio\";\n"
 "\"media.om_cut-hanging-15_32x40mm\" = \"32 x 40mm 1/5 sospensione di taglio Etichetta cartella file\";\n"
 "\"media.om_diskette_48x64mm\" = \"48 x 64 millimetri etichetta di Diskette\";\n"
+"\"media.om_diskette_54x70mm\" = \"54 x 70 millimetri etichetta di Diskette\";\n"
 "\"media.om_euro-file-folder_39x49mm\" = \"39 x 49mm Euro File Folder Etichetta\";\n"
 "\"media.om_euro-folder-narrow_38x186mm\" = \"38 x 186mm Etichetta pieghevole Euro Narrow File\";\n"
 "\"media.om_euro-folder-wide_48x186mm\" = \"48 x 186mm Etichetta pieghevole Euro Wide File\";\n"

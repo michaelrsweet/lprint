@@ -68,6 +68,7 @@ static const char * const lprint_dymo_label[] =
   "oe_shipping-label_2.3125x4in",
   "oe_internet-postage-label_2.3125x7in",
   "oe_internet-postage-confirmation-label_2.3125x10.5in",
+  "om_diskette-label_54x70mm",
 
   "roll_max_2.3125x3600in",
   "roll_min_0.25x0.25in"
