@@ -468,7 +468,7 @@ system_cb(
   char			oldfile[1024];	// Old configuration filename
   pappl_loglevel_t	loglevel;	// Log level
   int			port = 0;	// Port number, if any
-  pappl_soptions_t	soptions = PAPPL_SOPTIONS_MULTI_QUEUE | PAPPL_SOPTIONS_WEB_INTERFACE | PAPPL_SOPTIONS_WEB_LOG | PAPPL_SOPTIONS_WEB_SECURITY;
+  pappl_soptions_t	soptions = PAPPL_SOPTIONS_MULTI_QUEUE | PAPPL_SOPTIONS_WEB_INTERFACE | PAPPL_SOPTIONS_WEB_LOG | PAPPL_SOPTIONS_WEB_SECURITY | PAPPL_SOPTIONS_WEB_TLS;
 					// System options
   static pappl_version_t versions[1] =	// Software versions
   {
@@ -527,7 +527,7 @@ system_cb(
       else if (!strcmp(valptr, "web-security") || !strncmp(valptr, "web-security,", 13))
         soptions |= PAPPL_SOPTIONS_WEB_SECURITY;
       else if (!strcmp(valptr, "no-tls") || !strncmp(valptr, "no-tls,", 7))
-        soptions |= PAPPL_SOPTIONS_NO_TLS;
+        soptions = (pappl_soptions_t)((soptions | PAPPL_SOPTIONS_NO_TLS) & ~PAPPL_SOPTIONS_WEB_TLS);
 
       if ((valptr = strchr(valptr, ',')) != NULL)
         valptr ++;
