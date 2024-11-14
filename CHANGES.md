@@ -6,6 +6,8 @@ v1.3.2 - Month DD, YYYY
 -----------------------
 
 - Updated the default state file to match current PAPPL defaults (Issue #129)
+- Now enable the TLS web interface unless the "no-tls" option is specified
+  (Issue #161)
 
 
 v1.3.1 - February 9, 2024
