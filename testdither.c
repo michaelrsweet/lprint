@@ -5,7 +5,7 @@
 //
 //   ./testdither [--plain] INPUT.pwg > OUTPUT.pwg
 //
-// Copyright © 2023 by Michael R Sweet
+// Copyright © 2023-2024 by Michael R Sweet
 //
 
 #include "lprint.h"
@@ -88,7 +88,7 @@ main(int  argc,				// I - Number of command-line arguments
 
   if ((in_ras = cupsRasterOpen(in_file, CUPS_RASTER_READ)) == NULL)
   {
-    fprintf(stderr, "%s: %s\n", in_name, cupsLastErrorString());
+    fprintf(stderr, "%s: %s\n", in_name, cupsGetErrorString());
     close(in_file);
     return (1);
   }
@@ -96,7 +96,7 @@ main(int  argc,				// I - Number of command-line arguments
   // Output output raster stream...
   if ((out_ras = cupsRasterOpen(1, CUPS_RASTER_WRITE_PWG)) == NULL)
   {
-    fprintf(stderr, "stdout: %s\n", cupsLastErrorString());
+    fprintf(stderr, "stdout: %s\n", cupsGetErrorString());
     close(in_file);
     cupsRasterClose(in_ras);
     return (1);

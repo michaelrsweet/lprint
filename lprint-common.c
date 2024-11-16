@@ -716,72 +716,97 @@ lprintPackBitsAlloc(size_t len)		// I - Size of input buffer
 // <https://en.wikipedia.org/wiki/PackBits>.
 //
 
-void
+size_t					// O - Number of compressed bytes
 lprintPackBitsCompress(
     unsigned char       *dst,		// I - Destination buffer
     const unsigned char *src,		// I - Source buffer
-    size_t              len)		// I - Number of source bytes (at least 3)
+    size_t              srclen)		// I - Number of source bytes (at least 3)
 {
   const unsigned char	*srcptr,	// Current byte pointer
 			*srcend,	// End-of-line byte pointer
-			*srcend1,	// End-of-line byte pointer less 1
-			*src0;		// Start of compression sequence
+			*srclptr,	// Start of literal sequence
+			*srcrptr;	// Start of repeated sequence
   unsigned char		*dstptr;	// Pointer into compression buffer
-  unsigned		count;		// Count of bytes for output
+  unsigned		count,		// Current count
+			srclcount,	// Count of literal bytes for output
+			srcrcount;	// Count of repeated bytes for output
 
 
   // Do TIFF PackBits compression over the source buffer...
-  srcptr  = src;
-  srcend  = src + len - 1;
-  srcend1 = srcend - 1;
-  dstptr  = dst;
+  srcptr = srclptr = src;
+  srcend = src + srclen - 1;
+  dstptr = dst;
 
-  while (srcptr <= srcend)
+  while (srclptr <= srcend)
   {
-    if (srcptr < srcend1 && srcptr[0] == srcptr[1] && srcptr[1] == srcptr[2])
+    // Scan for literal and repeated sequences...
+    while (srcptr <= srcend)
     {
-      // Start of repeated sequence...
-      srcptr += 2;
-      count = 3;
-
-      while (srcptr < srcend && srcptr[0] == srcptr[1] && count < 128)
-      {
+      // Extend literal sequence, if any...
+      while (srcptr < srcend && srcptr[0] != srcptr[1])
 	srcptr ++;
-	count ++;
+
+      srclcount = srcptr - srclptr;
+      srcrcount = 0;
+
+      if (srcptr == srcend)
+      {
+        // Last byte, stop here...
+	srcptr ++;
+	srclcount ++;
+	break;
       }
 
-      // Encode as "count" repeated bytes...
-      *dstptr++ = (unsigned char)(257 - count);
-      *dstptr++ = *srcptr++;
-    }
-    else
-    {
-      // Literal sequence...
-      src0  = srcptr;
-      count = 1;
+      // Count a run...
+      srcrptr = srcptr;
+
+      while (srcptr < srcend && srcptr[0] == srcptr[1])
+      {
+	srcptr ++;
+	srcrcount ++;
+      }
+
       srcptr ++;
+      srcrcount ++;
 
-      while (srcptr < srcend && srcptr[0] != srcptr[1] && count < 128)
-      {
-	srcptr ++;
-	count ++;
-      }
-
-      if (count == 2 && src0[0] == src[1])
-      {
-	// Encode as 2 repeated bytes which is smaller...
-        *dstptr++ = 255;
-        *dstptr++ = *src0;
-      }
-      else
-      {
-        // Encode "count" literal bytes...
-        *dstptr++ = (unsigned char)(count - 1);
-	memcpy(dstptr, src0, count);
-	dstptr += count;
-      }
+      // Only stop to encode if the repeated sequence is long enough to make sense...
+      if (srcrcount > 2 || srcrptr == srclptr)
+        break;
     }
+
+    // Encode literal byte sequences...
+    while (srclcount > 0)
+    {
+      if (srclcount > 128)
+	count = 128;
+      else
+	count = srclcount;
+
+      *dstptr++ = (unsigned char)(count - 1);
+      memcpy(dstptr, srclptr, count);
+      dstptr += count;
+      srclptr += count;
+      srclcount -= count;
+    }
+
+    // Encode repeated byte sequences...
+    while (srcrcount > 0)
+    {
+      if (srcrcount > 128)
+	count = 128;
+      else
+	count = srcrcount;
+
+      *dstptr++ = (unsigned char)(257 - count);
+      *dstptr++ = *srcrptr;
+      srcrcount -= count;
+    }
+
+    // Reset the literal pointer and continue...
+    srclptr = srcptr;
   }
+
+  return ((size_t)(dstptr - dst));
 }
 
 

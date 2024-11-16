@@ -159,7 +159,7 @@ extern bool	lprintMediaUI(pappl_client_t *client, pappl_printer_t *printer);
 extern void	lprintMediaUpdate(pappl_printer_t *printer, pappl_pr_driver_data_t *data);
 
 extern unsigned char *lprintPackBitsAlloc(size_t len);
-extern void	lprintPackBitsCompress(unsigned char *dst, const unsigned char *src, size_t len);
+extern size_t	lprintPackBitsCompress(unsigned char *dst, const unsigned char *src, size_t len);
 
 #  ifdef LPRINT_EXPERIMENTAL
 extern bool	lprintBrother(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);

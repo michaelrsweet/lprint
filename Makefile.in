@@ -105,10 +105,11 @@ TARGETS		=	\
 
 
 TESTOBJS	=	\
-			lprint-common.o \
-			testdither.o
+			testdither.o \
+			testpackbits.o
 TESTTARGETS	=	\
-			testdither
+			testdither \
+			testpackbits
 
 
 # Make everything...
@@ -154,6 +155,9 @@ install:	all
 
 # Test everything...
 test:	$(TARGETS) $(TESTTARGETS)
+	date >test.log
+	echo "Running testpackbits..."
+	./testpackbits 2>>test.log
 
 
 # LPrint program...
@@ -167,12 +171,22 @@ lprint:	$(OBJS)
 
 
 # Dither test program...
-testdither: $(TESTOBJS)
+testdither: testdither.o lprint-common.o
 	echo Linking $@...
-	$(CC) $(LDFLAGS) -o $@ $(TESTOBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ testdither.o lprint-common.o $(LIBS)
 	if test `uname` = Darwin; then \
 	    echo "Code-signing $@..."; \
 	    codesign $(CSFLAGS) -i org.msweet.testdither $@; \
+	fi
+
+
+# Packbits test program...
+testpackbits: testpackbits.o lprint-common.o
+	echo Linking $@...
+	$(CC) $(LDFLAGS) -o $@ testpackbits.o lprint-common.o $(LIBS)
+	if test `uname` = Darwin; then \
+	    echo "Code-signing $@..."; \
+	    codesign $(CSFLAGS) -i org.msweet.testpackbits $@; \
 	fi
 
 
