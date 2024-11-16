@@ -17,6 +17,7 @@
 //
 
 static unsigned get_rand(void);
+static size_t	uncompress_packbits(unsigned char *dst, size_t dstsize, const unsigned char *src, size_t srclen);
 
 
 //
@@ -32,7 +33,9 @@ main(int  argc,				// I - Number of command-line arguments
   size_t	offset,			// Offset in source buffer
 		count,			// Looping var
 		len;			// Length of sequence
-  unsigned char	src[1024];		// Source buffer
+  unsigned char	src[1024],		// Source buffer
+		check[2048];		// Check buffer
+  size_t	checklen;		// Check data length
   unsigned char	*dst;			// Destination buffer
   size_t	dstlen,			// Number of destination bytes
 		dstmax;			// Maximum number of destination bytes
@@ -94,6 +97,19 @@ main(int  argc,				// I - Number of command-line arguments
       testHexDump(src, sizeof(src));
       testError("\nDestination Buffer:");
       testHexDump(dst, dstlen);
+      break;
+    }
+
+    // Verify compressed result...
+    if ((checklen = uncompress_packbits(check, sizeof(check), dst, dstlen)) != sizeof(src) || memcmp(check, src, sizeof(src)))
+    {
+      testEndMessage(false, "Decompression Failure");
+      testError("\nSource Buffer:");
+      testHexDump(src, sizeof(src));
+      testError("\nDestination Buffer (%u bytes):", (unsigned)dstlen);
+      testHexDump(dst, dstlen);
+      testError("\nCheck Buffer (%u bytes):", (unsigned)checklen);
+      testHexDump(check, checklen);
       break;
     }
   }
@@ -206,4 +222,82 @@ get_rand(void)
 
   return (temp);
 #endif // _WIN32
+}
+
+
+//
+// 'uncompress_packbits()' - Uncompress PackBits data.
+//
+
+static size_t				// O - Number of uncompressed bytes
+uncompress_packbits(
+    unsigned char       *dst,		// I - Output buffer
+    size_t              dstsize,	// I - Size of output buffer
+    const unsigned char *src,		// I - Input buffer
+    size_t              srclen)		// I - Length of input buffer
+{
+  const unsigned char	*srcptr,	// Pointer into input buffer
+			*srcend;	// End of input buffer
+  unsigned char		*dstptr,	// Pointer into output buffer
+			*dstend;	// End of output buffer
+  unsigned		count;		// Literal/repeat count
+
+
+  // Loop through the input buffer and decompress...
+  dstptr = dst;
+  dstend = dst + dstsize;
+  srcptr = src;
+  srcend = src + srclen;
+
+  while (srcptr < srcend)
+  {
+    if (*srcptr < 0x80)
+    {
+      // N literal bytes
+      count = *srcptr + 1;
+      srcptr ++;
+      if ((srcptr + count) > srcend)
+      {
+        testError("Literal count %u but only %ld input bytes remaining.", count, srcend - srcptr);
+        return (0);
+      }
+
+      if (count > (unsigned)(dstend - dstptr))
+      {
+        testError("Literal count %u but only %ld output bytes remaining.", count, dstend - dstptr);
+        return (0);
+      }
+
+      memcpy(dstptr, srcptr, count);
+      dstptr += count;
+      srcptr += count;
+    }
+    else if (*srcptr == 0x80)
+    {
+      testError("Undefined pack value 0x80 seen.");
+    }
+    else
+    {
+      count = 257 - *srcptr;
+      srcptr ++;
+
+      if (srcptr >= srcend)
+      {
+        testError("Repeat count %u but no input bytes remaining.", count);
+        return (0);
+      }
+
+      if (count > (unsigned)(dstend - dstptr))
+      {
+        testError("Repeat count %u but only %ld output bytes remaining.", count, dstend - dstptr);
+        return (0);
+      }
+
+      memset(dstptr, *srcptr, count);
+      dstptr += count;
+      srcptr ++;
+    }
+  }
+
+  return ((size_t)(dstptr - dst));
 }
