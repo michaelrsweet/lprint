@@ -696,6 +696,96 @@ lprintMediaUpdate(
 
 
 //
+// 'lprintPackBitsAlloc()' - Allocate a PackBits compression buffer.
+//
+// Free the returned pointer with `free()`...
+//
+
+unsigned char *				// O - Pointer to compression buffer
+lprintPackBitsAlloc(size_t len)		// I - Size of input buffer
+{
+  return (malloc(len + (len + 127) / 128));
+}
+
+
+//
+// 'lprintPackBitsCompress()' - PackBits compress some bytes to the destination buffer.
+//
+// The destination should be allocated wth `lprintPackBitsAlloc()`.
+// The algorithm is defined in many places, including at
+// <https://en.wikipedia.org/wiki/PackBits>.
+//
+
+void
+lprintPackBitsCompress(
+    unsigned char       *dst,		// I - Destination buffer
+    const unsigned char *src,		// I - Source buffer
+    size_t              len)		// I - Number of source bytes (at least 3)
+{
+  const unsigned char	*srcptr,	// Current byte pointer
+			*srcend,	// End-of-line byte pointer
+			*srcend1,	// End-of-line byte pointer less 1
+			*src0;		// Start of compression sequence
+  unsigned char		*dstptr;	// Pointer into compression buffer
+  unsigned		count;		// Count of bytes for output
+
+
+  // Do TIFF PackBits compression over the source buffer...
+  srcptr  = src;
+  srcend  = src + len - 1;
+  srcend1 = srcend - 1;
+  dstptr  = dst;
+
+  while (srcptr <= srcend)
+  {
+    if (srcptr < srcend1 && srcptr[0] == srcptr[1] && srcptr[1] == srcptr[2])
+    {
+      // Start of repeated sequence...
+      srcptr += 2;
+      count = 3;
+
+      while (srcptr < srcend && srcptr[0] == srcptr[1] && count < 128)
+      {
+	srcptr ++;
+	count ++;
+      }
+
+      // Encode as "count" repeated bytes...
+      *dstptr++ = (unsigned char)(257 - count);
+      *dstptr++ = *srcptr++;
+    }
+    else
+    {
+      // Literal sequence...
+      src0  = srcptr;
+      count = 1;
+      srcptr ++;
+
+      while (srcptr < srcend && srcptr[0] != srcptr[1] && count < 128)
+      {
+	srcptr ++;
+	count ++;
+      }
+
+      if (count == 2 && src0[0] == src[1])
+      {
+	// Encode as 2 repeated bytes which is smaller...
+        *dstptr++ = 255;
+        *dstptr++ = *src0;
+      }
+      else
+      {
+        // Encode "count" literal bytes...
+        *dstptr++ = (unsigned char)(count - 1);
+	memcpy(dstptr, src0, count);
+	dstptr += count;
+      }
+    }
+  }
+}
+
+
+//
 // 'free_cmedia()' - Free custom media information.
 //
 
