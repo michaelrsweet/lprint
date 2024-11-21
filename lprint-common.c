@@ -790,7 +790,7 @@ lprintPackBitsCompress(
     }
 
     // Encode repeated byte sequences...
-    while (srcrcount > 0)
+    while (srcrcount > 1)
     {
       if (srcrcount > 128)
 	count = 128;
@@ -803,7 +803,7 @@ lprintPackBitsCompress(
     }
 
     // Reset the literal pointer and continue...
-    srclptr = srcptr;
+    srclptr = srcptr - srcrcount;
   }
 
   return ((size_t)(dstptr - dst));
