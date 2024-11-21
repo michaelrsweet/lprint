@@ -13,6 +13,19 @@
 
 
 //
+// Local types
+//
+
+typedef struct testdata_s
+{
+  size_t	inlen;			// Length of input data
+  const char	*input;			// Input data
+  size_t	outlen;			// Length of output data
+  const char	*output;		// Output data
+} testdata_t;
+
+
+//
 // Local functions...
 //
 
@@ -39,6 +52,35 @@ main(int  argc,				// I - Number of command-line arguments
   unsigned char	*dst;			// Destination buffer
   size_t	dstlen,			// Number of destination bytes
 		dstmax;			// Maximum number of destination bytes
+  static testdata_t cases[] =		// Test cases
+  {
+    {
+      1, "a", 2, "\000a"
+    },
+    {
+      2, "ab", 3, "\001ab"
+    },
+    {
+      3, "abb", 4, "\002abb"
+    },
+    {
+      4, "abbc", 5, "\003abbc"
+    },
+    {
+      5, "abbcc", 6, "\004abbcc"
+    },
+    {
+      7, "abbccdd", 8, "\007abbccdd"
+    },
+    {
+      9, "abbbcccdd", 8, "\000a\376b\376c\377d"
+    },
+    {
+     130, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          "ab", 5, "\201a\001ab"
+    }
+  };
 
 
   // See if the number of tests is on the command-line...
@@ -61,6 +103,39 @@ main(int  argc,				// I - Number of command-line arguments
     testEnd(true);
   else
     testEndMessage(false, "%s", strerror(errno));
+
+  // Test specific values
+  for (i = 0; i < (int)(sizeof(cases) / sizeof(cases[0])); i ++)
+  {
+    testBegin("lprintPackBitsCompress(\"%s\")", cases[i].input);
+    if ((dstlen = lprintPackBitsCompress(dst, (unsigned char *)cases[i].input, cases[i].inlen)) == cases[i].outlen)
+    {
+      if (!memcmp(dst, cases[i].output, cases[i].outlen))
+      {
+        testEnd(true);
+      }
+      else
+      {
+	testEndMessage(false, "compressed bytes don't match");
+	testError("\nSource Buffer:");
+	testHexDump((unsigned char *)cases[i].input, cases[i].inlen);
+	testError("\nDestination Buffer:");
+	testHexDump(dst, dstlen);
+	testError("\nExpected Buffer:");
+	testHexDump((unsigned char *)cases[i].output, cases[i].outlen);
+      }
+    }
+    else
+    {
+      testEndMessage(false, "got %u bytes, expected %u bytes", (unsigned)dstlen, (unsigned)cases[i].outlen);
+      testError("\nSource Buffer:");
+      testHexDump((unsigned char *)cases[i].input, cases[i].inlen);
+      testError("\nDestination Buffer:");
+      testHexDump(dst, dstlen);
+      testError("\nExpected Buffer:");
+      testHexDump((unsigned char *)cases[i].output, cases[i].outlen);
+    }
+  }
 
   // Loop many times with random changes to the source buffer to test different
   // source values...
