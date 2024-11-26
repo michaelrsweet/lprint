@@ -80,6 +80,7 @@ static const char * const lprint_cpcl_media[] =
   "oe_4x5-label_4x5in",
   "oe_4x6-label_4x6in",
   "oe_4x6.5-label_4x6.5in",
+  "oe_4x7.83-label_4x7.83in",
   "oe_4x13-label_4x13in",
 
   "roll_max_4x50in",
