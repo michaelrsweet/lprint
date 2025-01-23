@@ -182,8 +182,8 @@ lprintDYMO(
     data->x_default = data->y_default = 300;
 
     // Media...
-    data->left_right = 367;
-    data->bottom_top = 1;
+    data->left_right = 100;
+    data->bottom_top = 525;
 
     data->num_media = (int)(sizeof(lprint_dymo_label) / sizeof(lprint_dymo_label[0]));
     memcpy(data->media, lprint_dymo_label, sizeof(lprint_dymo_label));
