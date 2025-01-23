@@ -7,6 +7,7 @@ v1.4.0 - YYYY-MM-DD
 - Updated the default state file to match current PAPPL defaults (Issue #129)
 - Now enable the TLS web interface unless the "no-tls" option is specified
   (Issue #161)
+- Added 4 x 7.83 inch label size (Issue #144)
 
 
 v1.3.1 - 2024-02-09
