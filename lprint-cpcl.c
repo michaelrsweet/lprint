@@ -1,7 +1,7 @@
 //
 // Experimental CPCL driver for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2024 by Michael R Sweet.
+// Copyright © 2019-2025 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
