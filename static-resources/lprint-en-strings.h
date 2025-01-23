@@ -51,6 +51,7 @@ static const char * const lprint_en_strings =
 "\"media.oe_4x5-label_4x5in\" = \"4 x 5ʺ Label\";\n"
 "\"media.oe_4x6-label_4x6in\" = \"4 x 6ʺ Label\";\n"
 "\"media.oe_4x6.5-label_4x6.5in\" = \"4 x 6-1/2ʺ Label\";\n"
+"\"media.oe_4x7.83-label_4x7.83in\" = \"4 x 7-13/16 Label\";\n"
 "\"media.oe_4x8-label_4x8in\" = \"4 x 8ʺ Label\";\n"
 "\"media.oe_6x1-label_6x1in\" = \"6 x 1ʺ Label\";\n"
 "\"media.oe_6x13-label_6x13in\" = \"6 x 13ʺ Label\";\n"
