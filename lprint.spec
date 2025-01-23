@@ -3,7 +3,7 @@
 #
 
 Name: lprint
-Version: 1.3.1
+Version: 1.4.0
 Release: 0
 Summary: LPrint, A Label Printer Application
 License: ASL 2.0
@@ -12,7 +12,7 @@ URL: https://www.msweet.org/lprint
 Packager: Anonymous <anonymous@example.com>
 Vendor: Example Corp
 # Note: Package names are as defined for Red Hat (and clone) distributions
-BuildRequires: avahi-devel, cups-devel >= 2.2, gnutls-devel, libpng-devel >= 1.6, libusb-devel >= 1.0, pam-devel, pappl-devel >= 1.2
+BuildRequires: avahi-devel, cups-devel >= 2.4, gnutls-devel, libpng-devel >= 1.6, libusb-devel >= 1.0, pam-devel, pappl-devel >= 1.2
 #BuildRoot: /tmp/%{name}-root
 
 %description

@@ -1,25 +1,24 @@
 LPrint Change History
 =====================
 
-
-v1.3.2 - Month DD, YYYY
------------------------
+v1.4.0 - YYYY-MM-DD
+-------------------
 
 - Updated the default state file to match current PAPPL defaults (Issue #129)
 - Now enable the TLS web interface unless the "no-tls" option is specified
   (Issue #161)
 
 
-v1.3.1 - February 9, 2024
--------------------------
+v1.3.1 - 2024-02-09
+-------------------
 
 - Updated "print-speed" support in TSPL driver (Issue #120 and #121)
 - Fixed lprint-modify man page (Issue #122 and #126)
 - Fixed snap documentation for connecting LPrint to Avahi.
 
 
-v1.3.0 - January 31, 2024
--------------------------
+v1.3.0 - 2024-01-31
+-------------------
 
 - Added new dithering algorithm to better support barcode printing with shaded
   content.
@@ -35,8 +34,8 @@ v1.3.0 - January 31, 2024
 - Fixed darkness calculations for EPL and ZPL printers (Issue #104)
 
 
-v1.2.0 - December 31, 2022
---------------------------
+v1.2.0 - 2022-12-31
+-------------------
 
 - Documentation corrections (Issue #53, Issue #76)
 - Added snap server configuration.
@@ -53,8 +52,8 @@ v1.2.0 - December 31, 2022
 - Fixed driver names for EPL printers (Issue #52)
 
 
-v1.1.0 - December 23, 2021
---------------------------
+v1.1.0 - 2021-12-23
+-------------------
 
 - Switched to PAPPL (Issue #20, #35)
 - Fixed `lprint default` and `lprint delete` not working (Issue #17, Issue #40)
@@ -73,14 +72,14 @@ v1.1.0 - December 23, 2021
 - Temporarily removed support for DYMO LabelWriter Wireless printer (Issue #23)
 
 
-v1.0 - February 17, 2020
-------------------------
+v1.0 - 2020-02-17
+-----------------
 
 - First production release.
 
 
-v1.0rc1 - February 10, 2020
----------------------------
+v1.0rc1 - 2020-02-10
+--------------------
 
 - Updated media documentation (Issue #13)
 - The `lprint options` command now reports both English and metric dimensions
@@ -92,8 +91,8 @@ v1.0rc1 - February 10, 2020
 - Fixed some small memory leaks.
 
 
-v1.0b2 - January 26, 2020
--------------------------
+v1.0b2 - 2020-01-26
+-------------------
 
 - Added support for authentication of remote administrative requests (Issue #1)
 - Added support for managing printers via web browser (Issue #1)
@@ -114,7 +113,7 @@ v1.0b2 - January 26, 2020
 - Added a spec file for building RPMs.
 
 
-v1.0b1 - January 15, 2020
--------------------------
+v1.0b1 - 2020-01-15
+-------------------
 
 - First public release.

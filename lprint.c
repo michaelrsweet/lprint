@@ -78,7 +78,7 @@ main(int  argc,				// I - Number of command-line arguments
 {
   return (papplMainloop(argc, argv,
                         LPRINT_VERSION,
-                        "Copyright &copy; 2019-2024 by Michael R Sweet. All Rights Reserved.",
+                        "Copyright &copy; 2019-2025 by Michael R Sweet. All Rights Reserved.",
                         (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])),
                         lprint_drivers, autoadd_cb, driver_cb,
                         /*subcmd_name*/NULL, /*subcmd_cb*/NULL,

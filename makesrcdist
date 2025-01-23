@@ -26,7 +26,13 @@ fi
 
 temp=`head -4 CHANGES.md | tail -1 | awk '{print $1}'`
 if test "$temp" != "v$version"; then
-	echo "Still need to add Changes in v$version in CHANGES.md (saw $temp)"
+	echo "Still need to add v$version in CHANGES.md (saw $temp)"
+	exit 1
+fi
+
+temp=`head -4 CHANGES.md | tail -1 | awk '{print $3}'`
+if test "$temp" = "YYYY-MM-DD"; then
+	echo "Still need to add date for v$version in CHANGES.md (saw $temp)"
 	exit 1
 fi
 
