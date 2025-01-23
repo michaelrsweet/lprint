@@ -9,6 +9,7 @@ v1.4.0 - YYYY-MM-DD
 - Now enable the TLS web interface unless the "no-tls" option is specified
   (Issue #161)
 - Added 4 x 7.83 inch label size (Issue #144)
+- Fixed the margins for DYMO printers (Issue #132)
 
 
 v1.3.1 - 2024-02-09
