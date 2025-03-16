@@ -43,5 +43,7 @@
   "MFG:Brother;CMD:PT-CBP;MDL:QL-1110NWB;", NULL },
 { "brother_ql-1115nwb",	"Brother QL-1115NWB",
   "MFG:Brother;CMD:PT-CBP;MDL:QL-1115NWB;", NULL },
+{ "brother_pt-e550w",	"Brother PT-E550W",
+  "MFG:Brother;CMD:PT-CBP;MDL:PT-E550W;", NULL },
 //{ "brother_pt-",	"Brother PT-",
 //  "MFG:Brother;CMD:???;MDL:PT-;", NULL },
