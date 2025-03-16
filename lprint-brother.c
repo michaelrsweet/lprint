@@ -173,12 +173,10 @@ lprintBrother(
     data->source[0]  = "main-roll";
 
     papplCopyString(data->media_ready[0].size_name, "oe_wide-2in-tape_1x2in", sizeof(data->media_ready[0].size_name));
-    papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
+    papplCopyString(data->media_ready[0].type, "tape", sizeof(data->media_ready[0].type));
 
-    data->num_type = 2;
-    data->type[0]  = "continuous";
-    data->type[1]  = "continuous-film";
-    data->type[2]  = "continuous-removable";
+    data->num_type = 1;
+    data->type[0]  = "tape";
   }
 
   data->num_source = 1;
