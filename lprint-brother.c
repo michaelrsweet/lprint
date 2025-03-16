@@ -374,7 +374,7 @@ lprint_brother_rendpage(
   buffer[ 9] = (brother->count >> 16) & 255;
   buffer[10] = (brother->count >> 24) & 255;
 #endif // 1
-  buffer[11] = page == 0 ? 0 : 1;
+  buffer[11] = page == 1 ? 0 : 1;
   buffer[12] = 0;
 
   if (!papplDeviceWrite(device, buffer, sizeof(buffer)))
