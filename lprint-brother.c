@@ -525,14 +525,15 @@ lprint_brother_rwriteline(
     // TODO: Add PackBits compression support
     brother->count += 3 + brother->dither.out_width;
 
-    *bufptr++ = 'g';
     if (brother->is_pt_series)
     {
+      *bufptr++ = 'G';
       *bufptr++ = brother->dither.out_width & 255;
       *bufptr++ = (brother->dither.out_width >> 8) & 255;
     }
     else
     {
+      *bufptr++ = 'g';
       *bufptr++ = 0;
       *bufptr++ = brother->dither.out_width;
     }
