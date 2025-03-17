@@ -1,12 +1,16 @@
 //
 // Experimental Brother driver table for LPrint, a Label Printer Application
 //
-// Copyright © 2023-2024 by Michael R Sweet.
+// Copyright © 2023-2025 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
 //
 
+{ "brother_pt-e550w",	"Brother PT-E550W",
+   "MFG:Brother;CMD:PT-CBP;MDL:PT-E550W;", NULL },
+//{ "brother_pt-",	"Brother PT-",
+//  "MFG:Brother;CMD:???;MDL:PT-;", NULL },
 { "brother_ql-500",	"Brother QL-500",
   "MFG:Brother;CMD:PT-CBP;MDL:QL-500;", NULL },
 { "brother_ql-550",	"Brother QL-550",
@@ -43,5 +47,3 @@
   "MFG:Brother;CMD:PT-CBP;MDL:QL-1110NWB;", NULL },
 { "brother_ql-1115nwb",	"Brother QL-1115NWB",
   "MFG:Brother;CMD:PT-CBP;MDL:QL-1115NWB;", NULL },
-//{ "brother_pt-",	"Brother PT-",
-//  "MFG:Brother;CMD:???;MDL:PT-;", NULL },

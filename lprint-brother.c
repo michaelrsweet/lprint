@@ -1,7 +1,7 @@
 //
 // Experimental Brother driver for LPrint, a Label Printer Application
 //
-// Copyright © 2023-2024 by Michael R Sweet.
+// Copyright © 2023-2025 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -173,7 +173,7 @@ lprintBrother(
     data->source[0]  = "main-roll";
 
     papplCopyString(data->media_ready[0].size_name, "oe_wide-2in-tape_1x2in", sizeof(data->media_ready[0].size_name));
-    papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
+    papplCopyString(data->media_ready[0].type, "continuous", sizeof(data->media_ready[0].type));
 
     data->num_type = 2;
     data->type[0]  = "continuous";
@@ -328,6 +328,8 @@ lprint_brother_rendjob(
 
   (void)options;
 
+  papplDevicePuts(device, "\032");	// Eject the last page
+
   free(brother->buffer);
   free(brother);
   papplJobSetData(job, NULL);
@@ -359,7 +361,7 @@ lprint_brother_rendpage(
   buffer[ 0] = 0x1b;
   buffer[ 1] = 'i';
   buffer[ 2] = 'z';
-  buffer[ 3] = !strcmp(options->media.type, "continuous") ? 0x04 : 0x0c;
+  buffer[ 3] = !strncmp(options->media.type, "continuous", 10) ? 0x04 : 0x0c;
   buffer[ 4] = 0;
   buffer[ 5] = options->media.size_width / 100;
   buffer[ 6] = options->media.size_length / 100;
@@ -385,7 +387,7 @@ lprint_brother_rendpage(
     return (false);
 
   // Eject/cut
-  papplDevicePrintf(device, "\033iM%c\014", !strcmp(options->media.type, "continuous") ? 64 : 0);
+  papplDevicePrintf(device, "\033iM%c", !strncmp(options->media.type, "continuous", 10) ? 64 : 0);
   papplDeviceFlush(device);
 
   // Free memory and return...
@@ -468,7 +470,8 @@ lprint_brother_rstartpage(
 					// Brother driver data
 
 
-  (void)page;
+  if (page > 0)
+    papplDevicePuts(device, "\014");	// Eject the previous page
 
   if (!lprintDitherAlloc(&brother->dither, job, options, CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0))
     return (false);
@@ -525,14 +528,15 @@ lprint_brother_rwriteline(
     // TODO: Add PackBits compression support
     brother->count += 3 + brother->dither.out_width;
 
-    *bufptr++ = 'g';
     if (brother->is_pt_series)
     {
+      *bufptr++ = 'G';
       *bufptr++ = brother->dither.out_width & 255;
       *bufptr++ = (brother->dither.out_width >> 8) & 255;
     }
     else
     {
+      *bufptr++ = 'g';
       *bufptr++ = 0;
       *bufptr++ = brother->dither.out_width;
     }
