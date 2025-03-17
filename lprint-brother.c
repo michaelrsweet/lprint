@@ -384,7 +384,8 @@ lprint_brother_rendpage(
   if (brother->num_bytes > 0 && !papplDeviceWrite(device, brother->buffer, brother->num_bytes))
     return (false);
 
-  papplDevicePrintf(device, "\014");
+  // End of last page
+  papplDevicePrintf(device, "\x1a");
   papplDeviceFlush(device);
 
   // Free memory and return...
