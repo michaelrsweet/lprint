@@ -61,6 +61,7 @@ static pappl_pr_driver_t	lprint_drivers[] =
 #include "lprint-sii.h"
 #include "lprint-tspl.h"
 #include "lprint-zpl.h"
+#include "lprint-misc.h"
 };
 static char			lprint_spooldir[1024],
 					// Spool directory

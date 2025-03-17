@@ -212,6 +212,7 @@ lprint.o:	\
 		lprint-cpcl.h \
 		lprint-dymo.h \
 		lprint-epl2.h \
+		lprint-misc.h \
 		lprint-sii.h \
 		lprint-tspl.h \
 		lprint-zpl.h \
