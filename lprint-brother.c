@@ -384,8 +384,7 @@ lprint_brother_rendpage(
   if (brother->num_bytes > 0 && !papplDeviceWrite(device, brother->buffer, brother->num_bytes))
     return (false);
 
-  // Eject/cut
-  papplDevicePrintf(device, "\033iM%c\014", !strcmp(options->media.type, "continuous") ? 64 : 0);
+  papplDevicePrintf(device, "\014");
   papplDeviceFlush(device);
 
   // Free memory and return...
@@ -448,6 +447,9 @@ lprint_brother_rstartjob(
     darkness = 0;
   else if (darkness > 100)
     darkness = 100;
+
+  // 64 == auto-cut
+  papplDevicePrintf(device, "\033iM%c", !strcmp(options->media.type, "continuous") ? 64 : 0);
 
   return (papplDevicePrintf(device, "\033iD%c", 4 * darkness / 100 + 1));
 }
