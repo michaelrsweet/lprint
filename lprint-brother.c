@@ -448,7 +448,11 @@ lprint_brother_rstartjob(
     darkness = 100;
 
   // 64 == auto-cut
-  papplDevicePrintf(device, "\033iM%c", !strcmp(options->media.type, "continuous") ? 64 : 0);
+  // TODO: Is this not reversed? Continuous should mean *no* autocut?
+  //papplDevicePrintf(device, "\033iM%c", !strcmp(options->media.type, "continuous") ? 64 : 0);
+  papplDevicePrintf(device, "\033iM%c", 64);
+  // 8 = nochain (cut at at end)
+  papplDevicePrintf(device, "\033iK%c", 8);
 
   return (papplDevicePrintf(device, "\033iD%c", 4 * darkness / 100 + 1));
 }
