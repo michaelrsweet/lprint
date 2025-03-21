@@ -8,6 +8,7 @@
 //
 
 #include "lprint.h"
+#include "util.h"
 #ifdef LPRINT_EXPERIMENTAL
 
 
@@ -142,7 +143,7 @@ lprintBrother(
     data->bottom_top = 1;
 
     // Supported media...
-    data->num_media = (int)(sizeof(lprint_brother_ql_media) / sizeof(lprint_brother_ql_media[0]));
+    data->num_media = ARRAY_SIZE(lprint_brother_ql_media);
     memcpy(data->media, lprint_brother_ql_media, sizeof(lprint_brother_ql_media));
 
     papplCopyString(data->media_ready[0].size_name, "roll_dk2205-continuous_2.4x3.9in", sizeof(data->media_ready[0].size_name));
@@ -166,7 +167,7 @@ lprintBrother(
     data->bottom_top = 1;
 
     // Supported media...
-    data->num_media = (int)(sizeof(lprint_brother_pt_media) / sizeof(lprint_brother_pt_media[0]));
+    data->num_media = ARRAY_SIZE(lprint_brother_pt_media);
     memcpy(data->media, lprint_brother_pt_media, sizeof(lprint_brother_pt_media));
 
     data->num_source = 1;

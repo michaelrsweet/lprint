@@ -8,6 +8,7 @@
 //
 
 #include "lprint.h"
+#include "util.h"
 
 
 //
@@ -174,7 +175,7 @@ lprintEPL2(
   if (!strncmp(driver_name, "epl2_2inch-", 16))
   {
     // 2 inch printer...
-    data->num_media = (int)(sizeof(lprint_epl2_2inch_media) / sizeof(lprint_epl2_2inch_media[0]));
+    data->num_media = ARRAY_SIZE(lprint_epl2_2inch_media);
     memcpy(data->media, lprint_epl2_2inch_media, sizeof(lprint_epl2_2inch_media));
 
     papplCopyString(data->media_ready[0].size_name, "oe_2x3-label_2x3in", sizeof(data->media_ready[0].size_name));
@@ -183,7 +184,7 @@ lprintEPL2(
   else
   {
     // 4 inch printer...
-    data->num_media = (int)(sizeof(lprint_epl2_4inch_media) / sizeof(lprint_epl2_4inch_media[0]));
+    data->num_media = ARRAY_SIZE(lprint_epl2_4inch_media);
     memcpy(data->media, lprint_epl2_4inch_media, sizeof(lprint_epl2_4inch_media));
 
     papplCopyString(data->media_ready[0].size_name, "na_index-4x6_4x6in", sizeof(data->media_ready[0].size_name));

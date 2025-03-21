@@ -8,6 +8,7 @@
 //
 
 #include "lprint.h"
+#include "util.h"
 #include "static-resources/lprint-de-strings.h"
 #include "static-resources/lprint-en-strings.h"
 #include "static-resources/lprint-es-strings.h"
@@ -79,7 +80,7 @@ main(int  argc,				// I - Number of command-line arguments
   return (papplMainloop(argc, argv,
                         LPRINT_VERSION,
                         "Copyright &copy; 2019-2025 by Michael R Sweet. All Rights Reserved.",
-                        (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])),
+			ARRAY_SIZE(lprint_drivers),
                         lprint_drivers, autoadd_cb, driver_cb,
                         /*subcmd_name*/NULL, /*subcmd_cb*/NULL,
                         system_cb,
@@ -121,7 +122,7 @@ autoadd_cb(const char *device_info,	// I - Device information/name (not used)
     lprintZPLQueryDriver((pappl_system_t *)cbdata, device_uri, name, sizeof(name));
 
   // Then loop through the driver list to find the best match...
-  for (i = 0; i < (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])); i ++)
+  for (i = 0; i < ARRAY_SIZE(lprint_drivers); i ++)
   {
     if (!strcmp(name, lprint_drivers[i].name))
     {
@@ -226,7 +227,7 @@ driver_cb(
 
 
   // Copy make/model info...
-  for (i = 0; i < (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])); i ++)
+  for (i = 0; i < ARRAY_SIZE(lprint_drivers); i ++)
   {
     if (!strcmp(driver_name, lprint_drivers[i].name))
     {
@@ -649,7 +650,7 @@ system_cb(
   papplSystemSetMIMECallback(system, mime_cb, NULL);
   papplSystemAddMIMEFilter(system, LPRINT_TESTPAGE_MIMETYPE, "image/pwg-raster", lprintTestFilterCB, NULL);
 
-  papplSystemSetPrinterDrivers(system, (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])), lprint_drivers, autoadd_cb, create_cb, driver_cb, system);
+  papplSystemSetPrinterDrivers(system, ARRAY_SIZE(lprint_drivers), lprint_drivers, autoadd_cb, create_cb, driver_cb, system);
 
   papplSystemAddResourceData(system, "/favicon.png", "image/png", lprint_small_png, sizeof(lprint_small_png));
   papplSystemAddResourceData(system, "/navicon.png", "image/png", lprint_png, sizeof(lprint_png));
@@ -662,7 +663,7 @@ system_cb(
 
   papplSystemSetFooterHTML(system, "Copyright &copy; 2019-2024 by Michael R Sweet. All rights reserved.");
   papplSystemSetSaveCallback(system, (pappl_save_cb_t)papplSystemSaveState, (void *)lprint_statefile);
-  papplSystemSetVersions(system, (int)(sizeof(versions) / sizeof(versions[0])), versions);
+  papplSystemSetVersions(system, ARRAY_SIZE(versions), versions);
 
   if (!papplSystemLoadState(system, lprint_statefile))
   {

@@ -8,6 +8,7 @@
 //
 
 #include "lprint.h"
+#include "util.h"
 
 
 //
@@ -142,7 +143,7 @@ lprintTSPL(
   data->bottom_top = 1;
 
   // Supported media...
-  data->num_media = (int)(sizeof(lprint_tspl_media) / sizeof(lprint_tspl_media[0]));
+  data->num_media = ARRAY_SIZE(lprint_tspl_media);
   memcpy(data->media, lprint_tspl_media, sizeof(lprint_tspl_media));
 
   data->num_source = 1;

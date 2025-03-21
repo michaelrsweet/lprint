@@ -8,6 +8,7 @@
 //
 
 #include "lprint.h"
+#include "util.h"
 #ifdef LPRINT_EXPERIMENTAL
 
 
@@ -141,7 +142,7 @@ lprintCPCL(
 
   data->finishings |= PAPPL_FINISHINGS_TRIM;
 
-  data->num_media = (int)(sizeof(lprint_cpcl_media) / sizeof(lprint_cpcl_media[0]));
+  data->num_media = ARRAY_SIZE(lprint_cpcl_media);
   memcpy(data->media, lprint_cpcl_media, sizeof(lprint_cpcl_media));
 
   papplCopyString(data->media_ready[0].size_name, "na_index-4x6_4x6in", sizeof(data->media_ready[0].size_name));
