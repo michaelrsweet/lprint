@@ -97,3 +97,6 @@ jobs:
 
     - name: Build/Install LPrint
       run: make && sudo make install
+
+    - name: Static Analysis Using Clang
+      run: make clang

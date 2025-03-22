@@ -226,6 +226,13 @@ lprint.o:	\
 		static-resources/lprint-it-strings.h
 
 
+# Analyze code with the Clang static analyzer <https://clang-analyzer.llvm.org>
+clang:
+	clang $(CPPFLAGS) --analyze $(OBJS:.o=.c) 2>clang.log
+	rm -rf $(OBJS:.o=.plist)
+	test -s clang.log && (echo "$(GHA_ERROR)Clang detected issues."; echo ""; cat clang.log; exit 1) || exit 0
+
+
 # Notarize the lprint executable and make the macOS package...
 #
 # Set the APPLEID, CODESIGN_IDENTITY, PKGSIGN_IDENTITY, and TEAMID environment
