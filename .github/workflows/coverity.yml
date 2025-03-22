@@ -1,0 +1,73 @@
+name: Coverity Scan
+
+on: workflow_dispatch
+
+jobs:
+  coverity-scan:
+    runs-on: ubuntu-latest
+    environment: Coverity
+    steps:
+      - name: Checkout LPrint sources
+        uses: actions/checkout@v4
+
+      - name: Update build environment
+        run: sudo apt-get update --fix-missing -y
+
+      - name: Install prerequisites
+        run: sudo apt-get install -y avahi-daemon cppcheck libavahi-client-dev libgnutls28-dev libjpeg-dev libpam-dev libpng-dev libusb-1.0-0-dev zlib1g-dev
+
+      - name: Checkout libcups3
+        uses: actions/checkout@v4
+        with:
+          repository: OpenPrinting/libcups
+          path: libcups
+          submodules: recursive
+
+      - name: Configure libcups3
+        run: cd libcups; ./configure --enable-debug --disable-shared
+
+      - name: Build/install libcups3
+        run: cd libcups; make && sudo make install
+
+      - name: Checkout PAPPL 1.4.x
+        uses: actions/checkout@v4
+        with:
+          repository: michaelrsweet/pappl
+          ref: v1.4.x
+          path: pappl
+          submodules: recursive
+
+      - name: Configure PAPPL
+        run: cd pappl; ./configure --enable-debug --disable-shared
+
+      - name: Build/install PAPPL
+        run: cd pappl; make && sudo make install
+
+      - name: Download Coverity Build Tool
+        run: |
+          wget -q https://scan.coverity.com/download/linux64 --post-data token="$TOKEN&project=$GITHUB_REPOSITORY" -O cov-analysis-linux64.tar.gz
+          mkdir cov-analysis-linux64
+          tar xzf cov-analysis-linux64.tar.gz --strip 1 -C cov-analysis-linux64
+        env:
+          TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
+
+      - name: Configure LPrint
+        run: ./configure --enable-debug --enable-maintainer
+
+      - name: Build LPrint with cov-build
+        run: |
+          export PATH=`pwd`/cov-analysis-linux64/bin:$PATH
+          cov-build --dir cov-int make
+
+      - name: Submit the Result to Coverity Scan
+        run: |
+          tar czvf cov.tgz cov-int
+          curl \
+            --form token=$TOKEN \
+            --form email=michael.r.sweet@gmail.com \
+            --form file=@cov.tgz \
+            --form version="$GITHUB_REF" \
+            --form description="$GITHUB_SHA" \
+            "https://scan.coverity.com/builds?project=$GITHUB_REPOSITORY"
+        env:
+          TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
