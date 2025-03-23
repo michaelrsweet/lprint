@@ -1,7 +1,7 @@
 //
 // Common driver code for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2024 by Michael R Sweet.
+// Copyright © 2019-2025 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -740,6 +740,9 @@ lprintPackBitsCompress(
   while (srclptr <= srcend)
   {
     // Scan for literal and repeated sequences...
+    srclcount = srcptr - srclptr;
+    srcrcount = 0;
+
     while (srcptr <= srcend)
     {
       // Extend literal sequence, if any...
