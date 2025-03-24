@@ -8,6 +8,7 @@
 //
 
 #include "lprint.h"
+#include "util.h"
 
 
 //
@@ -136,7 +137,7 @@ lprintSII(
   data->bottom_top = 1;
 
   // Supported media...
-  data->num_media = (int)(sizeof(lprint_sii_media) / sizeof(lprint_sii_media[0]));
+  data->num_media = ARRAY_SIZE(lprint_sii_media);
   memcpy(data->media, lprint_sii_media, sizeof(lprint_sii_media));
 
   data->num_source = 1;

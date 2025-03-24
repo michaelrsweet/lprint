@@ -10,6 +10,7 @@
 //
 
 #include "lprint.h"
+#include "util.h"
 
 
 // Define to 1 to use run-length encoding, 0 for uncompressed
@@ -235,7 +236,7 @@ lprintZPL(
   if (!strncmp(driver_name, "zpl_2inch-", 16))
   {
     // 2 inch printer...
-    data->num_media = (int)(sizeof(lprint_zpl_2inch_media) / sizeof(lprint_zpl_2inch_media[0]));
+    data->num_media = ARRAY_SIZE(lprint_zpl_2inch_media);
     memcpy(data->media, lprint_zpl_2inch_media, sizeof(lprint_zpl_2inch_media));
 
     papplCopyString(data->media_ready[0].size_name, "oe_2x3-label_2x3in", sizeof(data->media_ready[0].size_name));
@@ -244,7 +245,7 @@ lprintZPL(
   else
   {
     // 4 inch printer...
-    data->num_media = (int)(sizeof(lprint_zpl_4inch_media) / sizeof(lprint_zpl_4inch_media[0]));
+    data->num_media = ARRAY_SIZE(lprint_zpl_4inch_media);
     memcpy(data->media, lprint_zpl_4inch_media, sizeof(lprint_zpl_4inch_media));
 
     papplCopyString(data->media_ready[0].size_name, "na_index-4x6_4x6in", sizeof(data->media_ready[0].size_name));

@@ -10,6 +10,7 @@
 //
 
 #include "lprint.h"
+#include "util.h"
 
 
 //
@@ -154,7 +155,7 @@ lprintDYMO(
     data->left_right = 1;
     data->bottom_top = 1;
 
-    data->num_media = (int)(sizeof(lprint_dymo_tape) / sizeof(lprint_dymo_tape[0]));
+    data->num_media = ARRAY_SIZE(lprint_dymo_tape);
     memcpy(data->media, lprint_dymo_tape, sizeof(lprint_dymo_tape));
 
     data->num_source = 1;
@@ -185,7 +186,7 @@ lprintDYMO(
     data->left_right = 100;
     data->bottom_top = 525;
 
-    data->num_media = (int)(sizeof(lprint_dymo_label) / sizeof(lprint_dymo_label[0]));
+    data->num_media = ARRAY_SIZE(lprint_dymo_label);
     memcpy(data->media, lprint_dymo_label, sizeof(lprint_dymo_label));
 
     if (strstr(driver_name, "-twin"))
