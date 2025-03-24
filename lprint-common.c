@@ -410,8 +410,8 @@ lprintMediaMatch(
   {
     // Ready media has changed...
     papplCopyString(pdata.media_ready[source].size_name, ret, sizeof(pdata.media_ready[source].size_name));
-    pdata.media_ready[source].size_width = pwg->width;
-    pdata.media_ready[source].size_width = pwg->length;
+    pdata.media_ready[source].size_width  = pwg->width;
+    pdata.media_ready[source].size_length = pwg->length;
 
     if (pwg->length == 0)
       papplCopyString(pdata.media_ready[source].type, "continuous", sizeof(pdata.media_ready[source].type));
