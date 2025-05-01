@@ -11,6 +11,7 @@ v1.4.0 - YYYY-MM-DD
 - Added 4 x 7.83 inch label size (Issue #144)
 - Fixed the margins for DYMO printers (Issue #132)
 - Fixed some Brother driver problems (Issue #167)
+- Fixed a NumCopies issue in the TSPL driver (Issue #188)
 
 
 v1.3.1 - 2024-02-09

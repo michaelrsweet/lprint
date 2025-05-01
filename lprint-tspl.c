@@ -255,7 +255,10 @@ lprint_tspl_rendpage(
   lprint_tspl_rwriteline(job, options, device, options->header.cupsHeight, NULL);
 
   // Eject
-  papplDevicePrintf(device, "PRINT %u,1\n", options->header.NumCopies);
+  if (options->header.NumCopies)
+    papplDevicePrintf(device, "PRINT %u,1\n", options->header.NumCopies);
+  else
+    papplDevicePuts(device, "PRINT 1,1\n");
   papplDeviceFlush(device);
 
   // Free memory and return...
