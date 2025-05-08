@@ -105,7 +105,7 @@ main(int  argc,				// I - Number of command-line arguments
     testEndMessage(false, "%s", strerror(errno));
 
   // Test specific values
-  for (i = 0; i < (int)(sizeof(cases) / sizeof(cases[0])); i ++)
+  for (i = 0; i < ARRAY_SIZE(cases); i ++)
   {
     testBegin("lprintPackBitsCompress(\"%s\")", cases[i].input);
     if ((dstlen = lprintPackBitsCompress(dst, (unsigned char *)cases[i].input, cases[i].inlen)) == cases[i].outlen)
