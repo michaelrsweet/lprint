@@ -87,6 +87,12 @@ static const char * const lprint_cpcl_media[] =
   "roll_min_1.25x0.25in"
 };
 
+static const char * const lprint_hma300e_media[] =
+{					// Supported media sizes
+  "roll_max_80x1000mm",
+  "roll_min_25x25mm"
+};
+
 
 //
 // Local functions...
@@ -122,7 +128,7 @@ lprintCPCL(
   data->rstartpage_cb = lprint_cpcl_rstartpage;
   data->rwriteline_cb = lprint_cpcl_rwriteline;
   data->status_cb     = lprint_cpcl_status;
-  data->format        = LPRINT_EPL2_MIMETYPE;
+  data->format        = LPRINT_CPCL_MIMETYPE;
 
   data->num_resolution = 1;
 
@@ -141,11 +147,22 @@ lprintCPCL(
 
   data->finishings |= PAPPL_FINISHINGS_TRIM;
 
-  data->num_media = (int)(sizeof(lprint_cpcl_media) / sizeof(lprint_cpcl_media[0]));
-  memcpy(data->media, lprint_cpcl_media, sizeof(lprint_cpcl_media));
+  if (!strncmp(driver_name, "cpcl_hma300e-", 13))
+  {
+    data->num_media = (int)(sizeof(lprint_hma300e_media) / sizeof(lprint_hma300e_media[0]));
+    memcpy(data->media, lprint_hma300e_media, sizeof(lprint_hma300e_media));
 
-  papplCopyString(data->media_ready[0].size_name, "na_index-4x6_4x6in", sizeof(data->media_ready[0].size_name));
-  papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
+    papplCopyString(data->media_ready[0].size_name, "roll_main_80x150mm", sizeof(data->media_ready[0].size_name));
+    papplCopyString(data->media_ready[0].type, "continuous", sizeof(data->media_ready[0].type));
+  }
+  else
+  {
+    data->num_media = (int)(sizeof(lprint_cpcl_media) / sizeof(lprint_cpcl_media[0]));
+    memcpy(data->media, lprint_cpcl_media, sizeof(lprint_cpcl_media));
+
+    papplCopyString(data->media_ready[0].size_name, "na_index-4x6_4x6in", sizeof(data->media_ready[0].size_name));
+    papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
+  }
 
   data->bottom_top = data->left_right = 1;
 

@@ -108,7 +108,7 @@ typedef ipp_copycb_t ipp_copy_cb_t;
 
 #  ifdef LPRINT_EXPERIMENTAL
 #    define LPRINT_BROTHER_PT_CBP_MIMETYPE "application/vnd.brother-pt-cbp"
-#    define LPRINT_CPCL_MIMETYPE "application/vnd.zebra-cpcl"
+#    define LPRINT_CPCL_MIMETYPE	"application/vnd.zebra-cpcl"
 #  endif // LPRINT_EXPERIMENTAL
 #  define LPRINT_EPL2_MIMETYPE		"application/vnd.eltron-epl"
 #  define LPRINT_SLP_MIMETYPE		"application/vnd.sii-slp"
