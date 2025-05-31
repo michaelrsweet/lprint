@@ -1,7 +1,7 @@
 //
 // Main entry for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2024 by Michael R Sweet.
+// Copyright © 2019-2025 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -279,6 +279,8 @@ driver_cb(
 #ifdef LPRINT_EXPERIMENTAL
   if (!strncmp(driver_name, "brother_", 8))
     ret = lprintBrother(system, driver_name, device_uri, device_id, data, attrs, cbdata);
+  else if (!strncmp(driver_name, "cpcl_", 5))
+    ret = lprintCPCL(system, driver_name, device_uri, device_id, data, attrs, cbdata);
   else
 #endif // LPRINT_EXPERIMENTAL
   if (!strncmp(driver_name, "dymo_", 5))
