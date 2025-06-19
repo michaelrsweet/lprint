@@ -12,6 +12,9 @@ v1.4.0 - YYYY-MM-DD
 - Fixed the margins for DYMO printers (Issue #132)
 - Fixed some Brother driver problems (Issue #167)
 - Fixed a NumCopies issue in the TSPL driver (Issue #188)
+- Added support new printers:
+  - Arkscan 2054a
+  - HP KE103
 
 
 v1.3.1 - 2024-02-09
