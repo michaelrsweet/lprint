@@ -360,7 +360,7 @@ lprint_cpcl_rstartpage(
     return (false);
 
   // Initialize the printer...
-  papplDevicePrintf(device, "! 0 %u %u %u %u\r\n", options->header.HWResolution[0], options->header.HWResolution[1], options->header.cupsHeight, options->header.NumCopies);
+  papplDevicePrintf(device, "! 0 %u %u %u %u\r\n", options->header.HWResolution[0], options->header.HWResolution[1], options->header.cupsHeight, options->header.NumCopies ? options->header.NumCopies : 1);
   papplDevicePrintf(device, "PAGE-WIDTH %u\r\n", options->header.cupsWidth);
   papplDevicePrintf(device, "PAGE-HEIGHT %u\r\n", options->header.cupsHeight);
 
