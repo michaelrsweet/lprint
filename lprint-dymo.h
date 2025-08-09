@@ -35,6 +35,8 @@
   "MFG:DYMO;MDL:LabelWriter ;", NULL },
 { "dymo_lw-400-turbo",       "DYMO LabelWriter 400 Turbo",
   "MFG:DYMO;MDL:LabelWriter ;", NULL },
+{ "dymo_lw-400-twin-turbo",  "DYMO LabelWriter Twin Turbo",
+  "MFG:DYMO;MDL:LabelWriter ;", NULL },
 { "dymo_lw-450",             "DYMO LabelWriter 450",
   "MFG:DYMO;MDL:LabelWriter 450;", NULL },
 { "dymo_lw-450-duo-label",   "DYMO LabelWriter 450 DUO Label",
