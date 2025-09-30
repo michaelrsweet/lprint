@@ -9,13 +9,11 @@ v1.4.0 - YYYY-MM-DD
 - Now enable the TLS web interface unless the "no-tls" option is specified
   (Issue #161)
 - Added 4 x 7.83 inch label size (Issue #144)
+- Added Arkscan 2054a and HP KE103 (Issue #165)
 - Added DYMO LabelWriter Twin Turbo driver (Issue #193)
 - Fixed the margins for DYMO printers (Issue #132)
 - Fixed some Brother driver problems (Issue #167)
 - Fixed a NumCopies issue in the TSPL driver (Issue #188)
-- Added support new printers:
-  - Arkscan 2054a
-  - HP KE103
 
 
 v1.3.1 - 2024-02-09

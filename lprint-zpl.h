@@ -1,7 +1,7 @@
 //
 // ZPL driver table for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2023 by Michael R Sweet.
+// Copyright © 2019-2025 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -29,7 +29,7 @@
   "MANUFACTURER:Zebra Technologies;COMMAND SET:ZPL;MODEL:ZTC GX420d;", NULL },
 { "zpl_4inch-203dpi-dt_gx430d",	"Zebra GX430d",
   "MANUFACTURER:Zebra Technologies;COMMAND SET:ZPL;MODEL:ZTC GX430d;", NULL },
-{ "zpl_4inch-300dpi-dt_hp-ke103",      "HP KE103",
+{ "zpl_4inch-300dpi-dt_hp-ke103", "HP KE103",
   "MFG:HP ;CMD:Bixolon_01;MODEL:KE103;", NULL },
 { "zpl_4inch-203dpi-dt_zd621",	"Zebra ZD621d 203dpi",
   "MANUFACTURER:Zebra Technologies ;COMMAND SET:ZPL;MODEL:ZTC ZD621-203dpi ZPL;", NULL },
