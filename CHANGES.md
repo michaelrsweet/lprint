@@ -8,6 +8,7 @@ v1.4.0 - YYYY-MM-DD
 - Updated the maximum label width of TSPL printers to 105mm (Issue #141)
 - Now enable the TLS web interface unless the "no-tls" option is specified
   (Issue #161)
+- Added Vevor Y428BT driver (Issue #130)
 - Added 4 x 7.83 inch label size (Issue #144)
 - Added Arkscan 2054a and HP KE103 (Issue #165)
 - Added DYMO LabelWriter Twin Turbo driver (Issue #193)
