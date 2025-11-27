@@ -74,6 +74,45 @@ static const char * const lprint_dymo_label[] =
   "roll_min_0.25x0.25in"
 };
 
+static const char * const lprint_dymo_xl_label[] =
+{					// Supported media sizes for labels
+  "oe_thin-multipurpose-label_0.375x2.8125in",
+  "oe_library-barcode-label_0.5x1.875in",
+  "oe_hanging-file-tab-insert_0.5625x2in",
+  "oe_file-folder-label_0.5625x3.4375in",
+  "oe_return-address-label_0.75x2in",
+  "oe_barcode-label_0.75x2.5in",
+  "oe_video-spine-label_0.75x5.875in",
+  "oe_price-tag-label_0.9375x0.875in",
+  "oe_square-multipurpose-label_1x1in",
+  "oe_book-spine-label_1x1.5in",
+  "oe_sm-multipurpose-label_1x2.125in",
+  "oe_2-up-file-folder-label_1.125x3.4375in",
+  "oe_address-label_1.125x3.5in",
+  "oe_internet-postage-label_1.25x1.625in",
+  "oe_lg-address-label_1.4x3.5in",
+  "oe_video-top-label_1.8x3.1in",
+  "oe_multipurpose-label_2x2.3125in",
+  "oe_md-appointment-card_2x3.5in",
+  "oe_lg-multipurpose-label_2.125x.75in",
+  "oe_shipping-label_2.125x4in",
+  "oe_continuous-label_2.125x3600in",
+  "oe_md-multipurpose-label_2.25x1.25in",
+  "oe_media-label_2.25x2.25in",
+  "oe_2-up-address-label_2.25x3.5in",
+  "oe_name-badge-label_2.25x4in",
+  "oe_3-part-postage-label_2.25x7in",
+  "oe_2-part-internet-postage-label_2.25x7.5in",
+  "oe_shipping-label_2.3125x4in",
+  "oe_internet-postage-label_2.3125x7in",
+  "oe_internet-postage-confirmation-label_2.3125x10.5in",
+  "om_diskette-label_54x70mm",
+  "na_index_4x6in",
+
+  "roll_max_4.09x3600in",
+  "roll_min_0.25x0.25in"
+};
+
 static const char * const lprint_dymo_tape[] =
 {					// Supported media sizes for tape
   "oe_thin-1in-tape_0.25x1in",
@@ -185,8 +224,16 @@ lprintDYMO(
     data->left_right = 100;
     data->bottom_top = 525;
 
-    data->num_media = (int)(sizeof(lprint_dymo_label) / sizeof(lprint_dymo_label[0]));
-    memcpy(data->media, lprint_dymo_label, sizeof(lprint_dymo_label));
+    if (!strcmp(driver_name, "dymo_lw-4xl"))
+    {
+      data->num_media = (int)(sizeof(lprint_dymo_xl_label) / sizeof(lprint_dymo_xl_label[0]));
+      memcpy(data->media, lprint_dymo_xl_label, sizeof(lprint_dymo_xl_label));
+    }
+    else
+    {
+      data->num_media = (int)(sizeof(lprint_dymo_label) / sizeof(lprint_dymo_label[0]));
+      memcpy(data->media, lprint_dymo_label, sizeof(lprint_dymo_label));
+    }
 
     if (strstr(driver_name, "-twin"))
     {

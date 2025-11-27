@@ -15,6 +15,7 @@ v1.4.0 - YYYY-MM-DD
 - Fixed the margins for DYMO printers (Issue #132)
 - Fixed some Brother driver problems (Issue #167)
 - Fixed a NumCopies issue in the TSPL driver (Issue #188)
+- Fixed list of label sizes for DYMO LabelWriter 4XL (Issue #198)
 
 
 v1.3.1 - 2024-02-09
