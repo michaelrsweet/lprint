@@ -1,6 +1,10 @@
 LPrint - A Label Printer Application
 ====================================
 
+> **Note:** Current master branch has several known issues and is *not* suitable
+> for packaging!  Please do not package Git snapshots and wait for a proper
+> release...
+
 LPrint implements printing for a variety of common label and receipt printers
 connected via network or USB.  Features include:
 
