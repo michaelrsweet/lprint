@@ -1,7 +1,7 @@
 dnl
 dnl Configuration script for LPrint, a Label Printer Application
 dnl
-dnl Copyright © 2019-2024 by Michael R Sweet
+dnl Copyright © 2019-2026 by Michael R Sweet
 dnl
 dnl Licensed under Apache License v2.0.  See the file "LICENSE" for more
 dnl information.
@@ -13,7 +13,7 @@ AC_PREREQ(2.60)
 
 
 dnl Package name and version...
-AC_INIT([lprint], [1.4unstable], [https://github.com/michaelrsweet/lprint/issues], [lprint], [https://michaelrsweet.github.io/lprint])
+AC_INIT([lprint], [1.4.0.unstable], [https://github.com/michaelrsweet/lprint/issues], [lprint], [https://michaelrsweet.github.io/lprint])
 AC_CONFIG_HEADERS([config.h])
 
 LPRINT_VERSION="AC_PACKAGE_VERSION"
