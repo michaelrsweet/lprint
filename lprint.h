@@ -26,6 +26,13 @@
 
 
 //
+// Utility macros...
+//
+
+#  define DIV_ROUND_CLOSEST(n, d) ((n + d / 2) / d)
+
+
+//
 // Function annotations...
 //
 
