@@ -81,6 +81,14 @@ commands to install LPrint to "/usr/local/bin":
     make
     sudo make install
 
+On Linux, LPrint installs a udev rule that allows users in the "lp" group to
+access USB printers directly.  Make sure your user account is in the "lp" group
+before running LPrint:
+
+    sudo usermod -aG lp USERNAME
+
+You will need to log out and back in for the group change to take effect.
+
 The "configure" script supports the usual autoconf options - run:
 
     ./configure --help

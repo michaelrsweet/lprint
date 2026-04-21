@@ -162,6 +162,28 @@ AC_ARG_WITH([systemd], AS_HELP_STRING([--with-systemd[=PATH]], [install systemd 
 ])
 
 
+dnl udev support...
+udevdir=""
+AC_SUBST([udevdir])
+
+AC_ARG_WITH([udev], AS_HELP_STRING([--with-udev[=PATH]], [install udev rules, default=auto]), [
+    AS_CASE([$withval], [yes], [
+	with_udev=yes
+	udevdir="\$(prefix)/lib/udev/rules.d"
+    ], [no], [
+	with_udev=no
+    ], [
+	with_udev=yes
+	udevdir="$withval"
+    ])
+], [
+    AS_IF([test $host_os_name != darwin], [
+	with_udev=yes
+	udevdir="\$(prefix)/lib/udev/rules.d"
+    ])
+])
+
+
 dnl Support for experimental drivers...
 AC_ARG_ENABLE([experimental], AS_HELP_STRING([--enable-experimental], [turn on experimental drivers, default=no]))
 AS_IF([test x$enable_experimental = xyes], [

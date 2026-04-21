@@ -58,6 +58,7 @@ sharedstatedir	=	@sharedstatedir@
 srcdir		=	@srcdir@
 sysconfdir	=	@sysconfdir@
 top_srcdir	=	@top_srcdir@
+udevdir		=	@udevdir@
 unitdir		=	@unitdir@
 
 BUILDROOT	=	$(DSTROOT)$(RPM_BUILD_ROOT)$(DESTDIR)
@@ -102,6 +103,8 @@ OBJS		=	\
 			lprint-zpl.o
 TARGETS		=	\
 			lprint
+UDEVRULES	=	\
+			60-lprint.rules
 
 
 TESTOBJS	=	\
@@ -146,10 +149,17 @@ install:	all
 	    echo "Installing launchd service to $(BUILDROOT)/Library/LaunchDaemons..."; \
 	    $(INSTALL) -d -m 755 $(BUILDROOT)/Library/LaunchDaemons; \
 	    $(INSTALL) -c -m 644 org.msweet.lprint.plist $(BUILDROOT)/Library/LaunchDaemons; \
-	elif test "x$(unitdir)" != x; then \
-	    echo "Installing systemd service to $(BUILDROOT)$(unitdir)..."; \
-	    $(INSTALL) -d -m 755 $(BUILDROOT)$(unitdir); \
-	    $(INSTALL) -c -m 644 lprint.service $(BUILDROOT)$(unitdir); \
+	else \
+	    if test "x$(udevdir)" != x; then \
+	        echo "Installing udev rules to $(BUILDROOT)$(udevdir)..."; \
+	        $(INSTALL) -d -m 755 $(BUILDROOT)$(udevdir); \
+	        $(INSTALL) -c -m 644 60-lprint.rules $(BUILDROOT)$(udevdir); \
+	    fi; \
+	    if test "x$(unitdir)" != x; then \
+	        echo "Installing systemd service to $(BUILDROOT)$(unitdir)..."; \
+	        $(INSTALL) -d -m 755 $(BUILDROOT)$(unitdir); \
+	        $(INSTALL) -c -m 644 lprint.service $(BUILDROOT)$(unitdir); \
+	    fi \
 	fi
 
 
