@@ -29,7 +29,7 @@
 // Utility macros...
 //
 
-#  define DIV_ROUND_CLOSEST(n, d) ((n + d / 2) / d)
+#  define LPRINT_PWG_TO_MM(n) ((n + 50) / 100)
 
 
 //

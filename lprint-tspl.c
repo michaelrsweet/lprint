@@ -322,8 +322,8 @@ lprint_tspl_rstartpage(
     darkness = 100;
 
   papplDevicePrintf(device, "SIZE %d mm,%d mm\n",
-      DIV_ROUND_CLOSEST(options->media.size_width, 100),
-      DIV_ROUND_CLOSEST(options->media.size_length, 100));
+      LPRINT_PWG_TO_MM(options->media.size_width),
+      LPRINT_PWG_TO_MM(options->media.size_length));
 
   switch (options->orientation_requested)
   {
