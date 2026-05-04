@@ -132,8 +132,8 @@ lprintSII(
   data->x_default = data->y_default = data->x_resolution[0];
 
   // Basically borderless...
-  data->left_right = 1;
-  data->bottom_top = 1;
+  data->left_right = 1; // Should be 0.5mm?
+  data->bottom_top = 1; // Should be 3mm?
 
   // Supported media...
   data->num_media = (int)(sizeof(lprint_sii_media) / sizeof(lprint_sii_media[0]));
