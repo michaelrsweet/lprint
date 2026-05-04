@@ -26,6 +26,13 @@
 
 
 //
+// Utility macros...
+//
+
+#  define LPRINT_PWG_TO_MM(n) ((n + 50) / 100)
+
+
+//
 // Function annotations...
 //
 

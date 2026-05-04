@@ -321,7 +321,9 @@ lprint_tspl_rstartpage(
   else if (darkness > 100)
     darkness = 100;
 
-  papplDevicePrintf(device, "SIZE %d mm,%d mm\n", options->media.size_width / 100, options->media.size_length / 100);
+  papplDevicePrintf(device, "SIZE %d mm,%d mm\n",
+      LPRINT_PWG_TO_MM(options->media.size_width),
+      LPRINT_PWG_TO_MM(options->media.size_length));
 
   switch (options->orientation_requested)
   {

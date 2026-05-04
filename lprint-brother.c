@@ -363,8 +363,8 @@ lprint_brother_rendpage(
   buffer[ 2] = 'z';
   buffer[ 3] = !strncmp(options->media.type, "continuous", 10) ? 0x04 : 0x0c;
   buffer[ 4] = 0;
-  buffer[ 5] = options->media.size_width / 100;
-  buffer[ 6] = options->media.size_length / 100;
+  buffer[ 5] = LPRINT_PWG_TO_MM(options->media.size_width);
+  buffer[ 6] = LPRINT_PWG_TO_MM(options->media.size_length);
 #if 1
   buffer[ 7] = options->header.cupsHeight & 255;
   buffer[ 8] = (options->header.cupsHeight >> 8) & 255;
