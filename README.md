@@ -53,25 +53,25 @@ The following printers are currently supported:
 - Zebra/Eltron EPL2 printers
 - Zebra ZPL printers
 
-Additional drivers for Brother PT/QL and Zebra CPCL printers can be enabled
-using the `--enable-experimental` configure option, however they are untested
-and/or not fully functional.  Other label printers will be added as time and
-access to printers permits.
+Additional drivers for Brother PT/QL, ESC/POS, and Zebra CPCL printers can be
+enabled using the `--enable-experimental` configure option, however they are
+untested and/or not fully functional.  Other label and receipt printers will be
+added as time and access to printers permits.
 
 
 Standards
 ---------
 
-Through PAPPL, LPrint implements PWG 5100.14-2020: IPP Everywhere™ and the IPP
-Label Printing Extensions v1.0 for each printer, and has a partial
-implementation of PWG 5100.22-2019: IPP System Service v1.0 for managing the
+Through PAPPL, LPrint implements PWG 5100.14-2020: IPP Everywhere™ v1.1 and the
+IPP Label Printing Extensions v1.0 for each printer, and has a partial
+implementation of PWG 5100.22-2025: IPP System Service v1.1 for managing the
 print queues and default printer.
 
 
 Legal Stuff
 -----------
 
-LPrint is Copyright © 2019-2025 by Michael R Sweet.
+LPrint is Copyright © 2019-2026 by Michael R Sweet.
 
 LPrint is licensed under the Apache License Version 2.0.  See the files
 "LICENSE" and "NOTICE" for more information.

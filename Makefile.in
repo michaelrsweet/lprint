@@ -1,7 +1,7 @@
 #
 # Makefile for LPrint, a Label Printer Application
 #
-# Copyright © 2019-2024 by Michael R Sweet
+# Copyright © 2019-2026 by Michael R Sweet
 #
 # Licensed under Apache License v2.0.  See the file "LICENSE" for more
 # information.
@@ -96,6 +96,7 @@ OBJS		=	\
 			lprint-cpcl.o \
 			lprint-dymo.o \
 			lprint-epl2.o \
+			lprint-escpos.o \
 			lprint-sii.o \
 			lprint-testpage.o \
 			lprint-tspl.o \
@@ -212,6 +213,7 @@ lprint.o:	\
 		lprint-cpcl.h \
 		lprint-dymo.h \
 		lprint-epl2.h \
+		lprint-escpos.h \
 		lprint-sii.h \
 		lprint-tspl.h \
 		lprint-zpl.h \
