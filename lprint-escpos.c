@@ -17,6 +17,7 @@
 
 typedef struct lprint_escpos_s		// ESC/POS driver data
 {
+  int		max_width;		// Roll width in hundredths of millimeters
   lprint_dither_t dither;		// Dithering buffer
   bool		marked;			// Did we print anything yet?
   int		feed;			// Accumulated feed
@@ -142,8 +143,15 @@ lprint_escpos_init(
     pappl_job_t     *job,		// I - Job
     lprint_escpos_t *escpos)		// O - Driver data
 {
+  const char	*driver_name = papplPrinterGetDriverName(papplJobGetPrinter(job));
+					// Driver name
+
+
   // Clear the ESC/POS data...
   memset(escpos, 0, sizeof(lprint_escpos_t));
+
+  // Get the maximum width of the print head from the driver name ("escpos_MAXWIDTHmm")...
+  escpos->max_width = (int)(100 * strtol(driver_name + 7, NULL, 10));
 }
 
 
@@ -240,13 +248,19 @@ lprint_escpos_rendpage(
 
   if (options->finishings & PAPPL_FINISHINGS_TRIM)
   {
+    // Feed 1"...
+    papplDevicePrintf(device, "\033J%c", 203);
+
     // Cut...
     papplDevicePuts(device, "\033i");
   }
   else
   {
-    // Feed 1/4"...
-    papplDevicePrintf(device, "\033J%c", 51);
+    // Feed 1"...
+    papplDevicePrintf(device, "\033J%c", 203);
+
+    // Cut...
+    papplDevicePuts(device, "\033i");
   }
 
   // Free memory and return...
@@ -268,6 +282,7 @@ lprint_escpos_rstartjob(
 {
   lprint_escpos_t *escpos = (lprint_escpos_t *)calloc(1, sizeof(lprint_escpos_t));
 					// ESC/POS driver data
+  int		left_margin;		// Left margin in dots
 
 
   (void)options;
@@ -278,7 +293,16 @@ lprint_escpos_rstartjob(
   papplJobSetData(job, escpos);
 
   // Reset the printer...
-  return (papplDevicePuts(device, "\033@"));
+  if (!papplDevicePuts(device, "\033@"))
+    return (false);
+
+  // Set the left margin based on the difference in the media width and the
+  // maximum supported by the printer (the roll is centered)...
+  left_margin = options->printer_resolution[0] * (escpos->max_width - options->media.size_width) / 2540 / 2;
+  if (left_margin < 0)
+    left_margin = 0;
+
+  return (papplDevicePrintf(device, "\035L%c%c", left_margin & 255, left_margin >> 8));
 }
 
 
@@ -348,7 +372,7 @@ lprint_escpos_rwriteline(
     {
       if (escpos->feed > 255)
       {
-        papplDevicePuts(device, "\033J\377");
+        papplDevicePrintf(device, "\033J%c", 255);
         escpos->feed -= 255;
       }
       else
