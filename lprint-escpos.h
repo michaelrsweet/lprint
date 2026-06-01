@@ -11,4 +11,5 @@
   "MFG:;MDL:;", NULL },
 { "escpos_80mm",             "80mm ESC/POS Receipt Printer",
   "MFG:;MDL:;", NULL },
-
+{ "escpos_80mm_tm-m30iii",   "EPSON TM-m30III Receipt Printer",
+  "MFG:EPSON;MDL:TM-m30III;", NULL },
