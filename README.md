@@ -48,15 +48,16 @@ Supported Printers
 The following printers are currently supported:
 
 - DYMO LabelWriter printers
+- ESC/POS receipt printers such as the EPSON TM-series
 - Seiko Instruments SLP printers
 - TSPL/TSPL2 printers such as the Rollo X1038
 - Zebra/Eltron EPL2 printers
 - Zebra ZPL printers
 
-Additional drivers for Brother PT/QL, ESC/POS, and Zebra CPCL printers can be
-enabled using the `--enable-experimental` configure option, however they are
-untested and/or not fully functional.  Other label and receipt printers will be
-added as time and access to printers permits.
+Additional drivers for Brother PT/QL, and Zebra CPCL printers can be enabled
+using the `--enable-experimental` configure option, however they are untested
+and/or not fully functional.  Other label and receipt printers will be added as
+time and access to printers permits.
 
 
 Standards

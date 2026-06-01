@@ -8,7 +8,6 @@
 //
 
 #include "lprint.h"
-#ifdef LPRINT_EXPERIMENTAL
 
 
 //
@@ -59,6 +58,7 @@ static bool	lprint_escpos_rstartjob(pappl_job_t *job, pappl_pr_options_t *option
 static bool	lprint_escpos_rstartpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page);
 static bool	lprint_escpos_rwriteline(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned y, const unsigned char *line);
 static bool	lprint_escpos_status(pappl_printer_t *printer);
+static bool	lprint_escpos_update_reasons(pappl_printer_t *printer, pappl_job_t *job, pappl_device_t *device);
 
 
 //
@@ -180,6 +180,9 @@ lprint_escpos_printfile(
   // Reset the printer...
   lprint_escpos_rstartjob(job, options, device);
 
+  // Update status...
+  lprint_escpos_update_reasons(papplJobGetPrinter(job), job, device);
+
   // Copy the raw file...
   papplJobSetImpressions(job, 1);
 
@@ -200,7 +203,11 @@ lprint_escpos_printfile(
   }
   close(fd);
 
-  lprint_escpos_rstartjob(job, options, device);
+  // Update status...
+  lprint_escpos_update_reasons(papplJobGetPrinter(job), job, device);
+
+  // Reset the printer at the end of the job...
+  lprint_escpos_rendjob(job, options, device);
 
   papplJobSetImpressionsCompleted(job, 1);
 
@@ -220,13 +227,18 @@ lprint_escpos_rendjob(
 {
   lprint_escpos_t *escpos = (lprint_escpos_t *)papplJobGetData(job);
 					// ESC/POS driver data
+  bool		ret;			// Return value
+
 
   (void)options;
 
   free(escpos);
   papplJobSetData(job, NULL);
 
-  return (true);
+  // Reset the printer...
+  ret = papplDevicePuts(device, "\033@") > 0;
+
+  return (ret);
 }
 
 
@@ -249,25 +261,20 @@ lprint_escpos_rendpage(
 
   lprint_escpos_rwriteline(job, options, device, options->header.cupsHeight, NULL);
 
-  if (options->finishings & PAPPL_FINISHINGS_TRIM)
-  {
-    // Feed 1"...
-    papplDevicePrintf(device, "\033J%c", 203);
+  // Feed 1"...
+  papplDevicePrintf(device, "\033J%c", 203);
 
-    // Cut...
-    papplDevicePuts(device, "\033i");
-  }
-  else
+//  if (options->finishings & PAPPL_FINISHINGS_TRIM)
   {
-    // Feed 1"...
-    papplDevicePrintf(device, "\033J%c", 203);
-
     // Cut...
     papplDevicePuts(device, "\033i");
   }
 
   // Free memory and return...
   lprintDitherFree(&escpos->dither);
+
+  // Update status...
+  lprint_escpos_update_reasons(papplJobGetPrinter(job), job, device);
 
   return (true);
 }
@@ -296,7 +303,7 @@ lprint_escpos_rstartjob(
   papplJobSetData(job, escpos);
 
   // Reset the printer...
-  if (!papplDevicePuts(device, "\033@"))
+  if (papplDevicePuts(device, "\033@") < 0)
     return (false);
 
   // Set the left margin based on the difference in the media width and the
@@ -305,7 +312,7 @@ lprint_escpos_rstartjob(
   if (left_margin < 0)
     left_margin = 0;
 
-  return (papplDevicePrintf(device, "\035L%c%c", left_margin & 255, left_margin >> 8));
+  return (papplDevicePrintf(device, "\035L%c%c", left_margin & 255, left_margin >> 8) > 0);
 }
 
 
@@ -326,6 +333,10 @@ lprint_escpos_rstartpage(
 
   (void)page;
 
+  // Update status...
+  lprint_escpos_update_reasons(papplJobGetPrinter(job), job, device);
+
+  // Setup dithering buffer...
   if (!lprintDitherAlloc(&escpos->dither, job, options, CUPS_CSPACE_K, 1.0))
     return (false);
 
@@ -419,8 +430,65 @@ static bool				// O - `true` on success, `false` on failure
 lprint_escpos_status(
     pappl_printer_t *printer)		// I - Printer
 {
-  (void)printer;
+  pappl_device_t	*device;	// Connection to printer
+  bool			ret;		// Return value
+
+
+  if ((device = papplPrinterOpenDevice(printer)) == NULL)
+  {
+    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to open device for status.");
+    return (false);
+  }
+
+  // Get the printer status...
+  ret = lprint_escpos_update_reasons(printer, NULL, device);
+
+  papplPrinterCloseDevice(printer);
+
+  return (ret);
+}
+
+
+//
+// 'lprint_escpos_update_reasons()' - Update "printer-state-reasons" values.
+//
+
+static bool				// O - `true` on success, `false` on failure
+lprint_escpos_update_reasons(
+    pappl_printer_t *printer,		// I - Printer
+    pappl_job_t     *job,		// I - Current job or `NULL` if none
+    pappl_device_t  *device)		// I - Connection to device
+{
+  unsigned char		status;		// Status byte
+  pappl_preason_t	reasons;	// "printer-state-reasons" values
+
+
+  // Get the printer status...
+  if (papplDevicePuts(device, "\033v") < 0)
+  {
+    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to send paper sensor status command.");
+    return (false);
+  }
+
+  if (papplDeviceRead(device, &status, 1) < 0)
+  {
+    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to read paper sensor status response.");
+    return (false);
+  }
+
+  papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Paper sensor status is 0x%02X.", status);
+
+  reasons = PAPPL_PREASON_NONE;
+
+  if ((status & 0x03) == 0x03)
+    reasons |= PAPPL_PREASON_MEDIA_LOW;
+  if ((status & 0x0c) == 0x00c)
+    reasons |= PAPPL_PREASON_MEDIA_EMPTY;
+
+  if (job && (reasons & PAPPL_PREASON_MEDIA_EMPTY))
+    reasons |= PAPPL_PREASON_MEDIA_NEEDED;
+
+  papplPrinterSetReasons(printer, reasons, PAPPL_PREASON_MEDIA_EMPTY | PAPPL_PREASON_MEDIA_LOW | PAPPL_PREASON_MEDIA_NEEDED);
 
   return (true);
 }
-#endif // LPRINT_EXPERIMENTAL

@@ -58,9 +58,7 @@ static pappl_pr_driver_t	lprint_drivers[] =
 #endif // LPRINT_EXPERIMENTAL
 #include "lprint-dymo.h"
 #include "lprint-epl2.h"
-#ifdef LPRINT_EXPERIMENTAL
-#  include "lprint-escpos.h"
-#endif // LPRINT_EXPERIMENTAL
+#include "lprint-escpos.h"
 #include "lprint-sii.h"
 #include "lprint-tspl.h"
 #include "lprint-zpl.h"
@@ -290,10 +288,8 @@ driver_cb(
     ret = lprintDYMO(system, driver_name, device_uri, device_id, data, attrs, cbdata);
   else if (!strncmp(driver_name, "epl2_", 5))
     ret = lprintEPL2(system, driver_name, device_uri, device_id, data, attrs, cbdata);
-#ifdef LPRINT_EXPERIMENTAL
   else if (!strncmp(driver_name, "escpos_", 7))
     ret = lprintESCPOS(system, driver_name, device_uri, device_id, data, attrs, cbdata);
-#endif // LPRINT_EXPERIMENTAL
   else if (!strncmp(driver_name, "sii_", 4))
     ret = lprintSII(system, driver_name, device_uri, device_id, data, attrs, cbdata);
   else if (!strncmp(driver_name, "tspl_", 5))
