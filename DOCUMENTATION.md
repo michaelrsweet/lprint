@@ -1,8 +1,8 @@
 LPrint Documentation
 ====================
 
-LPrint v1.3.1 - Month DD, YYYY
-Copyright 2019-2024 by Michael R Sweet
+LPrint v1.4.0 - Month DD, YYYY
+Copyright 2019-2026 by Michael R Sweet
 
 LPrint is licensed under the Apache License Version 2.0.  See the files
 "LICENSE" and "NOTICE" for more information.
@@ -25,32 +25,32 @@ Table of Contents
 Overview
 --------
 
-LPrint is a label printer application for macOS® and Linux®.  I wrote it in
-response to criticism that coming changes in CUPS will leave users of label
-printers in the cold - see [Apple CUPS Github issue #5271][APPLE5271].
+LPrint is a label and receipt printer application for macOS® and Linux®.  I
+wrote it in response to criticism that coming changes in CUPS will leave users
+of label printers in the cold - see [Apple CUPS Github issue #5271][APPLE5271].
 
 [APPLE5271]: https://github.com/apple/cups/issues/5271
 
-Basically, LPrint is a print spooler optimized for label printing.  It accepts
-"raw" print data as well as PNG images (like those used for shipping labels by
-most shippers' current web APIs) and has built-in "drivers" to send the print
-data to USB and network-connected label printers.  The spooler also tries to
-keep the labels moving by merging jobs over a single connection to the printer
-rather than starting and stopping like CUPS does to support a wider variety of
-printers.
+Basically, LPrint is a print spooler optimized for label and receipt printing.
+It accepts "raw" print data as well as PNG images (like those used for shipping
+labels by most shippers' current web APIs) and has built-in "drivers" to send
+the print data to USB and network-connected label and receipt printers.  The
+spooler also tries to keep printing moving by merging jobs over a single
+connection to the printer rather than starting and stopping like CUPS does to
+support a wider variety of printers.
 
 LPrint supports the full range of options and features supported by the
-embedded drivers - currently most DYMO, Seiko, TSPL, and Zebra EPL2/ZPL label
-printers.  Whenever possible, LPrint will auto-detect the make and model of your
-printer and its installed capabilities.  And you can configure the default
-values of all options as well as manually configure the media that is loaded in
-each printer.
+embedded drivers - currently most DYMO, ESC/POS, Seiko, TSPL, and Zebra EPL2/ZPL
+label and receipt printers.  Whenever possible, LPrint will auto-detect the make
+and model of your printer and its installed capabilities.  And you can configure
+the default values of all options as well as manually configure the media that
+is loaded in each printer.
 
-LPrint also offers a simple network server mode that makes your label printers
-appear as IPP Everywhere™/AirPrint™/Mopria™ printers on your network.  Thus, any
+LPrint also offers a simple network server mode that makes your printers appear
+as IPP Everywhere™/AirPrint™/Mopria™ printers on your network.  Thus, any
 Android™, Chrome OS™, iOS®, Linux®, macOS®, or Windows® 10/11 client can use any
-label printer supported by LPrint.  And you can, of course, send jobs from
-LPrint to an LPrint server on the network.
+printer supported by LPrint.  And you can, of course, send jobs from LPrint to
+an LPrint server on the network.
 
 Finally, LPrint offers command-line and web-based monitoring of printer and
 job status.
