@@ -21,6 +21,9 @@ typedef struct lprint_escpos_s		// ESC/POS driver data
   lprint_dither_t dither;		// Dithering buffer
   bool		marked;			// Did we print anything yet?
   int		feed;			// Accumulated feed
+  int		num_lines,		// Number of lines in buffer
+		max_lines;		// Maximum number of lines that can fit
+  unsigned char	buffer[32768];		// Graphics buffer
 } lprint_escpos_t;
 
 
@@ -323,17 +326,13 @@ lprint_escpos_rstartpage(
 
   (void)page;
 
-  if (options->header.cupsWidth > 576)
-  {
-    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Raster data too large for printer.");
-    return (false);
-  }
-
   if (!lprintDitherAlloc(&escpos->dither, job, options, CUPS_CSPACE_K, 1.0))
     return (false);
 
-  escpos->marked = false;
-  escpos->feed   = 0;
+  escpos->marked    = false;
+  escpos->feed      = 0;
+  escpos->max_lines = (int)(sizeof(escpos->buffer) / escpos->dither.out_width);
+  escpos->num_lines = 0;
 
   return (true);
 }
@@ -353,12 +352,16 @@ lprint_escpos_rwriteline(
 {
   lprint_escpos_t	*escpos = (lprint_escpos_t *)papplJobGetData(job);
 					// ESC/POS driver data
+  bool			ret = true;	// Return value
+  bool			blank;		// Is the current line blank?
 
 
   if (!lprintDitherLine(&escpos->dither, y, line))
-    return (true);
+    blank = true;
+  else
+    blank = !escpos->dither.output[0] && !memcmp(escpos->dither.output, escpos->dither.output + 1, escpos->dither.out_width - 1);
 
-  if (escpos->dither.output[0] || memcmp(escpos->dither.output, escpos->dither.output + 1, escpos->dither.out_width - 1))
+  if (!blank)
   {
     // Not a blank line, print it...
     if (!escpos->marked)
@@ -368,32 +371,43 @@ lprint_escpos_rwriteline(
       escpos->feed   = 0;
     }
 
+    memcpy(escpos->buffer + escpos->num_lines * escpos->dither.out_width, escpos->dither.output, escpos->dither.out_width);
+    escpos->num_lines ++;
+  }
+
+  if ((blank && escpos->num_lines > 0) || escpos->num_lines >= escpos->max_lines || (y == options->header.cupsHeight && escpos->num_lines > 0))
+  {
+    // Output current block of graphics...
+    papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "Writing %ux%d block with feed %d.", escpos->dither.out_width, escpos->num_lines, escpos->feed);
+
     while (escpos->feed > 0)
     {
       if (escpos->feed > 255)
       {
-        papplDevicePrintf(device, "\033J%c", 255);
+        ret &= papplDevicePrintf(device, "\033J%c", 255) > 0;
         escpos->feed -= 255;
       }
       else
       {
-        papplDevicePrintf(device, "\033J%c", escpos->feed);
+        ret &= papplDevicePrintf(device, "\033J%c", escpos->feed) > 0;
         escpos->feed = 0;
       }
     }
 
-    if (!papplDevicePrintf(device, "\035v00%c%c%c%c", escpos->dither.out_width & 255, (escpos->dither.out_width >> 8) & 255, 1, 0))
-      return (false);
+    ret &= papplDevicePrintf(device, "\035v00%c%c%c%c", escpos->dither.out_width & 255, (escpos->dither.out_width >> 8) & 255, escpos->num_lines & 255, (escpos->num_lines >> 8) & 255) > 0;
 
-    return (papplDeviceWrite(device, escpos->dither.output, escpos->dither.out_width));
+    ret &= papplDeviceWrite(device, escpos->buffer, escpos->num_lines * escpos->dither.out_width) > 0;
+
+    escpos->num_lines = 0;
   }
-  else
+
+  if (blank)
   {
     // Blank line, accumulate the feed...
     escpos->feed ++;
   }
 
-  return (true);
+  return (ret);
 }
 
 
