@@ -1,7 +1,7 @@
 //
 // Experimental CPCL driver for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2025 by Michael R Sweet.
+// Copyright © 2019-2026 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -78,7 +78,7 @@ static const char * const lprint_cpcl_media[] =
   "oe_4x3-label_4x3in",
   "oe_4x4-label_4x4in",
   "oe_4x5-label_4x5in",
-  "oe_4x6-label_4x6in",
+  "na_index-4x6_4x6in",
   "oe_4x6.5-label_4x6.5in",
   "oe_4x7.83-label_4x7.83in",
   "oe_4x13-label_4x13in",

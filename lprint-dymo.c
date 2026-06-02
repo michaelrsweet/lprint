@@ -1,7 +1,7 @@
 //
 // DYMO driver for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2025 by Michael R Sweet.
+// Copyright © 2019-2026 by Michael R Sweet.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 2001-2007 by Easy Software Products.
 //
@@ -107,7 +107,7 @@ static const char * const lprint_dymo_xl_label[] =
   "oe_internet-postage-label_2.3125x7in",
   "oe_internet-postage-confirmation-label_2.3125x10.5in",
   "om_diskette-label_54x70mm",
-  "na_index_4x6in",
+  "na_index-4x6_4x6in",
 
   "roll_max_4.09x3600in",
   "roll_min_0.25x0.25in"
