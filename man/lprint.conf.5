@@ -1,39 +1,48 @@
 .\"
 .\" lprint.conf man page for LPrint, a Label Printer Utility
 .\"
-.\" Copyright © 2019-2021 by Michael R Sweet.
+.\" Copyright © 2019-2026 by Michael R Sweet.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint.conf 5 "LPrint" "2021-12-21" "Michael R Sweet"
+.TH lprint.conf 5 "LPrint" "2026-06-03" "Michael R Sweet"
 .SH NAME
-lprint.conf \- printer configuration file.
+lprint.conf \- server configuration file.
 .SH DESCRIPTION
 The
-.B ~/.lprint.conf
-(per-user server) and
-.B /etc/lprint.conf
-(root server) files contain a list of the printer queues configured using the
-.BR lprint-add (1),
-.BR lprint-default (1),
-.BR lprint-delete (1),
-and
-.BR lprint-modify (1)
-commands along with a history of print jobs submitted using the
-.BR lprint-submit (1)
-command.
-The files are not intended to be hand-edited and
-.B cannot
-be changed while the server is running as those changes will be lost.
+.B lprint.conf
+server configuration file provides default values for zero or more server
+options.
+LPrint will look in the
+.BR /etc ,
+.BR /usr/local/etc ,
+.BR "/Library/Application Support" "(macOS) ,"
+and/or
+.B $SNAP_COMMON
+directories for system-wide defaults and the
+.BR $HOME/.config ,
+.BR "$HOME/Library/Application Support" "(macOS) ,"
+and/or
+.B "%PROFILE%/AppData/Local"
+(Windows) directories for per-user defaults.
+.PP
+Lines starting with the "#" character are comments, for example:
+.nf
+    # This is a comment
+.fi
+Otherwise, LPrint will look for options of the form "NAME=VALUE".
+Multiple options can be specified on a line when separated by whitespace.
+.SH EXAMPLES
+Listen on the hostname "server.example.com" and log activity to the file "/var/log/lprint.log":
+.nf
+    # Listen on the server's published addresses...
+    listen-hostname=server.example.com
+
+    # Log file and level...
+    log-file=/var/log/lprint.log log-level=debug
+.fi
 .SH SEE ALSO
-.BR lprint (1),
-.BR lprint-add (1),
-.BR lprint-default (1),
-.BR lprint-delete (1),
-.BR lprint-modify (1),
-.BR lprint-server (1),
-and
-.BR lprint-submit (1).
+.BR lprint-server (1).
 .SH COPYRIGHT
-Copyright \[co] 2019-2021 by Michael R Sweet.
+Copyright \[co] 2019-2026 by Michael R Sweet.

@@ -77,15 +77,7 @@ int					// O - Exit status
 main(int  argc,				// I - Number of command-line arguments
      char *argv[])			// I - Command-line arguments
 {
-  return (papplMainloop(argc, argv,
-                        LPRINT_VERSION,
-                        "Copyright &copy; 2019-2026 by Michael R Sweet. All Rights Reserved.",
-                        (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])),
-                        lprint_drivers, autoadd_cb, driver_cb,
-                        /*subcmd_name*/NULL, /*subcmd_cb*/NULL,
-                        system_cb,
-                        /*usage_cb*/NULL,
-                        /*data*/NULL));
+  return (papplMainloop(argc, argv, LPRINT_VERSION, /*footer_html*/NULL, (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])), lprint_drivers, autoadd_cb, driver_cb, /*subcmd_name*/NULL, /*subcmd_cb*/NULL, system_cb, /*usage_cb*/NULL, /*data*/NULL));
 }
 
 
@@ -667,7 +659,8 @@ system_cb(
     papplSystemAddListeners(system, listenhost);
   }
 
-  papplSystemSetHostName(system, hostname);
+  if (hostname)
+    papplSystemSetHostName(system, hostname);
 
   if ((val = cupsGetOption("admin-group", num_options, options)) != NULL)
     papplSystemSetAdminGroup(system, val);
@@ -686,7 +679,7 @@ system_cb(
   papplSystemAddStringsData(system, "/fr.strings", "fr", lprint_fr_strings);
   papplSystemAddStringsData(system, "/it.strings", "it", lprint_it_strings);
 
-  papplSystemSetFooterHTML(system, "Copyright &copy; 2019-2024 by Michael R Sweet. All rights reserved.");
+  papplSystemSetFooterHTML(system, "Copyright &copy; 2019-2026 by Michael R Sweet. All rights reserved.");
   papplSystemSetSaveCallback(system, (pappl_save_cb_t)papplSystemSaveState, (void *)lprint_statefile);
   papplSystemSetVersions(system, (int)(sizeof(versions) / sizeof(versions[0])), versions);
 

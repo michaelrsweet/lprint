@@ -1,12 +1,12 @@
 .\"
 .\" lprint-modify man page for LPrint, a Label Printer Utility
 .\"
-.\" Copyright © 2019-2024 by Michael R Sweet.
+.\" Copyright © 2019-2026 by Michael R Sweet.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint-modify 1 "LPrint" "2024-02-06" "Michael R Sweet"
+.TH lprint-modify 1 "LPrint" "2026-06-03" "Michael R Sweet"
 .SH NAME
 lprint-modify \- modify a printer queue.
 .SH SYNOPSIS
@@ -42,28 +42,28 @@ See
 .BR lprint-submit (1)
 for a list of supported options.
 .TP 5
-\fB\-o label-mode-configured\fI=VALUE\fR
+\fB\-o label\-mode\-configured\fI=VALUE\fR
 Specifies the label printing mode: "applicator", "cutter", "cutter-delayed", "kiosk", "peel-off", "peel-off-prepeel", "rewind", "rfid", or "tear-off".
 .TP 5
-\fB\-o label-tear-offset-configured\fI=NNNin\fR
+\fB\-o label\-tear\-offset\-configured\fI=NNNin\fR
 .TP 5
-\fB\-o label-tear-offset-configured\fI=NNNmm\fR
+\fB\-o label\-tear\-offset\-configured\fI=NNNmm\fR
 Specifies the label tear-off offset in inches ("NNNin") or millimeters ("NNNmm").
 .TP 5
-\fB\-o printer-darkness\fI=NNN\fR
+\fB\-o printer\-darkness\-configured\fI=NNN\fR
 Specifies the base darkness setting for all print jobs as a percentage.
 0 represents the lightest printing while 100 represents the darkest printing.
 .TP 5
-\fB\-o printer-geo-location=geo:\fI=LATLON\fR
+\fB\-o printer\-geo\-location=geo:\fI=LATLON\fR
 Specifies the geographic location of the printer as a "geo:" URI.
 .TP 5
-\fB\-o printer-location\fI=LOCATION\fR
+\fB\-o printer\-location\fI=LOCATION\fR
 Specifies the human-readable location, for example "Rack 42".
 .TP 5
-\fB\-o printer-organization\fI=ORGANIZATION\fR
+\fB\-o printer\-organization\fI=ORGANIZATION\fR
 Specifies the organization name, for example "Acme, Inc.".
 .TP 5
-\fB\-o printer-organizational-unit\fI=UNIT\fR
+\fB\-o printer\-organizational\-unit\fI=UNIT\fR
 Specifies the organizational unit, for example "Shipping Department".
 .TP 5
 \fB\-u \fIPRINTER-URI\fR
@@ -77,4 +77,4 @@ Specifies an "ipp:" or "ipps:" URI for a remote printer.
 .BR lprint-options (1),
 .BR lprint-submit (1)
 .SH COPYRIGHT
-Copyright \[co] 2019-2024 by Michael R Sweet.
+Copyright \[co] 2019-2026 by Michael R Sweet.

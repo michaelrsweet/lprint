@@ -1,12 +1,12 @@
 .\"
 .\" lprint-server man page for LPrint, a Label Printer Utility
 .\"
-.\" Copyright © 2019-2021 by Michael R Sweet.
+.\" Copyright © 2019-2026 by Michael R Sweet.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint-server 1 "LPrint" "2021-12-21" "Michael R Sweet"
+.TH lprint-server 1 "LPrint" "2026-06-03" "Michael R Sweet"
 .SH NAME
 lprint-server \- start a label print server.
 .SH SYNOPSIS
@@ -19,6 +19,13 @@ lprint-server \- start a label print server.
 .SH DESCRIPTION
 This command starts a label print server.
 Normally a server is started automatically as needed, however you can run the server manually to listen on a public network address and/or enable different logging options.
+.PP
+Server options can be specified on the command-line using the
+.B -\o
+.I OPTION=VALUE
+arguments or in the
+.B lprint.conf
+configuration file.
 .SH OPTIONS
 The following options are recognized by
 .B lprint server:
@@ -46,18 +53,24 @@ Specifies that all messages are written to the named file.
 If the file already exists, messages are appended to it.
 The default log file is "$TMPDIR/lprintUID.log".
 .TP 5
-.B \-o log\-level=error
-Specifies that only error messages should be logged.
-This is the default.
-.TP 5
-.B \-o log\-level=info
-Specifies that error and informational messages should be logged.
-.TP 5
 .B \-o log\-level=debug
 Specifies that all messages should be logged.
 .TP 5
+.B \-o log\-level=error
+Specifies that fatal and error messages should be logged.
+This is the default.
+.TP 5
+.B \-o log\-level=fatal
+Specifies that only fatal messages should be logged.
+.TP 5
+.B \-o log\-level=info
+Specifies that error, warning, and informational messages should be logged.
+.TP 5
+.B \-o log\-level=warning
+Specifies that fatal, error, and warning messages should be logged.
+.TP 5
 \fB\-o server\-hostname=\fIHOSTNAME\fR
-Specifies the hostname to advertise for the server.
+Specifies the hostname for the server.
 The default is the system hostname.
 .TP 5
 \fB\-o server\-options=\fIOPTIONS\fI
@@ -66,15 +79,19 @@ See "SERVER OPTIONS" below.
 .TP 5
 \fB\-o server\-port=\fIPORT\fR
 Listens for IPP connections on the specified port.
-If not specified, a random port between 9000 and 9999 is chosen.
+If not specified, a random port between 8000 and 8999 is chosen.
 .TP 5
 \fB\-o spool\-directory=\fIDIRECTORY\fR
 Specifies a directory that holds pending print files.
 If not specified, a subdirectory in the system temporary directory is used.
+.TP 5
+\fB\-o system\-name=\fINAME\fR
+Specifies the DNS-SD service name for the server.
+The default is "LPrint".
 .SH SERVER OPTIONS
 By default,
 .B lprint server
-uses the "multi-queue" and "web-interface" options.
+uses the "multi-queue", "web-interface", "web-log", "web-security", and "web-tls" options.
 The \fB\-o server\-options=\fIOPTIONS\fR option can be used to override the default options, where "OPTIONS" is a comma-delimited list of any of the following:
 .TP 5
 .B dnssd\-host
@@ -104,13 +121,11 @@ Enables remote queue management.
 .B web\-security
 Enables the user/password settings web page.
 .TP 5
-.B web\-tls
-Enables the TLS settings web page.
-.TP 5
 .B no\-tls
-Disables TLS support.
+Disables TLS support entirely.
 .SH SEE ALSO
 .BR lprint (1),
-.BR lprint-shutdown (1).
+.BR lprint-shutdown (1),
+.BR lprint.conf (5).
 .SH COPYRIGHT
-Copyright \[co] 2019-2021 by Michael R Sweet.
+Copyright \[co] 2019-2026 by Michael R Sweet.

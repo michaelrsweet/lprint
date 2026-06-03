@@ -1,12 +1,12 @@
 .\"
 .\" lprint-submit man page for LPrint, a Label Printer Utility
 .\"
-.\" Copyright © 2019-2021 by Michael R Sweet.
+.\" Copyright © 2019-2026 by Michael R Sweet.
 .\"
 .\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
 .\" information.
 .\"
-.TH lprint-submit 1 "LPrint" "2021-12-21" "Michael R Sweet"
+.TH lprint-submit 1 "LPrint" "2026-06-03" "Michael R Sweet"
 .SH NAME
 lprint-submit \- submit a file for printing.
 .SH SYNOPSIS
@@ -66,6 +66,12 @@ If not specified, the default printer is used.
 .TP 5
 \fB\-n \fICOPIES\fR
 Specifies the number of copies.
+.TP 5
+.B \-o finishings=none
+Print without cutting.
+.TP 5
+.B \-o finishings=trim
+Print and cut.
 .TP 5
 \fB\-o media=\fISIZE-NAME\fR
 Specifies the label size.
@@ -151,4 +157,4 @@ Specifies an "ipp:" or "ipps:" URI for a remote printer.
 .BR lprint-default (1),
 .BR lprint-options (1).
 .SH COPYRIGHT
-Copyright \[co] 2019-2021 by Michael R Sweet.
+Copyright \[co] 2019-2026 by Michael R Sweet.

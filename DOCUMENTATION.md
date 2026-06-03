@@ -280,7 +280,6 @@ control the server operation:
 - "-o log-level=LEVEL": Specifies the log level - "debug", "info", "warn",
   "error", or "fatal".
 - "-o server-hostname=HOSTNAME": Sets the network hostname to advertise.
-- "-o server-name=DNS-SD-NAME": Sets the DNS-SD name to advertise.
 - "-o server-options=OPTION[,...,OPTION]": Sets server options:
   - 'none': No options
   - 'dnssd-host': Use the hostname in printer DNS-SD names
@@ -297,7 +296,7 @@ control the server operation:
 - "-o server-port=NNN": Sets the network port number; the default is randomly
   assigned starting at 8000.
 - "-o spool-directory=DIRECTORY": Specifies the directory to store print files.
-
+- "-o system-name=NAME": Specifies the DNS-SD service name.
 When using the LPrint snap you can set these options using the `snap set`
 command, for example:
 
