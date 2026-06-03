@@ -12,8 +12,6 @@
 		<string>server</string>
 		<string>-o</string>
 		<string>log-file=/Library/Logs/lprint.log</string>
-		<string>-o</string>
-		<string>log-level=info</string>
 	</array>
 </dict>
 </plist>

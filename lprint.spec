@@ -8,7 +8,7 @@ Release: 0
 Summary: LPrint, A Label Printer Application
 License: ASL 2.0
 Source0: https://github.com/michaelrsweet/lprint/releases/download/v%{version}/lprint-%{version}.tar.gz
-URL: https://www.msweet.org/lprint
+URL: https://www.msweet.org/lprint/
 Packager: Anonymous <anonymous@example.com>
 Vendor: Example Corp
 # Note: Package names are as defined for Red Hat (and clone) distributions
