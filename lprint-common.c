@@ -1,7 +1,7 @@
 //
 // Common driver code for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2025 by Michael R Sweet.
+// Copyright © 2019-2026 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -517,6 +517,7 @@ lprintMediaUI(
     }
     else
     {
+      // Collect new settings...
       bool		changed = false;// Did the custom media list change?
       pwg_media_t	*pwg = NULL;	// PWG media info
       pappl_media_col_t	*ready;		// Current ready media
@@ -525,6 +526,7 @@ lprintMediaUI(
 			*custom_length,	// Custom media length
 			*custom_units;	// Custom media units
 
+      // Ready media...
       memset(data.media_ready, 0, sizeof(data.media_ready));
       for (i = 0, ready = data.media_ready; i < data.num_source; i ++, ready ++)
       {
@@ -604,12 +606,50 @@ lprintMediaUI(
           papplCopyString(ready->type, value, sizeof(ready->type));
       }
 
+      // Label mode...
+      if (data.mode_supported && (value = cupsGetOption("label-mode-configured", num_form, form)) != NULL)
+      {
+        if (!strcmp(value, "applicator"))
+          data.mode_configured = PAPPL_LABEL_MODE_APPLICATOR;
+        else if (!strcmp(value, "cutter"))
+          data.mode_configured = PAPPL_LABEL_MODE_CUTTER;
+        else if (!strcmp(value, "cutter-delayed"))
+          data.mode_configured = PAPPL_LABEL_MODE_CUTTER_DELAYED;
+        else if (!strcmp(value, "kiosk"))
+          data.mode_configured = PAPPL_LABEL_MODE_KIOSK;
+        else if (!strcmp(value, "peel-off"))
+          data.mode_configured = PAPPL_LABEL_MODE_PEEL_OFF;
+        else if (!strcmp(value, "peel-off-prepeel"))
+          data.mode_configured = PAPPL_LABEL_MODE_PEEL_OFF_PREPEEL;
+        else if (!strcmp(value, "rewind"))
+          data.mode_configured = PAPPL_LABEL_MODE_REWIND;
+        else if (!strcmp(value, "rfid"))
+          data.mode_configured = PAPPL_LABEL_MODE_RFID;
+        else if (!strcmp(value, "tear-off"))
+          data.mode_configured = PAPPL_LABEL_MODE_TEAR_OFF;
+      }
+
+      // Label tear offset...
+      if (data.tear_offset_supported[1] && (value = cupsGetOption("label-tear-offset-configured", num_form, form)) != NULL)
+      {
+        int offset = (int)strtol(value, NULL, 10) * 100;
+					// Tear offset in hundredths of millimeters
+
+        if (offset >= data.tear_offset_supported[0] && offset <= data.tear_offset_supported[1])
+          data.tear_offset_configured = offset;
+      }
+
+      // Save changes as needed...
       if (changed)
       {
 	// Rebuild media size list and save...
 	lprintMediaUpdate(printer, &data);
 	papplPrinterSetDriverData(printer, &data, NULL);
 	lprintMediaSave(printer, &data);
+      }
+      else
+      {
+        papplPrinterSetDriverDefaults(printer, &data, /*num_vendor*/0, /*vendor*/NULL);
       }
 
       papplPrinterSetReadyMedia(printer, data.num_source, data.media_ready);
@@ -634,6 +674,42 @@ lprintMediaUI(
   {
     snprintf(name, sizeof(name), "ready%d", i);
     media_chooser(client, &data, localize_keyword(client, "media-source", data.source[i], text, sizeof(text)), name, data.media_ready + i);
+  }
+
+  if (data.mode_supported)
+  {
+    pappl_label_mode_t	mode;		// Label mode constant
+    static const char * const modes[][2] =
+    {					// Label mode keywords/text
+      { "applicator",		"Applicator" },
+      { "cutter",		"Cutter" },
+      { "cutter-delayed",	"Cutter (Delayed)" },
+      { "kiosk",		"Kiosk" },
+      { "peel-off",		"Peel Off" },
+      { "peel-off-prepeel",	"Peel Off (Pre-Peel)" },
+      { "rewind",		"Rewind" },
+      { "rfid",			"RFID" },
+      { "tear-off",		"Tear Off" }
+    };
+
+    papplClientHTMLPrintf(client,
+			  "              <tr><th>%s</th><td><select name=\"label-mode-configured\">", papplClientGetLocString(client, "Label Mode:"));
+
+    for (i = 0, mode = PAPPL_LABEL_MODE_APPLICATOR; i < (int)(sizeof(modes) / sizeof(modes[0])); i ++, mode *= 2)
+    {
+      if (data.mode_supported & mode)
+      {
+        papplClientHTMLPrintf(client, "<option value=\"%s\"%s>%s</option>", modes[i][0], mode == data.mode_configured ? " selected" : "", papplClientGetLocString(client, modes[i][1]));
+      }
+    }
+
+    papplClientHTMLPuts(client, "</td></tr>\n");
+  }
+
+  if (data.tear_offset_supported[1])
+  {
+    papplClientHTMLPrintf(client,
+			  "              <tr><th>%s</th><td><input type=\"number\" name=\"label-tear-offset-configured\" value=\"%d\">mm</td></tr>\n", papplClientGetLocString(client, "Label Tear Offset:"), data.tear_offset_configured / 100);
   }
 
   papplClientHTMLPrintf(client,
