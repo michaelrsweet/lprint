@@ -169,7 +169,7 @@ lprintEPL2(
   data->x_default = data->y_default = data->x_resolution[0];
 
   if (strstr(driver_name, "-cutter"))
-    data->finishings |= PAPPL_FINISHINGS_TRIM;
+    data->finishings = PAPPL_FINISHINGS_TRIM;
 
   if (!strncmp(driver_name, "epl2_2inch-", 16))
   {

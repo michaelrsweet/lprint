@@ -230,7 +230,7 @@ lprintZPL(
   data->x_default = data->y_default = data->x_resolution[0];
 
   if (strstr(driver_name, "-cutter"))
-    data->finishings |= PAPPL_FINISHINGS_TRIM;
+    data->finishings = PAPPL_FINISHINGS_TRIM;
 
   if (!strncmp(driver_name, "zpl_2inch-", 16))
   {
@@ -268,7 +268,7 @@ lprintZPL(
   data->type[2]  = "labels-continuous";
 
   data->mode_configured = PAPPL_LABEL_MODE_TEAR_OFF;
-  data->mode_supported = PAPPL_LABEL_MODE_APPLICATOR | PAPPL_LABEL_MODE_CUTTER | PAPPL_LABEL_MODE_CUTTER_DELAYED | PAPPL_LABEL_MODE_KIOSK | PAPPL_LABEL_MODE_PEEL_OFF | PAPPL_LABEL_MODE_PEEL_OFF_PREPEEL | PAPPL_LABEL_MODE_REWIND | PAPPL_LABEL_MODE_RFID | PAPPL_LABEL_MODE_TEAR_OFF;
+  data->mode_supported  = PAPPL_LABEL_MODE_APPLICATOR | PAPPL_LABEL_MODE_CUTTER | PAPPL_LABEL_MODE_CUTTER_DELAYED | PAPPL_LABEL_MODE_KIOSK | PAPPL_LABEL_MODE_PEEL_OFF | PAPPL_LABEL_MODE_PEEL_OFF_PREPEEL | PAPPL_LABEL_MODE_REWIND | PAPPL_LABEL_MODE_RFID | PAPPL_LABEL_MODE_TEAR_OFF;
 
   data->tear_offset_configured   = 0;
   data->tear_offset_supported[0] = -1500;

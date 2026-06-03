@@ -297,6 +297,27 @@ driver_cb(
   else if (!strncmp(driver_name, "zpl_", 4))
     ret = lprintZPL(system, driver_name, device_uri, device_id, data, attrs, cbdata);
 
+  // Update for finishings support...
+  if (data->finishings & PAPPL_FINISHINGS_TRIM)
+  {
+    data->num_vendor = 1;
+    data->vendor[0]  = "finishings";
+
+    if (data->finishings & PAPPL_FINISHINGS_TRIM)
+    {
+      // Default to trim (cut) when supported...
+      ipp_t	*col = ippNew();	// "finishings-col-default" value
+
+      *attrs = ippNew();
+
+      ippAddString(col, IPP_TAG_ZERO, IPP_CONST_TAG(IPP_TAG_KEYWORD), "finishing-template", /*lang*/NULL, "trim");
+      ippAddCollection(*attrs, IPP_TAG_PRINTER, "finishings-col-default", col);
+      ippDelete(col);
+
+      ippAddInteger(*attrs, IPP_TAG_PRINTER, IPP_TAG_ENUM, "finishings-default", IPP_FINISHINGS_TRIM);
+    }
+  }
+
   // Update the ready media...
   for (i = 0; i < data->num_source; i ++)
   {

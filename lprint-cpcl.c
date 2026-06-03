@@ -145,7 +145,7 @@ lprintCPCL(
 
   data->x_default = data->y_default = data->x_resolution[0];
 
-  data->finishings |= PAPPL_FINISHINGS_TRIM;
+  data->finishings = PAPPL_FINISHINGS_TRIM;
 
   if (!strncmp(driver_name, "cpcl_hma300e-", 13))
   {

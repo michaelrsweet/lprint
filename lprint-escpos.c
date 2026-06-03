@@ -75,8 +75,6 @@ lprintESCPOS(
     ipp_t                  **attrs,	// O - Pointer to driver attributes
     void                   *cbdata)	// I - Callback data (not used)
 {
-  ipp_t	*col;				// "finishings-col-default" value
-
   data->printfile_cb  = lprint_escpos_printfile;
   data->rendjob_cb    = lprint_escpos_rendjob;
   data->rendpage_cb   = lprint_escpos_rendpage;
@@ -108,17 +106,6 @@ lprintESCPOS(
 
   // Cutter...
   data->finishings = PAPPL_FINISHINGS_TRIM;
-  data->num_vendor = 1;
-  data->vendor[0]  = "finishings";
-
-  *attrs = ippNew();
-
-  col = ippNew();
-  ippAddString(col, IPP_TAG_ZERO, IPP_CONST_TAG(IPP_TAG_KEYWORD), "finishing-template", /*lang*/NULL, "trim");
-  ippAddCollection(*attrs, IPP_TAG_PRINTER, "finishings-col-default", col);
-  ippDelete(col);
-
-  ippAddInteger(*attrs, IPP_TAG_PRINTER, IPP_TAG_ENUM, "finishings-default", IPP_FINISHINGS_TRIM);
 
   // Model-specific values...
   if (!strncmp(driver_name, "escpos_58mm", 11))
