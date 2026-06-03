@@ -315,7 +315,7 @@ lprintMediaLoad(
     pappl_printer_t        *printer,	// I - Printer
     pappl_pr_driver_data_t *data)	// I - Driver data
 {
-  lprint_cmedia_t	*cmedia;	// Custom media
+  lprint_extdata_t	*cmedia;	// Custom media
   int			fd;		// Custom media file descriptor
   cups_file_t		*fp;		// Custom media file
   char			filename[1024],	// Custom media filename
@@ -324,9 +324,9 @@ lprintMediaLoad(
 
 
   // Allocate memory as needed...
-  if ((cmedia = (lprint_cmedia_t *)data->extension) == NULL)
+  if ((cmedia = (lprint_extdata_t *)data->extension) == NULL)
   {
-    if ((cmedia = (lprint_cmedia_t *)calloc(1, sizeof(lprint_cmedia_t))) == NULL)
+    if ((cmedia = (lprint_extdata_t *)calloc(1, sizeof(lprint_extdata_t))) == NULL)
       return (false);
 
     data->extension = cmedia;
@@ -364,7 +364,7 @@ lprintMediaMatch(
     int             length)		// I - Length in hundredths of millimeters
 {
   pappl_pr_driver_data_t pdata;		// Printer driver data
-  lprint_cmedia_t	*cmedia;	// Custom media info
+  lprint_extdata_t	*cmedia;	// Custom media info
   int			i;		// Looping var
   pwg_media_t		*pwg;		// Current size info
   const char		*ret = NULL;	// Return value
@@ -392,7 +392,7 @@ lprintMediaMatch(
     if (!pdata.extension)
       lprintMediaLoad(printer, &pdata);
 
-    if ((cmedia = (lprint_cmedia_t *)pdata.extension) != NULL)
+    if ((cmedia = (lprint_extdata_t *)pdata.extension) != NULL)
     {
       if (length == 0)
         pwgFormatSizeName(cmedia->custom_name[source], sizeof(cmedia->custom_name[source]), "roll", pdata.source[source], width, length, /*units*/NULL);
@@ -434,7 +434,7 @@ lprintMediaSave(
     pappl_printer_t        *printer,	// I - Printer
     pappl_pr_driver_data_t *data)	// I - Driver data
 {
-  lprint_cmedia_t	*cmedia;	// Custom media
+  lprint_extdata_t	*cmedia;	// Custom media
   int			i,		// Looping var
 			fd;		// Custom media file descriptor
   cups_file_t		*fp;		// Custom media file
@@ -442,7 +442,7 @@ lprintMediaSave(
 
 
   // Get the custom media...
-  if ((cmedia = (lprint_cmedia_t *)data->extension) == NULL)
+  if ((cmedia = (lprint_extdata_t *)data->extension) == NULL)
   {
     // No custom media, delete any existing file...
     papplPrinterOpenFile(printer, filename, sizeof(filename), /*directory*/NULL, "custom-media", "txt", "x");
@@ -479,7 +479,7 @@ lprintMediaUI(
 {
   int			i;		// Looping var
   pappl_pr_driver_data_t data;		// Driver data
-  lprint_cmedia_t	*cmedia;	// Custom label sizes, if any
+  lprint_extdata_t	*cmedia;	// Custom label sizes, if any
   char			name[128],	// Form variable name
 			text[256];	// Localized text
   const char		*status = NULL;	// Status message, if any
@@ -500,7 +500,7 @@ lprintMediaUI(
     lprintMediaLoad(printer, &data);
     LPRINT_DEBUG("lprintMediaUI: AFTER data.extension=%p\n", data.extension);
   }
-  cmedia = (lprint_cmedia_t *)data.extension;
+  cmedia = (lprint_extdata_t *)data.extension;
 
   if (papplClientGetMethod(client) == HTTP_STATE_POST)
   {
@@ -681,9 +681,9 @@ lprintMediaUI(
     pappl_label_mode_t	mode;		// Label mode constant
     static const char * const modes[][2] =
     {					// Label mode keywords/text
-      { "applicator",		"Applicator" },
-      { "cutter",		"Cutter" },
-      { "cutter-delayed",	"Cutter (Delayed)" },
+      { "applicator",		"Apply" },
+      { "cutter",		"Cut" },
+      { "cutter-delayed",	"Cut (Delayed)" },
       { "kiosk",		"Kiosk" },
       { "peel-off",		"Peel Off" },
       { "peel-off-prepeel",	"Peel Off (Pre-Peel)" },
@@ -709,7 +709,7 @@ lprintMediaUI(
   if (data.tear_offset_supported[1])
   {
     papplClientHTMLPrintf(client,
-			  "              <tr><th>%s</th><td><input type=\"number\" name=\"label-tear-offset-configured\" value=\"%d\">mm</td></tr>\n", papplClientGetLocString(client, "Label Tear Offset:"), data.tear_offset_configured / 100);
+			  "              <tr><th>%s</th><td><input type=\"number\" name=\"label-tear-offset-configured\" size=\"4\" value=\"%d\">mm</td></tr>\n", papplClientGetLocString(client, "Label Tear Offset:"), data.tear_offset_configured / 100);
   }
 
   papplClientHTMLPrintf(client,
@@ -741,7 +741,7 @@ lprintMediaUpdate(
     pappl_pr_driver_data_t *data)	// I - Driver data
 {
   int			i, j;		// Looping vars
-  lprint_cmedia_t	*cmedia;	// Custom label sizes
+  lprint_extdata_t	*cmedia;	// Custom label sizes
 
 
   (void)printer;
@@ -754,7 +754,7 @@ lprintMediaUpdate(
   }
 
   // Then copy any custom sizes over...
-  if ((cmedia = (lprint_cmedia_t *)data->extension) != NULL)
+  if ((cmedia = (lprint_extdata_t *)data->extension) != NULL)
   {
     for (j = 0; j < data->num_source && i < PAPPL_MAX_MEDIA; j ++)
     {

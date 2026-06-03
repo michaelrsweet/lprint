@@ -430,8 +430,18 @@ lprint_escpos_status(
 {
   pappl_device_t	*device;	// Connection to printer
   bool			ret;		// Return value
+  pappl_pr_driver_data_t data;		// Driver data
+  lprint_extdata_t	*extdata;	// Driver extension data
 
 
+  // See if the status checks need to be suspended...
+  papplPrinterGetDriverData(printer, &data);
+  extdata = (lprint_extdata_t *)data.extension;
+
+  if (extdata->status_disabled || extdata->status_time >= time(NULL))
+    return (true);
+
+  // No, try talking to the printer...
   if ((device = papplPrinterOpenDevice(printer)) == NULL)
   {
     papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to open device for status.");
@@ -442,6 +452,13 @@ lprint_escpos_status(
   ret = lprint_escpos_update_reasons(printer, NULL, device);
 
   papplPrinterCloseDevice(printer);
+
+  if (!ret)
+  {
+    // Don't try doing status updates for 5 minutes...
+    extdata->status_time = time(NULL) + 300;
+    ret = true;
+  }
 
   return (ret);
 }
@@ -459,7 +476,16 @@ lprint_escpos_update_reasons(
 {
   unsigned char		status;		// Status byte
   pappl_preason_t	reasons;	// "printer-state-reasons" values
+  pappl_pr_driver_data_t data;		// Driver data
+  lprint_extdata_t	*extdata;	// Extension data
 
+
+  // Check the "disabled" flag in the printer's extension data...
+  papplPrinterGetDriverData(printer, &data);
+  extdata = (lprint_extdata_t *)data.extension;
+
+  if (extdata->status_disabled)
+    return (true);
 
   // Get the printer status...
   if (papplDevicePuts(device, "\033v") < 0)

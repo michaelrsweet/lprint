@@ -4,15 +4,17 @@ LPrint Change History
 v1.4.0 - YYYY-MM-DD
 -------------------
 
-- Updated the default state file to match current PAPPL defaults (Issue #129)
-- Updated the maximum label width of TSPL printers to 105mm (Issue #141)
-- Now enable the TLS web interface unless the "no-tls" option is specified
-  (Issue #161)
 - Added ESC/POS driver (Issue #123)
 - Added Vevor Y428BT driver (Issue #130)
 - Added 4 x 7.83 inch label size (Issue #144)
 - Added Arkscan 2054a and HP KE103 (Issue #165)
 - Added DYMO LabelWriter Twin Turbo driver (Issue #193)
+- Now enable the TLS web interface unless the "no-tls" option is specified
+  (Issue #161)
+- Updated the default state file to match current PAPPL defaults (Issue #129)
+- Updated the maximum label width of TSPL printers to 105mm (Issue #141)
+- Updated the ZPL driver to automatically disable status commands if the target
+  printer doesn't implement that part of ZPL (Issue #161)
 - Fixed the margins for DYMO printers (Issue #132)
 - Fixed some Brother driver problems (Issue #167)
 - Fixed a NumCopies issue in the TSPL driver (Issue #188)

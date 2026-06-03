@@ -1,7 +1,7 @@
 //
 // ZPL driver for LPrint, a Label Printer Application
 //
-// Copyright © 2019-2025 by Michael R Sweet.
+// Copyright © 2019-2026 by Michael R Sweet.
 // Copyright © 2007-2019 by Apple Inc.
 // Copyright © 2001-2007 by Easy Software Products.
 //
@@ -555,7 +555,7 @@ lprint_zpl_rstartjob(
 {
   pappl_pr_driver_data_t data;		// Driver data
   int			darkness;	// Composite darkness value
-  lprint_zpl_t	*zpl = (lprint_zpl_t *)calloc(1, sizeof(lprint_zpl_t));
+  lprint_zpl_t		*zpl = (lprint_zpl_t *)calloc(1, sizeof(lprint_zpl_t));
 					// ZPL driver data
 
 
@@ -771,12 +771,22 @@ lprint_zpl_status(
   ssize_t		bytes;		// Bytes read
   int			length = 0;	// Label length
   bool			ret = false;	// Return value
+  pappl_pr_driver_data_t data;		// Driver data
+  lprint_extdata_t	*extdata;	// Driver extension data
 
 
+  // See if the status checks need to be suspended...
+  papplPrinterGetDriverData(printer, &data);
+  extdata = (lprint_extdata_t *)data.extension;
+
+  if (extdata->status_disabled || extdata->status_time >= time(NULL))
+    return (true);
+
+  // No, try talking to the printer...
   if ((device = papplPrinterOpenDevice(printer)) == NULL)
   {
     papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to open device for status.");
-    return (false);
+    goto done;
   }
 
   // Get the printer status...
@@ -803,10 +813,6 @@ lprint_zpl_status(
   if (sscanf(line + 1, "%*d,%*d,%*d,%d", &length) == 1 && length > 11)
   {
     // Auto-detect label length for ready media...
-    pappl_pr_driver_data_t	data;	// Driver data
-
-    papplPrinterGetDriverData(printer, &data);
-
     // Round the length to the nearest dot and snap to the nearest 1/4"...
     length = (2540 * length + data.y_resolution[0] / 2) / data.y_resolution[0];
 
@@ -825,6 +831,13 @@ lprint_zpl_status(
 
   papplPrinterCloseDevice(printer);
 
+  if (!ret)
+  {
+    // Don't try doing status updates for 5 minutes...
+    extdata->status_time = time(NULL) + 300;
+    ret = true;
+  }
+
   return (ret);
 }
 
@@ -839,25 +852,35 @@ lprint_zpl_update_reasons(
     pappl_job_t     *job,		// I - Current job or `NULL` if none
     pappl_device_t  *device)		// I - Connection to device
 {
+  bool			ret = false;	// Return value
   char			line[1025],	// Line from printer
 			*lineptr;	// Pointer into line
   ssize_t		bytes;		// Bytes read
   unsigned		errors = 0,	// Detected errors
 			warnings = 0;	// Detected warnings
   pappl_preason_t	reasons;	// "printer-state-reasons" values
+  pappl_pr_driver_data_t data;		// Driver data
+  lprint_extdata_t	*extdata;	// Extension data
 
+
+  // Check the "disabled" flag in the printer's extension data...
+  papplPrinterGetDriverData(printer, &data);
+  extdata = (lprint_extdata_t *)data.extension;
+
+  if (extdata->status_disabled)
+    return (true);
 
   // Get the printer status...
   if (papplDevicePuts(device, "~HQES\n") < 0)
   {
     papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to send HQES status command.");
-    return (false);
+    goto done;
   }
 
   if ((bytes = papplDeviceRead(device, line, sizeof(line) - 1)) < 0)
   {
     papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to read HQES status response.");
-    return (false);
+    goto done;
   }
 
   line[bytes] = '\0';
@@ -958,5 +981,15 @@ lprint_zpl_update_reasons(
 
   papplPrinterSetReasons(printer, reasons, ~reasons);
 
-  return (true);
+  ret = true;
+
+  done:
+
+  if (!ret && job)
+  {
+    // Disable status monitoring completely...
+    extdata->status_disabled = true;
+  }
+
+  return (ret);
 }

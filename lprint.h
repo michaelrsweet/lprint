@@ -145,11 +145,13 @@ typedef struct lprint_dither_s		// Dithering state
   unsigned	out_width;		// Output width in bytes
 } lprint_dither_t;
 
-typedef struct lprint_cmedia_s		// Custom label sizes (per-printer/source)
+typedef struct lprint_extdata_s		// Per-printer extensions data
 {
   char		custom_name[PAPPL_MAX_SOURCE][128];
-					// Custom media size names
-} lprint_cmedia_t;
+					// Custom media size names per source
+  bool		status_disabled;	// Have we given up on getting status updates?
+  time_t	status_time;		// Time until the next status attempt
+} lprint_extdata_t;
 
 
 //
