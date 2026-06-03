@@ -613,7 +613,7 @@ PACKAGE_TARNAME='lprint'
 PACKAGE_VERSION='1.4.0.unstable'
 PACKAGE_STRING='lprint 1.4.0.unstable'
 PACKAGE_BUGREPORT='https://github.com/michaelrsweet/lprint/issues'
-PACKAGE_URL='https://michaelrsweet.github.io/lprint'
+PACKAGE_URL='https://www.msweet.org/lprint/'
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
@@ -1348,7 +1348,7 @@ Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
 
 Report bugs to <https://github.com/michaelrsweet/lprint/issues>.
-lprint home page: <https://michaelrsweet.github.io/lprint>.
+lprint home page: <https://www.msweet.org/lprint/>.
 _ACEOF
 ac_status=$?
 fi
@@ -4733,7 +4733,7 @@ Configuration headers:
 $config_headers
 
 Report bugs to <https://github.com/michaelrsweet/lprint/issues>.
-lprint home page: <https://michaelrsweet.github.io/lprint>."
+lprint home page: <https://www.msweet.org/lprint/>."
 
 _ACEOF
 ac_cs_config=`printf "%s\n" "$ac_configure_args" | sed "$ac_safe_unquote"`
