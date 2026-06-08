@@ -1,7 +1,7 @@
 LPrint Change History
 =====================
 
-v1.4.0 - YYYY-MM-DD
+v1.4.0 - 2026-06-08
 -------------------
 
 - Added ESC/POS driver (Issue #123)
