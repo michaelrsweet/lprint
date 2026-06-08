@@ -1,6 +1,13 @@
 LPrint Change History
 =====================
 
+v1.4.1 - YYYY-MM-DD
+-------------------
+
+- Fixed build error when compiling against older versions of libcups
+  (Issue #210)
+
+
 v1.4.0 - 2026-06-08
 -------------------
 
