@@ -202,7 +202,7 @@ lprint_tspl_printfile(
   filename = papplJobGetFilename(job);
 #endif // PAPPL_API_VERSION_MAJOR
 
-  if ((fd  = open(papplJobGetDocumentFilename(job, doc_number), O_RDONLY)) < 0)
+  if ((fd  = open(filename, O_RDONLY)) < 0)
   {
     papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to open print file '%s': %s", filename, strerror(errno));
     return (false);
