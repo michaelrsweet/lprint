@@ -40,10 +40,10 @@ static lprint_device_t	*copy_cb(lprint_device_t *src);
 static void		create_cb(pappl_printer_t *printer, void *cbdata);
 static bool		driver_cb(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 static void		free_cb(lprint_device_t *src);
-static int		match_id(int num_did, cups_option_t *did, const char *match_id);
+static int		match_id(pappl_len_t num_did, cups_option_t *did, const char *match_id);
 static const char	*mime_cb(const unsigned char *header, size_t headersize, void *data);
 static bool		printer_cb(const char *device_info, const char *device_uri, const char *device_id, cups_array_t *devices);
-static pappl_system_t	*system_cb(int num_options, cups_option_t *options, void *data);
+static pappl_system_t	*system_cb(pappl_len_t num_options, cups_option_t *options, void *data);
 
 
 //
@@ -91,11 +91,11 @@ autoadd_cb(const char *device_info,	// I - Device information/name (not used)
            const char *device_id,	// I - IEEE-1284 device ID
            void       *cbdata)		// I - Callback data (System)
 {
-  int		i,			// Looping var
-		score,			// Current driver match score
-	    	best_score = 0,		// Best score
-		num_did;		// Number of device ID key/value pairs
+  size_t	i;			// Looping var
+  pappl_len_t	num_did;		// Number of device ID key/value pairs
   cups_option_t	*did;			// Device ID key/value pairs
+  int		score,			// Current driver match score
+	    	best_score = 0;		// Best score
   const char	*make,			// Manufacturer name
 		*best_name = NULL;	// Best driver
   char		name[1024] = "";	// Driver name to match
@@ -106,15 +106,15 @@ autoadd_cb(const char *device_info,	// I - Device information/name (not used)
   // First parse the device ID and get any potential driver name to match...
   num_did = papplDeviceParseID(device_id, &did);
 
-  if ((make = cupsGetOption("MANUFACTURER", num_did, did)) == NULL)
-    if ((make = cupsGetOption("MANU", num_did, did)) == NULL)
-      make = cupsGetOption("MFG", num_did, did);
+  if ((make = cupsGetOption("MANUFACTURER", (cups_len_t)num_did, did)) == NULL)
+    if ((make = cupsGetOption("MANU", (cups_len_t)num_did, did)) == NULL)
+      make = cupsGetOption("MFG", (cups_len_t)num_did, did);
 
   if (make && !strncasecmp(make, "Zebra", 5))
     lprintZPLQueryDriver((pappl_system_t *)cbdata, device_uri, name, sizeof(name));
 
   // Then loop through the driver list to find the best match...
-  for (i = 0; i < (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])); i ++)
+  for (i = 0; i < (sizeof(lprint_drivers) / sizeof(lprint_drivers[0])); i ++)
   {
     if (!strcmp(name, lprint_drivers[i].name))
     {
@@ -214,16 +214,16 @@ driver_cb(
     ipp_t                  **attrs,	// O - Pointer to driver attributes
     void                   *cbdata)	// I - Callback data (not used)
 {
-  bool	ret = false;			// Return value
-  int	i;				// Looping var
+  bool		ret = false;		// Return value
+  size_t	i;			// Looping var
 
 
   // Copy make/model info...
-  for (i = 0; i < (int)(sizeof(lprint_drivers) / sizeof(lprint_drivers[0])); i ++)
+  for (i = 0; i < (sizeof(lprint_drivers) / sizeof(lprint_drivers[0])); i ++)
   {
     if (!strcmp(driver_name, lprint_drivers[i].name))
     {
-      papplCopyString(data->make_and_model, lprint_drivers[i].description, sizeof(data->make_and_model));
+      cupsCopyString(data->make_and_model, lprint_drivers[i].description, sizeof(data->make_and_model));
       break;
     }
   }
@@ -241,7 +241,7 @@ driver_cb(
   // Color values...
   data->color_supported = PAPPL_COLOR_MODE_AUTO | PAPPL_COLOR_MODE_MONOCHROME | PAPPL_COLOR_MODE_BI_LEVEL;
   data->color_default   = PAPPL_COLOR_MODE_MONOCHROME;
-  data->raster_types    = PAPPL_PWG_RASTER_TYPE_BLACK_1 | PAPPL_PWG_RASTER_TYPE_BLACK_8 | PAPPL_PWG_RASTER_TYPE_SGRAY_8;
+  data->raster_types    = PAPPL_RASTER_TYPE_BLACK_1 | PAPPL_RASTER_TYPE_BLACK_8 | PAPPL_RASTER_TYPE_SGRAY_8;
 
   // "print-quality-default" value...
   data->quality_default = IPP_QUALITY_NORMAL;
@@ -289,6 +289,7 @@ driver_cb(
   else if (!strncmp(driver_name, "zpl_", 4))
     ret = lprintZPL(system, driver_name, device_uri, device_id, data, attrs, cbdata);
 
+#if PAPPL_API_VERSION_MAJOR < 2
   // Update for finishings support...
   if (data->finishings & PAPPL_FINISHINGS_TRIM)
   {
@@ -309,9 +310,10 @@ driver_cb(
       ippAddInteger(*attrs, IPP_TAG_PRINTER, IPP_TAG_ENUM, "finishings-default", IPP_FINISHINGS_TRIM);
     }
   }
+#endif // PAPPL_API_VERSION_MAJOR < 2
 
   // Update the ready media...
-  for (i = 0; i < data->num_source; i ++)
+  for (i = 0; i < (size_t)data->num_source; i ++)
   {
     pwg_media_t *pwg = pwgMediaForPWG(data->media_ready[i].size_name);
 
@@ -321,9 +323,9 @@ driver_cb(
     data->media_ready[i].size_width    = pwg->width;
     data->media_ready[i].size_length   = pwg->length;
     data->media_ready[i].top_margin    = data->bottom_top;
-    papplCopyString(data->media_ready[i].source, data->source[i], sizeof(data->media_ready[i].source));
+    cupsCopyString(data->media_ready[i].source, data->source[i], sizeof(data->media_ready[i].source));
     if (!data->media_ready[i].type[0])
-      papplCopyString(data->media_ready[i].type, data->type[0], sizeof(data->media_ready[i].type));
+      cupsCopyString(data->media_ready[i].type, data->type[0], sizeof(data->media_ready[i].type));
   }
 
   // By default use media from the main source...
@@ -356,13 +358,13 @@ free_cb(lprint_device_t *dev)		// I - Device entry
 //
 
 static int				// O - Score
-match_id(int           num_did,		// I - Number of device ID key/value pairs
+match_id(pappl_len_t   num_did,		// I - Number of device ID key/value pairs
          cups_option_t *did,		// I - Device ID key/value pairs
          const char    *match_id)	// I - Driver's device ID match string
 {
-  int		i,			// Looping var
-		score = 0,		// Score
+  pappl_len_t	i,			// Looping var
 		num_mid;		// Number of match ID key/value pairs
+  int		score = 0;		// Score
   cups_option_t	*mid,			// Match ID key/value pairs
 		*current;		// Current key/value pair
   const char	*value,			// Device ID value
@@ -376,7 +378,7 @@ match_id(int           num_did,		// I - Number of device ID key/value pairs
   // Loop through the match pairs to find matches (or not)
   for (i = num_mid, current = mid; i > 0; i --, current ++)
   {
-    if ((value = cupsGetOption(current->name, num_did, did)) == NULL)
+    if ((value = cupsGetOption(current->name, (cups_len_t)num_did, did)) == NULL)
     {
       // No match
       score = 0;
@@ -393,6 +395,7 @@ match_id(int           num_did,		// I - Number of device ID key/value pairs
       // Possible substring match, check
       size_t mlen = strlen(current->value);
 					// Length of match value
+
       if ((valptr == value || valptr[-1] == ',') && (!valptr[mlen] || valptr[mlen] == ','))
       {
         // Partial match!
@@ -413,7 +416,7 @@ match_id(int           num_did,		// I - Number of device ID key/value pairs
     }
   }
 
-  cupsFreeOptions(num_mid, mid);
+  cupsFreeOptions((cups_len_t)num_mid, mid);
 
   return (score);
 }
@@ -472,7 +475,7 @@ printer_cb(const char   *device_info,	// I - Device information
 
 static pappl_system_t *			// O - System object
 system_cb(
-    int           num_options,		// I - Number options
+    pappl_len_t   num_options,		// I - Number options
     cups_option_t *options,		// I - Options
     void          *data)		// I - Callback data (unused)
 {
@@ -497,7 +500,7 @@ system_cb(
   (void)data;
 
   // Parse standard log and server options...
-  if ((val = cupsGetOption("log-level", num_options, options)) != NULL)
+  if ((val = cupsGetOption("log-level", (cups_len_t)num_options, options)) != NULL)
   {
     if (!strcmp(val, "fatal"))
       loglevel = PAPPL_LOGLEVEL_FATAL;
@@ -518,7 +521,7 @@ system_cb(
   else
     loglevel = PAPPL_LOGLEVEL_UNSPEC;
 
-  if ((val = cupsGetOption("server-options", num_options, options)) != NULL)
+  if ((val = cupsGetOption("server-options", (cups_len_t)num_options, options)) != NULL)
   {
     const char	*valptr;		// Pointer into value
 
@@ -552,13 +555,13 @@ system_cb(
     }
   }
 
-  hostname    = cupsGetOption("server-hostname", num_options, options);
-  listenhost  = cupsGetOption("listen-hostname", num_options, options);
-  logfile     = cupsGetOption("log-file", num_options, options);
-  spooldir    = cupsGetOption("spool-directory", num_options, options);
-  system_name = cupsGetOption("system-name", num_options, options);
+  hostname    = cupsGetOption("server-hostname", (cups_len_t)num_options, options);
+  listenhost  = cupsGetOption("listen-hostname", (cups_len_t)num_options, options);
+  logfile     = cupsGetOption("log-file", (cups_len_t)num_options, options);
+  spooldir    = cupsGetOption("spool-directory", (cups_len_t)num_options, options);
+  system_name = cupsGetOption("system-name", (cups_len_t)num_options, options);
 
-  if ((val = cupsGetOption("server-port", num_options, options)) != NULL)
+  if ((val = cupsGetOption("server-port", (cups_len_t)num_options, options)) != NULL)
   {
     if (!isdigit(*val & 255))
     {
@@ -596,8 +599,8 @@ system_cb(
   }
   else
   {
-    papplCopyString(oldfile, "/lprint.ini", sizeof(oldfile));
-    papplCopyString(lprint_statefile, "/lprint.state", sizeof(lprint_statefile));
+    cupsCopyString(oldfile, "/lprint.ini", sizeof(oldfile));
+    cupsCopyString(lprint_statefile, "/lprint.state", sizeof(lprint_statefile));
   }
 #else
   else if ((val = getenv("HOME")) != NULL)
@@ -625,11 +628,11 @@ system_cb(
   }
   else
   {
-    papplCopyString(oldfile, "/etc/lprint.conf", sizeof(oldfile));
+    cupsCopyString(oldfile, "/etc/lprint.conf", sizeof(oldfile));
 #  ifdef __APPLE__
-    papplCopyString(lprint_statefile, "/private/var/lib/lprint.state", sizeof(lprint_statefile));
+    cupsCopyString(lprint_statefile, "/private/var/lib/lprint.state", sizeof(lprint_statefile));
 #  else
-    papplCopyString(lprint_statefile, "/var/lib/lprint.state", sizeof(lprint_statefile));
+    cupsCopyString(lprint_statefile, "/var/lib/lprint.state", sizeof(lprint_statefile));
 #  endif // __APPLE__
   }
 #endif // _WIN32
@@ -650,10 +653,10 @@ system_cb(
   }
 
   // Create the system object...
-  if ((system = papplSystemCreate(soptions, system_name ? system_name : "LPrint", port, "_print,_universal", spooldir, logfile ? logfile : "-", loglevel, cupsGetOption("auth-service", num_options, options), /* tls_only */false)) == NULL)
+  if ((system = papplSystemCreate(soptions, system_name ? system_name : "LPrint", port, "_print,_universal", spooldir, logfile ? logfile : "-", loglevel, cupsGetOption("auth-service", (cups_len_t)num_options, options), /* tls_only */false)) == NULL)
     return (NULL);
 
-  if (!cupsGetOption("private-server", num_options, options))
+  if (!cupsGetOption("private-server", (cups_len_t)num_options, options))
   {
     // Listen for TCP/IP connections...
     papplSystemAddListeners(system, listenhost);
@@ -662,7 +665,7 @@ system_cb(
   if (hostname)
     papplSystemSetHostName(system, hostname);
 
-  if ((val = cupsGetOption("admin-group", num_options, options)) != NULL)
+  if ((val = cupsGetOption("admin-group", (cups_len_t)num_options, options)) != NULL)
     papplSystemSetAdminGroup(system, val);
 
   papplSystemSetMIMECallback(system, mime_cb, NULL);
@@ -713,7 +716,7 @@ system_cb(
 	if (!strncasecmp(dev->device_info, "Zebra Technologies ZTC ", 23))
 	  snprintf(name, sizeof(name), "Zebra %s", dev->device_info + 23);
 	else
-	  papplCopyString(name, dev->device_info, sizeof(name));
+	  cupsCopyString(name, dev->device_info, sizeof(name));
 
 	if ((nameptr = strstr(name, " (")) != NULL)
 	  *nameptr = '\0';
@@ -735,7 +738,7 @@ system_cb(
 	    snprintf(number, sizeof(number), " %d", i);
 	    numberlen = strlen(number);
 
-	    papplCopyString(newname, name, sizeof(newname));
+	    cupsCopyString(newname, name, sizeof(newname));
 	    if ((namelen + numberlen) < sizeof(newname))
 	      memcpy(newname + namelen, number, numberlen + 1);
 	    else

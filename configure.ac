@@ -13,7 +13,7 @@ AC_PREREQ(2.60)
 
 
 dnl Package name and version...
-AC_INIT([lprint], [1.4.0], [https://github.com/michaelrsweet/lprint/issues], [lprint], [https://www.msweet.org/lprint/])
+AC_INIT([lprint], [1.5.0.unstable], [https://github.com/michaelrsweet/lprint/issues], [lprint], [https://www.msweet.org/lprint/])
 AC_CONFIG_HEADERS([config.h])
 
 LPRINT_VERSION="AC_PACKAGE_VERSION"
@@ -99,7 +99,10 @@ AC_PATH_TOOL([PKGCONFIG], [pkg-config])
 
 
 dnl PAPPL library...
-AS_IF([$PKGCONFIG --exists pappl --atleast-version=1.2], [
+AS_IF([$PKGCONFIG --exists pappl2], [
+    CFLAGS="$CFLAGS $($PKGCONFIG --cflags pappl2)"
+    LIBS="$LIBS $($PKGCONFIG --libs pappl2)"
+], [$PKGCONFIG --exists pappl --atleast-version=1.2], [
     CFLAGS="$CFLAGS $($PKGCONFIG --cflags pappl)"
     LIBS="$LIBS $($PKGCONFIG --libs pappl)"
 ], [

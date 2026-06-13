@@ -344,7 +344,7 @@ lprintMediaLoad(
   }
 
   for (i = 0; i < data->num_source && cupsFileGets(fp, line, sizeof(line)); i ++)
-    papplCopyString(cmedia->custom_name[i], line, sizeof(cmedia->custom_name[i]));
+    cupsCopyString(cmedia->custom_name[i], line, sizeof(cmedia->custom_name[i]));
 
   cupsFileClose(fp);
 
@@ -409,14 +409,14 @@ lprintMediaMatch(
   if (ret && strcmp(pdata.media_ready[source].size_name, ret) && (pwg = pwgMediaForPWG(ret)) != NULL)
   {
     // Ready media has changed...
-    papplCopyString(pdata.media_ready[source].size_name, ret, sizeof(pdata.media_ready[source].size_name));
+    cupsCopyString(pdata.media_ready[source].size_name, ret, sizeof(pdata.media_ready[source].size_name));
     pdata.media_ready[source].size_width  = pwg->width;
     pdata.media_ready[source].size_length = pwg->length;
 
     if (pwg->length == 0)
-      papplCopyString(pdata.media_ready[source].type, "continuous", sizeof(pdata.media_ready[source].type));
+      cupsCopyString(pdata.media_ready[source].type, "continuous", sizeof(pdata.media_ready[source].type));
     else
-      papplCopyString(pdata.media_ready[source].type, "label", sizeof(pdata.media_ready[source].type));
+      cupsCopyString(pdata.media_ready[source].type, "label", sizeof(pdata.media_ready[source].type));
 
     papplPrinterSetDriverData(printer, &pdata, NULL);
   }
@@ -566,13 +566,13 @@ lprintMediaUI(
 
             snprintf(name, sizeof(name), "ready%d", i);
             pwgFormatSizeName(ready->size_name, sizeof(ready->size_name), "custom", name, ready->size_width, ready->size_length, custom_units);
-            papplCopyString(cmedia->custom_name[i], ready->size_name, sizeof(cmedia->custom_name[i]));
+            cupsCopyString(cmedia->custom_name[i], ready->size_name, sizeof(cmedia->custom_name[i]));
 	  }
         }
         else if ((pwg = pwgMediaForPWG(value)) != NULL)
         {
           // Standard size...
-          papplCopyString(ready->size_name, pwg->pwg, sizeof(ready->size_name));
+          cupsCopyString(ready->size_name, pwg->pwg, sizeof(ready->size_name));
           ready->size_width  = pwg->width;
           ready->size_length = pwg->length;
         }
@@ -580,7 +580,7 @@ lprintMediaUI(
         papplLogClient(client, PAPPL_LOGLEVEL_DEBUG, "ready%d-size='%s',%d,%d", i, ready->size_name, ready->size_width, ready->size_length);
 
         // source
-        papplCopyString(ready->source, data.source[i], sizeof(ready->source));
+        cupsCopyString(ready->source, data.source[i], sizeof(ready->source));
 
         // xxx-margin
 	ready->bottom_margin = ready->top_margin = data.bottom_top;
@@ -603,7 +603,7 @@ lprintMediaUI(
         // type
         snprintf(name, sizeof(name), "ready%d-type", i);
         if ((value = cupsGetOption(name, num_form, form)) != NULL)
-          papplCopyString(ready->type, value, sizeof(ready->type));
+          cupsCopyString(ready->type, value, sizeof(ready->type));
       }
 
       // Label mode...
@@ -922,7 +922,7 @@ localize_keyword(
   if ((loctext = papplClientGetLocString(client, key)) != key)
   {
     // Use localized string...
-    papplCopyString(buffer, loctext, bufsize);
+    cupsCopyString(buffer, loctext, bufsize);
   }
   else if (!strcmp(attrname, "media"))
   {
@@ -948,7 +948,7 @@ localize_keyword(
     // Convert "separated-words" to "Separated Words"...
     char	*ptr;			// Pointer into string
 
-    papplCopyString(buffer, keyword, bufsize);
+    cupsCopyString(buffer, keyword, bufsize);
     *buffer = (char)toupper(*buffer & 255);
 
     for (ptr = buffer + 1; *ptr; ptr ++)

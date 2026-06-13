@@ -176,7 +176,11 @@ static const char * const lprint_zpl_4inch_media[] =
 #if ZPL_COMPRESSION
 static bool	lprint_zpl_compress(pappl_device_t *device, unsigned char ch, unsigned count);
 #endif // ZPL_COMPRESSION
+#if PAPPL_API_VERSION_MAJOR < 2
 static bool	lprint_zpl_printfile(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
+#else
+static bool	lprint_zpl_printfile(pappl_job_t *job, int doc_number, pappl_pr_options_t *options, pappl_device_t *device);
+#endif // PAPPL_API_VERSION_MAJOR < 2
 static bool	lprint_zpl_rendjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
 static bool	lprint_zpl_rendpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page);
 static bool	lprint_zpl_rstartjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
@@ -230,7 +234,14 @@ lprintZPL(
   data->x_default = data->y_default = data->x_resolution[0];
 
   if (strstr(driver_name, "-cutter"))
+  {
+#if PAPPL_API_VERSION_MAJOR < 2
     data->finishings = PAPPL_FINISHINGS_TRIM;
+#else
+    data->finishings_default   = PAPPL_FINISHINGS_TRIM;
+    data->finishings_supported = PAPPL_FINISHINGS_TRIM;
+#endif // PAPPL_API_VERSION_MAJOR < 2
+  }
 
   if (!strncmp(driver_name, "zpl_2inch-", 16))
   {
@@ -238,8 +249,8 @@ lprintZPL(
     data->num_media = (int)(sizeof(lprint_zpl_2inch_media) / sizeof(lprint_zpl_2inch_media[0]));
     memcpy(data->media, lprint_zpl_2inch_media, sizeof(lprint_zpl_2inch_media));
 
-    papplCopyString(data->media_ready[0].size_name, "oe_2x3-label_2x3in", sizeof(data->media_ready[0].size_name));
-    papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
+    cupsCopyString(data->media_ready[0].size_name, "oe_2x3-label_2x3in", sizeof(data->media_ready[0].size_name));
+    cupsCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
   }
   else
   {
@@ -247,8 +258,8 @@ lprintZPL(
     data->num_media = (int)(sizeof(lprint_zpl_4inch_media) / sizeof(lprint_zpl_4inch_media[0]));
     memcpy(data->media, lprint_zpl_4inch_media, sizeof(lprint_zpl_4inch_media));
 
-    papplCopyString(data->media_ready[0].size_name, "na_index-4x6_4x6in", sizeof(data->media_ready[0].size_name));
-    papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
+    cupsCopyString(data->media_ready[0].size_name, "na_index-4x6_4x6in", sizeof(data->media_ready[0].size_name));
+    cupsCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
   }
 
   data->media_ready[0].tracking = PAPPL_MEDIA_TRACKING_GAP;
@@ -308,8 +319,13 @@ lprintZPLQueryDriver(
   *name = '\0';
 
   // Connect and send Host Information command...
+#if PAPPL_API_VERSION_MAJOR < 2
   if ((device = papplDeviceOpen(device_uri, "query", papplLogDevice, system)) == NULL)
     return;
+#else
+  if ((device = papplDeviceOpen(device_uri, /*job*/NULL, papplLogDevice, system)) == NULL)
+    return;
+#endif // PAPPL_API_VERSION_MAJOR < 2
 
   if (papplDevicePuts(device, "~HI\n") < 0)
     goto done;
@@ -417,9 +433,13 @@ lprint_zpl_compress(
 static bool				// O - `true` on success, `false` on failure
 lprint_zpl_printfile(
     pappl_job_t        *job,		// I - Job
+#if PAPPL_API_VERSION_MAJOR >= 2
+    int                doc_number,	// I - Document number
+#endif // PAPPL_API_VERSION_MAJOR >= 2
     pappl_pr_options_t *options,	// I - Job options
     pappl_device_t     *device)		// I - Output device
 {
+  const char	*filename;		// Document filename
   int		fd;			// Input file
   ssize_t	bytes;			// Bytes read/written
   char		buffer[65536];		// Read/write buffer
@@ -428,9 +448,15 @@ lprint_zpl_printfile(
   // Copy the raw file...
   papplJobSetImpressions(job, 1);
 
-  if ((fd  = open(papplJobGetFilename(job), O_RDONLY)) < 0)
+#if PAPPL_API_VERSION_MAJOR < 2
+  filename = papplJobGetFilename(job);
+#else
+  filename = papplJobGetDocumentFilename(job, doc_number);
+#endif // PAPPL_API_VERSION_MAJOR < 2
+
+  if ((fd  = open(papplJobGetDocumentFilename(job, doc_number), O_RDONLY)) < 0)
   {
-    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to open print file '%s': %s", papplJobGetFilename(job), strerror(errno));
+    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to open print file '%s': %s", filename, strerror(errno));
     return (false);
   }
 

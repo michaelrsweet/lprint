@@ -143,7 +143,11 @@ static const char * const lprint_dymo_tape[] =
 //
 
 static void	lprint_dymo_init(pappl_job_t *job, lprint_dymo_t *dymo);
+#if PAPPL_API_VERSION_MAJOR < 2
 static bool	lprint_dymo_printfile(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
+#else
+static bool	lprint_dymo_printfile(pappl_job_t *job, int doc_number, pappl_pr_options_t *options, pappl_device_t *device);
+#endif // PAPPL_API_VERSION_MAJOR < 2
 static bool	lprint_dymo_rendjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
 static bool	lprint_dymo_rendpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page);
 static bool	lprint_dymo_rstartjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
@@ -199,7 +203,7 @@ lprintDYMO(
     data->num_source = 1;
     data->source[0]  = "main-roll";
 
-    papplCopyString(data->media_ready[0].size_name, "oe_wide-2in-tape_1x2in", sizeof(data->media_ready[0].size_name));
+    cupsCopyString(data->media_ready[0].size_name, "oe_wide-2in-tape_1x2in", sizeof(data->media_ready[0].size_name));
   }
   else
   {
@@ -241,18 +245,18 @@ lprintDYMO(
       data->source[0]  = "main-roll";
       data->source[1]  = "alternate-roll";
 
-      papplCopyString(data->media_ready[0].size_name, "oe_address-label_1.125x3.5in", sizeof(data->media_ready[0].size_name));
-      papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
-      papplCopyString(data->media_ready[1].size_name, "oe_address-label_1.125x3.5in", sizeof(data->media_ready[1].size_name));
-      papplCopyString(data->media_ready[1].type, "labels", sizeof(data->media_ready[0].type));
+      cupsCopyString(data->media_ready[0].size_name, "oe_address-label_1.125x3.5in", sizeof(data->media_ready[0].size_name));
+      cupsCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
+      cupsCopyString(data->media_ready[1].size_name, "oe_address-label_1.125x3.5in", sizeof(data->media_ready[1].size_name));
+      cupsCopyString(data->media_ready[1].type, "labels", sizeof(data->media_ready[0].type));
     }
     else
     {
       data->num_source = 1;
       data->source[0]  = "main-roll";
 
-      papplCopyString(data->media_ready[0].size_name, "oe_address-label_1.125x3.5in", sizeof(data->media_ready[0].size_name));
-      papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
+      cupsCopyString(data->media_ready[0].size_name, "oe_address-label_1.125x3.5in", sizeof(data->media_ready[0].size_name));
+      cupsCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
     }
   }
 
@@ -317,9 +321,13 @@ lprint_dymo_init(
 static bool				// O - `true` on success, `false` on failure
 lprint_dymo_printfile(
     pappl_job_t        *job,		// I - Job
+#if PAPPL_API_VERSION_MAJOR >= 2
+    int                doc_number,	// I - Document number
+#endif // PAPPL_API_VERSION_MAJOR >= 2
     pappl_pr_options_t *options,	// I - Job options
     pappl_device_t     *device)		// I - Output device
 {
+  const char	*filename;		// Document filename
   int		fd;			// Input file
   ssize_t	bytes;			// Bytes read/written
   char		buffer[65536];		// Read/write buffer
@@ -335,9 +343,15 @@ lprint_dymo_printfile(
   // Copy the raw file...
   papplJobSetImpressions(job, 1);
 
-  if ((fd  = open(papplJobGetFilename(job), O_RDONLY)) < 0)
+#if PAPPL_API_VERSION_MAJOR < 2
+  filename = papplJobGetFilename(job);
+#else
+  filename = papplJobGetDocumentFilename(job, doc_number);
+#endif // PAPPL_API_VERSION_MAJOR < 2
+
+  if ((fd  = open(papplJobGetDocumentFilename(job, doc_number), O_RDONLY)) < 0)
   {
-    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to open print file '%s': %s", papplJobGetFilename(job), strerror(errno));
+    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to open print file '%s': %s", filename, strerror(errno));
     return (false);
   }
 

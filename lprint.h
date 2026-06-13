@@ -107,6 +107,15 @@ typedef ipp_copycb_t ipp_copy_cb_t;
 #    define IPP_NUM_CAST (size_t)
 #  endif // CUPS_VERSION_MAJOR < 3
 
+#  if PAPPL_API_VERSION_MAJOR < 2
+#    define pappl_len_t int
+#    define PAPPL_RASTER_TYPE_BLACK_1 PAPPL_PWG_RASTER_TYPE_BLACK_1
+#    define PAPPL_RASTER_TYPE_BLACK_8 PAPPL_PWG_RASTER_TYPE_BLACK_8
+#    define PAPPL_RASTER_TYPE_SGRAY_8 PAPPL_PWG_RASTER_TYPE_SGRAY_8
+#  else
+#    define pappl_len_t size_t
+#  endif // PAPPL_API_VERSION_MAJOR < 2
+
 
 //
 // Constants...
@@ -181,7 +190,11 @@ extern bool	lprintDYMO(pappl_system_t *system, const char *driver_name, const ch
 extern bool	lprintEPL2(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern bool	lprintESCPOS(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *driver_data, ipp_t **driver_attrs, void *cbdata);
 extern bool	lprintSII(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
+#  if PAPPL_API_VERSION_MAJOR < 2
 extern bool	lprintTestFilterCB(pappl_job_t *job, pappl_device_t *device, void *data);
+#  else
+extern bool	lprintTestFilterCB(pappl_job_t *job, int doc_number, pappl_pr_options_t *options, pappl_device_t *device, void *data);
+#  endif // PAPPL_API_VERSION_MAJOR < 2
 extern const char *lprintTestPageCB(pappl_printer_t *printer, char *buffer, size_t bufsize);
 extern bool	lprintTSPL(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern bool	lprintZPL(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);

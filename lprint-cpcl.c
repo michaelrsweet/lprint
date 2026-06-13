@@ -98,7 +98,11 @@ static const char * const lprint_hma300e_media[] =
 // Local functions...
 //
 
+#if PAPPL_API_VERSION_MAJOR < 2
 static bool	lprint_cpcl_printfile(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
+#else
+static bool	lprint_cpcl_printfile(pappl_job_t *job, int doc_number, pappl_pr_options_t *options, pappl_device_t *device);
+#endif // PAPPL_API_VERSION_MAJOR < 2
 static bool	lprint_cpcl_rendjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
 static bool	lprint_cpcl_rendpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page);
 static bool	lprint_cpcl_rstartjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
@@ -145,23 +149,28 @@ lprintCPCL(
 
   data->x_default = data->y_default = data->x_resolution[0];
 
+#if PAPPL_API_VERSION_MAJOR < 2
   data->finishings = PAPPL_FINISHINGS_TRIM;
+#else
+  data->finishings_default   = PAPPL_FINISHINGS_TRIM;
+  data->finishings_supported = PAPPL_FINISHINGS_TRIM;
+#endif // PAPPL_API_VERSION_MAJOR < 2
 
   if (!strncmp(driver_name, "cpcl_hma300e-", 13))
   {
     data->num_media = (int)(sizeof(lprint_hma300e_media) / sizeof(lprint_hma300e_media[0]));
     memcpy(data->media, lprint_hma300e_media, sizeof(lprint_hma300e_media));
 
-    papplCopyString(data->media_ready[0].size_name, "roll_main_80x150mm", sizeof(data->media_ready[0].size_name));
-    papplCopyString(data->media_ready[0].type, "continuous", sizeof(data->media_ready[0].type));
+    cupsCopyString(data->media_ready[0].size_name, "roll_main_80x150mm", sizeof(data->media_ready[0].size_name));
+    cupsCopyString(data->media_ready[0].type, "continuous", sizeof(data->media_ready[0].type));
   }
   else
   {
     data->num_media = (int)(sizeof(lprint_cpcl_media) / sizeof(lprint_cpcl_media[0]));
     memcpy(data->media, lprint_cpcl_media, sizeof(lprint_cpcl_media));
 
-    papplCopyString(data->media_ready[0].size_name, "na_index-4x6_4x6in", sizeof(data->media_ready[0].size_name));
-    papplCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
+    cupsCopyString(data->media_ready[0].size_name, "na_index-4x6_4x6in", sizeof(data->media_ready[0].size_name));
+    cupsCopyString(data->media_ready[0].type, "labels", sizeof(data->media_ready[0].type));
   }
 
   data->bottom_top = data->left_right = 1;
@@ -198,10 +207,13 @@ lprintCPCL(
 static bool				// O - `true` on success, `false` on failure
 lprint_cpcl_printfile(
     pappl_job_t        *job,		// I - Job
+#if PAPPL_API_VERSION_MAJOR >= 2
+    int                doc_number,	// I - Document number
+#endif // PAPPL_API_VERSION_MAJOR >= 2
     pappl_pr_options_t *options,	// I - Job options
     pappl_device_t     *device)		// I - Output device
 {
-
+  const char	*filename;		// Document filename
   int		fd;			// Input file
   ssize_t	bytes;			// Bytes read/written
   char		buffer[65536];		// Read/write buffer
@@ -210,9 +222,15 @@ lprint_cpcl_printfile(
   // Copy the raw file...
   papplJobSetImpressions(job, 1);
 
-  if ((fd  = open(papplJobGetFilename(job), O_RDONLY)) < 0)
+#if PAPPL_API_VERSION_MAJOR < 2
+  filename = papplJobGetFilename(job);
+#else
+  filename = papplJobGetDocumentFilename(job, doc_number);
+#endif // PAPPL_API_VERSION_MAJOR < 2
+
+  if ((fd  = open(papplJobGetDocumentFilename(job, doc_number), O_RDONLY)) < 0)
   {
-    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to open print file '%s': %s", papplJobGetFilename(job), strerror(errno));
+    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to open print file '%s': %s", filename, strerror(errno));
     return (false);
   }
 

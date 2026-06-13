@@ -51,7 +51,11 @@ static const char * const lprint_escpos_80mm[] =
 //
 
 static void	lprint_escpos_init(pappl_job_t *job, lprint_escpos_t *escpos);
+#if PAPPL_API_VERSION_MAJOR < 2
 static bool	lprint_escpos_printfile(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
+#else
+static bool	lprint_escpos_printfile(pappl_job_t *job, int doc_number, pappl_pr_options_t *options, pappl_device_t *device);
+#endif // PAPPL_API_VERSION_MAJOR < 2
 static bool	lprint_escpos_rendjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
 static bool	lprint_escpos_rendpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page);
 static bool	lprint_escpos_rstartjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
@@ -105,7 +109,12 @@ lprintESCPOS(
   data->type[0]  = "continuous";
 
   // Cutter...
+#if PAPPL_API_VERSION_MAJOR < 2
   data->finishings = PAPPL_FINISHINGS_TRIM;
+#else
+  data->finishings_default   = PAPPL_FINISHINGS_TRIM;
+  data->finishings_supported = PAPPL_FINISHINGS_TRIM;
+#endif // PAPPL_API_VERSION_MAJOR < 2
 
   // Model-specific values...
   if (!strncmp(driver_name, "escpos_58mm", 11))
@@ -117,7 +126,7 @@ lprintESCPOS(
     data->num_media = (int)(sizeof(lprint_escpos_58mm) / sizeof(lprint_escpos_58mm[0]));
     memcpy(data->media, lprint_escpos_58mm, sizeof(lprint_escpos_58mm));
 
-    papplCopyString(data->media_ready[0].size_name, "oe_2.25-receipt_58x1000mm", sizeof(data->media_ready[0].size_name));
+    cupsCopyString(data->media_ready[0].size_name, "oe_2.25-receipt_58x1000mm", sizeof(data->media_ready[0].size_name));
   }
   else
   {
@@ -128,7 +137,7 @@ lprintESCPOS(
     data->num_media = (int)(sizeof(lprint_escpos_80mm) / sizeof(lprint_escpos_80mm[0]));
     memcpy(data->media, lprint_escpos_80mm, sizeof(lprint_escpos_80mm));
 
-    papplCopyString(data->media_ready[0].size_name, "oe_3.125-receipt_80x1000mm", sizeof(data->media_ready[0].size_name));
+    cupsCopyString(data->media_ready[0].size_name, "oe_3.125-receipt_80x1000mm", sizeof(data->media_ready[0].size_name));
   }
 
   return (true);
@@ -163,9 +172,13 @@ lprint_escpos_init(
 static bool				// O - `true` on success, `false` on failure
 lprint_escpos_printfile(
     pappl_job_t        *job,		// I - Job
+#if PAPPL_API_VERSION_MAJOR >= 2
+    int                doc_number,	// I - Document number
+#endif // PAPPL_API_VERSION_MAJOR >= 2
     pappl_pr_options_t *options,	// I - Job options
     pappl_device_t     *device)		// I - Output device
 {
+  const char	*filename;		// Document filename
   int		fd;			// Input file
   ssize_t	bytes;			// Bytes read/written
   char		buffer[65536];		// Read/write buffer
@@ -184,9 +197,15 @@ lprint_escpos_printfile(
   // Copy the raw file...
   papplJobSetImpressions(job, 1);
 
-  if ((fd  = open(papplJobGetFilename(job), O_RDONLY)) < 0)
+#if PAPPL_API_VERSION_MAJOR < 2
+  filename = papplJobGetFilename(job);
+#else
+  filename = papplJobGetDocumentFilename(job, doc_number);
+#endif // PAPPL_API_VERSION_MAJOR < 2
+
+  if ((fd  = open(papplJobGetDocumentFilename(job, doc_number), O_RDONLY)) < 0)
   {
-    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to open print file '%s': %s", papplJobGetFilename(job), strerror(errno));
+    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to open print file '%s': %s", filename, strerror(errno));
     return (false);
   }
 

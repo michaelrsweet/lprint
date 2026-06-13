@@ -1,7 +1,7 @@
 LPrint Documentation
 ====================
 
-LPrint v1.4.0 - Month DD, YYYY
+LPrint v1.5.0 - Month DD, YYYY
 Copyright 2019-2026 by Michael R Sweet
 
 LPrint is licensed under the Apache License Version 2.0.  See the files

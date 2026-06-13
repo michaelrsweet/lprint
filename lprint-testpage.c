@@ -1,7 +1,7 @@
 //
 // Test page generator for LPrint, a Label Printer Application
 //
-// Copyright © 2021-2023 by Michael R Sweet.
+// Copyright © 2021-2026 by Michael R Sweet.
 //
 // Licensed under Apache License v2.0.  See the file "LICENSE" for more
 // information.
@@ -16,13 +16,19 @@
 
 bool					// O - `true` on success, `false` on failure
 lprintTestFilterCB(
-    pappl_job_t    *job,		// I - Job
-    pappl_device_t *device,		// I - Output device
-    void           *cbdata)		// I - Callback data (not used)
+    pappl_job_t        *job,		// I - Job
+#if PAPPL_API_VERSION_MAJOR >= 2
+    int                doc_number,	// I - Document number
+    pappl_pr_options_t *options,	// I - Print options
+#endif // PAPPL_API_VERSION_MAJOR >= 2
+    pappl_device_t     *device,		// I - Output device
+    void               *cbdata)		// I - Callback data (not used)
 {
   pappl_pr_driver_data_t data;		// Printer driver data
+#if PAPPL_API_VERSION_MAJOR < 2
   pappl_pr_options_t	*options = papplJobCreatePrintOptions(job, 1, false);
 					// Print options
+#endif // PAPPL_API_VERSION_MAJOR < 2
   unsigned char	*line = NULL,		// Output line
 		*lineptr;		// Pointer into line
   unsigned	width,			// Width accounting for margins
