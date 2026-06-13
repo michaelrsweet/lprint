@@ -88,11 +88,11 @@ static const char * const lprint_sii_media[] =
 
 static unsigned	lprint_sii_get_max_width(const char *driver_name);
 static void	lprint_sii_init(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, lprint_sii_t *siidata);
-#if PAPPL_API_VERSION_MAJOR < 2
-static bool	lprint_sii_printfile(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
-#else
+#ifdef PAPPL_API_VERSION_MAJOR
 static bool	lprint_sii_printfile(pappl_job_t *job, int doc_number, pappl_pr_options_t *options, pappl_device_t *device);
-#endif // PAPPL_API_VERSION_MAJOR < 2
+#else
+static bool	lprint_sii_printfile(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
+#endif // PAPPL_API_VERSION_MAJOR
 static bool	lprint_sii_rendjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
 static bool	lprint_sii_rendpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page);
 static bool	lprint_sii_rstartjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
@@ -234,9 +234,9 @@ lprint_sii_init(
 static bool				// O - `true` on success, `false` on failure
 lprint_sii_printfile(
     pappl_job_t        *job,		// I - Job
-#if PAPPL_API_VERSION_MAJOR >= 2
+#ifdef PAPPL_API_VERSION_MAJOR
     int                doc_number,	// I - Document number
-#endif // PAPPL_API_VERSION_MAJOR >= 2
+#endif // PAPPL_API_VERSION_MAJOR
     pappl_pr_options_t *options,	// I - Job options
     pappl_device_t     *device)		// I - Output device
 {
@@ -253,11 +253,11 @@ lprint_sii_printfile(
   // Copy the raw file...
   papplJobSetImpressions(job, 1);
 
-#if PAPPL_API_VERSION_MAJOR < 2
-  filename = papplJobGetFilename(job);
-#else
+#ifdef PAPPL_API_VERSION_MAJOR
   filename = papplJobGetDocumentFilename(job, doc_number);
-#endif // PAPPL_API_VERSION_MAJOR < 2
+#else
+  filename = papplJobGetFilename(job);
+#endif // PAPPL_API_VERSION_MAJOR
 
   if ((fd  = open(papplJobGetDocumentFilename(job, doc_number), O_RDONLY)) < 0)
   {

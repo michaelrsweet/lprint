@@ -17,18 +17,18 @@
 bool					// O - `true` on success, `false` on failure
 lprintTestFilterCB(
     pappl_job_t        *job,		// I - Job
-#if PAPPL_API_VERSION_MAJOR >= 2
+#ifdef PAPPL_API_VERSION_MAJOR
     int                doc_number,	// I - Document number
     pappl_pr_options_t *options,	// I - Print options
-#endif // PAPPL_API_VERSION_MAJOR >= 2
+#endif // PAPPL_API_VERSION_MAJOR
     pappl_device_t     *device,		// I - Output device
     void               *cbdata)		// I - Callback data (not used)
 {
   pappl_pr_driver_data_t data;		// Printer driver data
-#if PAPPL_API_VERSION_MAJOR < 2
+#ifndef PAPPL_API_VERSION_MAJOR
   pappl_pr_options_t	*options = papplJobCreatePrintOptions(job, 1, false);
 					// Print options
-#endif // PAPPL_API_VERSION_MAJOR < 2
+#endif // !PAPPL_API_VERSION_MAJOR
   unsigned char	*line = NULL,		// Output line
 		*lineptr;		// Pointer into line
   unsigned	width,			// Width accounting for margins

@@ -98,11 +98,11 @@ static const char * const lprint_hma300e_media[] =
 // Local functions...
 //
 
-#if PAPPL_API_VERSION_MAJOR < 2
-static bool	lprint_cpcl_printfile(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
-#else
+#ifdef PAPPL_API_VERSION_MAJOR
 static bool	lprint_cpcl_printfile(pappl_job_t *job, int doc_number, pappl_pr_options_t *options, pappl_device_t *device);
-#endif // PAPPL_API_VERSION_MAJOR < 2
+#else
+static bool	lprint_cpcl_printfile(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
+#endif // PAPPL_API_VERSION_MAJOR
 static bool	lprint_cpcl_rendjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
 static bool	lprint_cpcl_rendpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page);
 static bool	lprint_cpcl_rstartjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
@@ -149,12 +149,12 @@ lprintCPCL(
 
   data->x_default = data->y_default = data->x_resolution[0];
 
-#if PAPPL_API_VERSION_MAJOR < 2
-  data->finishings = PAPPL_FINISHINGS_TRIM;
-#else
+#ifdef PAPPL_API_VERSION_MAJOR
   data->finishings_default   = PAPPL_FINISHINGS_TRIM;
   data->finishings_supported = PAPPL_FINISHINGS_TRIM;
-#endif // PAPPL_API_VERSION_MAJOR < 2
+#else
+  data->finishings = PAPPL_FINISHINGS_TRIM;
+#endif // PAPPL_API_VERSION_MAJOR
 
   if (!strncmp(driver_name, "cpcl_hma300e-", 13))
   {
@@ -207,9 +207,9 @@ lprintCPCL(
 static bool				// O - `true` on success, `false` on failure
 lprint_cpcl_printfile(
     pappl_job_t        *job,		// I - Job
-#if PAPPL_API_VERSION_MAJOR >= 2
+#ifdef PAPPL_API_VERSION_MAJOR
     int                doc_number,	// I - Document number
-#endif // PAPPL_API_VERSION_MAJOR >= 2
+#endif // PAPPL_API_VERSION_MAJOR
     pappl_pr_options_t *options,	// I - Job options
     pappl_device_t     *device)		// I - Output device
 {
@@ -222,11 +222,11 @@ lprint_cpcl_printfile(
   // Copy the raw file...
   papplJobSetImpressions(job, 1);
 
-#if PAPPL_API_VERSION_MAJOR < 2
-  filename = papplJobGetFilename(job);
-#else
+#ifdef PAPPL_API_VERSION_MAJOR
   filename = papplJobGetDocumentFilename(job, doc_number);
-#endif // PAPPL_API_VERSION_MAJOR < 2
+#else
+  filename = papplJobGetFilename(job);
+#endif // PAPPL_API_VERSION_MAJOR
 
   if ((fd  = open(papplJobGetDocumentFilename(job, doc_number), O_RDONLY)) < 0)
   {
