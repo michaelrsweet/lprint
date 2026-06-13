@@ -49,7 +49,7 @@ AS_IF([test "x$host_os_version" = x], [
 
 dnl Compiler options...
 CFLAGS="${CFLAGS:=}"
-CXXFLAGS="${CXXFLAGS:=}"
+CPPFLAGS="${CPPFLATS:=}"
 LDFLAGS="${LDFLAGS:=}"
 LIBS="${LIBS:=}"
 
@@ -100,10 +100,10 @@ AC_PATH_TOOL([PKGCONFIG], [pkg-config])
 
 dnl PAPPL library...
 AS_IF([$PKGCONFIG --exists pappl2], [
-    CFLAGS="$CFLAGS $($PKGCONFIG --cflags pappl2)"
+    CPPFLAGS="$CPPFLAGS $($PKGCONFIG --cflags pappl2)"
     LIBS="$LIBS $($PKGCONFIG --libs pappl2)"
 ], [$PKGCONFIG --exists pappl --atleast-version=1.2], [
-    CFLAGS="$CFLAGS $($PKGCONFIG --cflags pappl)"
+    CPPFLAGS="$CPPFLAGS $($PKGCONFIG --cflags pappl)"
     LIBS="$LIBS $($PKGCONFIG --libs pappl)"
 ], [
     AC_MSG_ERROR([PAPPL 1.2 or later is required for LPrint.])
@@ -117,13 +117,13 @@ AS_IF([$PKGCONFIG --exists cups3], [
     CUPS_VERSION="$($PKGCONFIG --modversion cups3)"
     AC_MSG_RESULT([yes, v$CUPS_VERSION])
 
-    CFLAGS="$CFLAGS $($PKGCONFIG --cflags cups3)"
+    CPPFLAGS="$CPPFLAGS $($PKGCONFIG --cflags cups3)"
     LIBS="$LIBS $($PKGCONFIG --libs cups3)"
 ], [$PKGCONFIG --exists cups], [
     CUPS_VERSION="$($PKGCONFIG --modversion cups)"
     AC_MSG_RESULT([yes, v$CUPS_VERSION])
 
-    CFLAGS="$CFLAGS $($PKGCONFIG --cflags cups)"
+    CPPFLAGS="$CPPFLAGS $($PKGCONFIG --cflags cups)"
     LIBS="$LIBS $($PKGCONFIG --libs cups)"
 ], [test "x$CUPSCONFIG" = x], [
     AC_MSG_RESULT([no])
@@ -137,7 +137,7 @@ AS_IF([$PKGCONFIG --exists cups3], [
     ])
 
     AC_MSG_RESULT([yes, v$CUPS_VERSION])
-    CFLAGS="$CFLAGS $($CUPSCONFIG --cflags)"
+    CPPFLAGS="$CPPFLAGS $($CUPSCONFIG --cflags)"
     LDFLAGS="$LDFLAGSS $($CUPSCONFIG --ldflags)"
     LIBS="$LIBS $($CUPSCONFIG --image --libs)"
 ])

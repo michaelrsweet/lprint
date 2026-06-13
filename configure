@@ -2350,7 +2350,7 @@ fi
 
 
 CFLAGS="${CFLAGS:=}"
-CXXFLAGS="${CXXFLAGS:=}"
+CPPFLAGS="${CPPFLATS:=}"
 LDFLAGS="${LDFLAGS:=}"
 LIBS="${LIBS:=}"
 
@@ -3745,13 +3745,13 @@ fi
 if $PKGCONFIG --exists pappl2
 then :
 
-    CFLAGS="$CFLAGS $($PKGCONFIG --cflags pappl2)"
+    CPPFLAGS="$CPPFLAGS $($PKGCONFIG --cflags pappl2)"
     LIBS="$LIBS $($PKGCONFIG --libs pappl2)"
 
 elif $PKGCONFIG --exists pappl --atleast-version=1.2
 then :
 
-    CFLAGS="$CFLAGS $($PKGCONFIG --cflags pappl)"
+    CPPFLAGS="$CPPFLAGS $($PKGCONFIG --cflags pappl)"
     LIBS="$LIBS $($PKGCONFIG --libs pappl)"
 
 else $as_nop
@@ -3878,7 +3878,7 @@ then :
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes, v$CUPS_VERSION" >&5
 printf "%s\n" "yes, v$CUPS_VERSION" >&6; }
 
-    CFLAGS="$CFLAGS $($PKGCONFIG --cflags cups3)"
+    CPPFLAGS="$CPPFLAGS $($PKGCONFIG --cflags cups3)"
     LIBS="$LIBS $($PKGCONFIG --libs cups3)"
 
 elif $PKGCONFIG --exists cups
@@ -3888,7 +3888,7 @@ then :
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes, v$CUPS_VERSION" >&5
 printf "%s\n" "yes, v$CUPS_VERSION" >&6; }
 
-    CFLAGS="$CFLAGS $($PKGCONFIG --cflags cups)"
+    CPPFLAGS="$CPPFLAGS $($PKGCONFIG --cflags cups)"
     LIBS="$LIBS $($PKGCONFIG --libs cups)"
 
 elif test "x$CUPSCONFIG" = x
@@ -3914,7 +3914,7 @@ esac
 
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes, v$CUPS_VERSION" >&5
 printf "%s\n" "yes, v$CUPS_VERSION" >&6; }
-    CFLAGS="$CFLAGS $($CUPSCONFIG --cflags)"
+    CPPFLAGS="$CPPFLAGS $($CUPSCONFIG --cflags)"
     LDFLAGS="$LDFLAGSS $($CUPSCONFIG --ldflags)"
     LIBS="$LIBS $($CUPSCONFIG --image --libs)"
 
