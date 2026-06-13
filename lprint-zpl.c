@@ -321,9 +321,9 @@ lprintZPLQueryDriver(
   // Connect and send Host Information command...
 #ifdef PAPPL_API_VERSION_MAJOR
   if ((device = papplDeviceOpen(device_uri, /*job*/NULL, papplLogDevice, system)) == NULL)
+    return;
 #else
   if ((device = papplDeviceOpen(device_uri, "query", papplLogDevice, system)) == NULL)
-    return;
     return;
 #endif // PAPPL_API_VERSION_MAJOR
 
