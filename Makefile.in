@@ -243,7 +243,7 @@ macos:
 	echo "Creating archive for notarization..."
 	rm -f lprint.zip
 	zip -v9 lprint.zip lprint
-	echo Notarizing application
+	echo "Notarizing application..."
 	xcrun notarytool submit lprint.zip \
 	    --apple-id "$${APPLEID}" \
 	    --keychain-profile "AC_$${TEAMID}" \
@@ -260,3 +260,9 @@ macos:
 	    --min-os-version 11.0 \
 	    --sign "$${PKGSIGN_IDENTITY}" --timestamp \
 	    lprint-$(LPRINT_VERSION)-macos.pkg
+	echo "Notarizing package..."
+	xcrun notarytool submit lprint-$(LPRINT_VERSION)-macos.pkg \
+	    --apple-id "$${APPLEID}" \
+	    --keychain-profile "AC_$${TEAMID}" \
+	    --team-id "$${TEAMID}" \
+	    --wait
