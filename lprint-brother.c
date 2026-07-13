@@ -173,9 +173,6 @@ lprintBrother(
     data->num_media = (int)(sizeof(lprint_brother_pt_media) / sizeof(lprint_brother_pt_media[0]));
     memcpy(data->media, lprint_brother_pt_media, sizeof(lprint_brother_pt_media));
 
-    data->num_source = 1;
-    data->source[0]  = "main-roll";
-
     cupsCopyString(data->media_ready[0].size_name, "oe_wide-2in-tape_1x2in", sizeof(data->media_ready[0].size_name));
     cupsCopyString(data->media_ready[0].type, "continuous", sizeof(data->media_ready[0].type));
 
