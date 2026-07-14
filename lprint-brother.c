@@ -396,6 +396,11 @@ lprint_brother_rendpage(
   if (!papplDeviceWrite(device, buffer, sizeof(buffer)))
     return (false);
 
+  // Set compression mode to uncompressed (default for some devices, but not
+  // all, so always set explicitly).
+  if (!papplDeviceWrite(device, (const unsigned char *)"M\0", 2))
+    return (false);
+
   // Send label data...
   if (brother->num_bytes > 0 && !papplDeviceWrite(device, brother->buffer, brother->num_bytes))
     return (false);
