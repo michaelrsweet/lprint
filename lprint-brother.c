@@ -10,6 +10,8 @@
 #include "lprint.h"
 #ifdef LPRINT_EXPERIMENTAL
 
+// TODO: Make device-specific
+static unsigned int head_width = 128;
 
 //
 // Local types...
@@ -487,7 +489,7 @@ lprint_brother_rstartpage(
   if (page > 0)
     papplDevicePuts(device, "\014");	// Eject the previous page
 
-  if (!lprintDitherAlloc(&brother->dither, job, options, /*head_width*/0, CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0, /*out_mirror*/false))
+  if (!lprintDitherAlloc(&brother->dither, job, options, /*head_width*/head_width, CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0, /*out_mirror*/true))
     return (false);
 
   brother->count     = 0;
