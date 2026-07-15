@@ -379,7 +379,7 @@ lprint_epl2_rstartpage(
   if (options->header.HWResolution[0] == 300)
     out_gamma = 1.2;
 
-  if (!lprintDitherAlloc(dither, job, options, CUPS_CSPACE_W, out_gamma))
+  if (!lprintDitherAlloc(dither, job, options, /*head_width*/0, CUPS_CSPACE_W, out_gamma, /*out_mirror*/false))
     return (false);
 
   // Start a new label...

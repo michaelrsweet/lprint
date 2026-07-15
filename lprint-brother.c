@@ -487,7 +487,7 @@ lprint_brother_rstartpage(
   if (page > 0)
     papplDevicePuts(device, "\014");	// Eject the previous page
 
-  if (!lprintDitherAlloc(&brother->dither, job, options, CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0))
+  if (!lprintDitherAlloc(&brother->dither, job, options, /*head_width*/0, CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0, /*out_mirror*/false))
     return (false);
 
   brother->count     = 0;

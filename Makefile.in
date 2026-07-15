@@ -114,7 +114,7 @@ TESTTARGETS	=	\
 
 
 # Make everything...
-all:	$(TARGETS)
+all:	$(TARGETS) $(TESTTARGETS)
 
 
 # Clean everything...

@@ -5,7 +5,7 @@
 //
 //   ./testpackbits [COUNT]
 //
-// Copyright © 2024 by Michael R Sweet
+// Copyright © 2024-2026 by Michael R Sweet
 //
 
 #include "lprint.h"

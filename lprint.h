@@ -153,7 +153,9 @@ typedef struct lprint_dither_s		// Dithering state
 		in_white;		// Input white pixel value (0 or 255)
   unsigned char	*output,		// Output bitmap
 		out_white;		// Output white pixel value (0 or 255)
-  unsigned	out_width;		// Output width in bytes
+  bool		out_mirror;		// Mirror/flip output lines?
+  unsigned	out_offset,		// Starting pixel in output?
+		out_width;		// Output width in bytes
 } lprint_dither_t;
 
 typedef struct lprint_extdata_s		// Per-printer extensions data
@@ -169,7 +171,7 @@ typedef struct lprint_extdata_s		// Per-printer extensions data
 // Functions...
 //
 
-extern bool	lprintDitherAlloc(lprint_dither_t *dither, pappl_job_t *job, pappl_pr_options_t *options, cups_cspace_t out_cspace, double out_gamma);
+extern bool	lprintDitherAlloc(lprint_dither_t *dither, pappl_job_t *job, pappl_pr_options_t *options, unsigned head_width, cups_cspace_t out_cspace, double out_gamma, bool out_mirror);
 extern void	lprintDitherFree(lprint_dither_t *dither);
 extern bool	lprintDitherLine(lprint_dither_t *dither, unsigned y, const unsigned char *line);
 

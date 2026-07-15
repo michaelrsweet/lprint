@@ -380,7 +380,7 @@ lprint_sii_rstartpage(
   (void)page;
 
   // Initialize the dither buffer and blanks count...
-  if (!lprintDitherAlloc(&siidata->dither, job, options, CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0))
+  if (!lprintDitherAlloc(&siidata->dither, job, options, /*head_width*/0, CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0, /*out_mirror*/false))
     return (false);
 
   papplDevicePrintf(device, "%c%c", LPRINT_SLP_CMD_MARGIN, (int)(12.7 * (lprint_sii_get_max_width(driver_name) - options->header.cupsWidth) / options->header.HWResolution[0]));

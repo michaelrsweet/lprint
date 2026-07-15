@@ -374,7 +374,7 @@ lprint_cpcl_rstartpage(
   (void)page;
 
   // Initialize the dither buffer...
-  if (!lprintDitherAlloc(&cpcl->dither, job, options, CUPS_CSPACE_W, options->header.HWResolution[0] == 300 ? 1.2 : 1.0))
+  if (!lprintDitherAlloc(&cpcl->dither, job, options, /*head_width*/0, CUPS_CSPACE_W, options->header.HWResolution[0] == 300 ? 1.2 : 1.0, /*out_mirror*/false))
     return (false);
 
   // Initialize the printer...

@@ -37,8 +37,10 @@ lprintDitherAlloc(
     lprint_dither_t    *dither,		// I - Dither buffer
     pappl_job_t        *job,		// I - Job
     pappl_pr_options_t *options,	// I - Print options
+    unsigned           head_width,	// I - Print head width in pixels or `0` for auto
     cups_cspace_t      out_cspace,	// I - Output color space
-    double             out_gamma)	// I - Output gamma correction
+    double             out_gamma,	// I - Output gamma correction
+    bool               out_mirror)	// I - Mirror/flip each output line?
 {
   int		i, j;			// Looping vars
   unsigned	right;			// Right margin
@@ -62,13 +64,27 @@ lprintDitherAlloc(
     options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom] = options->header.cupsHeight - options->header.HWResolution[1] * (unsigned)options->media.bottom_margin / 2540 - 1;
   }
 
-  dither->in_left   = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxLeft];
-  right             = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxRight];
-  dither->in_top    = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxTop];
-  dither->in_bottom = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom];
-  dither->in_width  = right - dither->in_left + 1;
-  dither->in_height = dither->in_bottom - dither->in_top + 1;
-  dither->out_width = (right - dither->in_left + 8) / 8;
+  dither->in_left    = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxLeft];
+  right              = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxRight];
+  dither->in_top     = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxTop];
+  dither->in_bottom  = options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom];
+  dither->in_width   = right - dither->in_left + 1;
+  dither->in_height  = dither->in_bottom - dither->in_top + 1;
+  dither->out_mirror = out_mirror;
+
+
+  if (head_width && head_width >= dither->in_width)
+  {
+    // Fixed width
+    dither->out_offset = (head_width - dither->in_width) / 2;
+    dither->out_width  = (head_width + 7) / 8;
+  }
+  else
+  {
+    // Automatic width
+    dither->out_offset = 0;
+    dither->out_width  = (dither->in_width + 7) / 8;
+  }
 
   if (dither->in_width > 65536)
   {
@@ -125,6 +141,8 @@ lprintDitherAlloc(
     return (false);
   }
 
+  memset(dither->output, dither->out_white, dither->out_width);
+
   papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "dither=[");
   for (i = 0; i < 16; i ++)
     papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "  [ %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u ]", dither->dither[i][0], dither->dither[i][1], dither->dither[i][2], dither->dither[i][3], dither->dither[i][4], dither->dither[i][5], dither->dither[i][6], dither->dither[i][7], dither->dither[i][8], dither->dither[i][9], dither->dither[i][10], dither->dither[i][11], dither->dither[i][12], dither->dither[i][13], dither->dither[i][14], dither->dither[i][15]);
@@ -135,6 +153,8 @@ lprintDitherAlloc(
   papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "in_width=%u", dither->in_width);
   papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "in_bpp=%u", dither->in_bpp);
   papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "in_white=%u", dither->in_white);
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "out_mirror=%s", dither->out_mirror ? "true" : "false");
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "out_offset=%u", dither->out_offset);
   papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "out_white=%u", dither->out_white);
   papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "out_width=%u", dither->out_width);
 
@@ -256,7 +276,20 @@ lprintDitherLine(
     return (false);
 
   // Dither...
-  for (x = 0, count = dither->in_width, prev = dither->input[(y - 2) & 3], current = dither->input[(y - 1) & 3], next = dither->input[y & 3], outptr = dither->output, byte = dither->out_white, bit = 128, dline = dither->dither[y & 15]; count > 0; x ++, count --, prev ++, current ++, next ++)
+  x = dither->out_offset;
+
+  if (dither->out_mirror)
+  {
+    outptr = dither->output + dither->out_width - 1 - x / 8;
+    bit    = 1 << (x & 7);
+  }
+  else
+  {
+    outptr = dither->output + x / 8;
+    bit    = 128 >> (x & 7);
+  }
+
+  for (count = dither->in_width, prev = dither->input[(y - 2) & 3], current = dither->input[(y - 1) & 3], next = dither->input[y & 3], byte = dither->out_white, dline = dither->dither[y & 15]; count > 0; x ++, count --, prev ++, current ++, next ++)
   {
     if (*current)
     {
@@ -286,7 +319,20 @@ lprintDitherLine(
     }
 
     // Next output bit...
-    if (bit > 1)
+    if (dither->out_mirror)
+    {
+      if (bit < 128)
+      {
+	bit *= 2;
+      }
+      else
+      {
+	*outptr-- = byte;
+	byte      = dither->out_white;
+	bit       = 1;
+      }
+    }
+    else if (bit > 1)
     {
       bit /= 2;
     }
@@ -299,7 +345,7 @@ lprintDitherLine(
   }
 
   // Save last byte of output as needed and return...
-  if (bit < 128)
+  if ((!dither->out_mirror && bit < 128) || (dither->out_mirror && bit > 1))
     *outptr = byte;
 
   return (true);

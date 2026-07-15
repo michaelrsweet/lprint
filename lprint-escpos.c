@@ -354,7 +354,7 @@ lprint_escpos_rstartpage(
   lprint_escpos_update_reasons(papplJobGetPrinter(job), job, device);
 
   // Setup dithering buffer...
-  if (!lprintDitherAlloc(&escpos->dither, job, options, CUPS_CSPACE_K, 1.0))
+  if (!lprintDitherAlloc(&escpos->dither, job, options, /*head_width*/0, CUPS_CSPACE_K, 1.0, /*out_mirror*/false))
     return (false);
 
   escpos->marked    = false;

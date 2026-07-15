@@ -669,7 +669,7 @@ lprint_zpl_rstartpage(
   else if (options->header.HWResolution[0] == 600)
     out_gamma = 1.44;
 
-  if (!lprintDitherAlloc(&zpl->dither, job, options, CUPS_CSPACE_K, out_gamma))
+  if (!lprintDitherAlloc(&zpl->dither, job, options, /*head_width*/0, CUPS_CSPACE_K, out_gamma, /*out_mirror*/false))
     return (false);
 
   // print-speed
