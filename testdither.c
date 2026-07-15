@@ -153,7 +153,7 @@ main(int  argc,				// I - Number of command-line arguments
     memcpy(&options.header, &in_header, sizeof(options.header));
 
     memcpy(&out_header, &in_header, sizeof(out_header));
-    if (head_width > out_header.cupsWidth)
+    if (head_width > 0)
       out_header.cupsWidth = head_width;
 
     if (plain)
@@ -182,6 +182,23 @@ main(int  argc,				// I - Number of command-line arguments
       ret = 1;
       break;
     }
+
+#if 0 // DEBUG
+    fprintf(stderr, "dither=[\n");
+    for (i = 0; i < 16; i ++)
+      fprintf(stderr, "  [ %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u %3u ]\n", dither.dither[i][0], dither.dither[i][1], dither.dither[i][2], dither.dither[i][3], dither.dither[i][4], dither.dither[i][5], dither.dither[i][6], dither.dither[i][7], dither.dither[i][8], dither.dither[i][9], dither.dither[i][10], dither.dither[i][11], dither.dither[i][12], dither.dither[i][13], dither.dither[i][14], dither.dither[i][15]);
+    fprintf(stderr, "]\n");
+    fprintf(stderr, "in_bottom=%u\n", dither.in_bottom);
+    fprintf(stderr, "in_left=%u\n", dither.in_left);
+    fprintf(stderr, "in_top=%u\n", dither.in_top);
+    fprintf(stderr, "in_width=%u\n", dither.in_width);
+    fprintf(stderr, "in_bpp=%u\n", dither.in_bpp);
+    fprintf(stderr, "in_white=%u\n", dither.in_white);
+    fprintf(stderr, "out_mirror=%s\n", dither.out_mirror ? "true" : "false");
+    fprintf(stderr, "out_offset=%u\n", dither.out_offset);
+    fprintf(stderr, "out_white=%u\n", dither.out_white);
+    fprintf(stderr, "out_width=%u\n", dither.out_width);
+#endif // 0
 
     in_line  = malloc(in_header.cupsBytesPerLine);
     out_line = malloc(out_header.cupsBytesPerLine);

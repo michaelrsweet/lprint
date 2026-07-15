@@ -73,11 +73,15 @@ lprintDitherAlloc(
   dither->out_mirror = out_mirror;
 
 
-  if (head_width && head_width >= dither->in_width)
+  if (head_width)
   {
     // Fixed width
+    if (head_width < dither->in_width)
+      dither->in_width = head_width;	// Truncate to head width
+
     dither->out_offset = (head_width - dither->in_width) / 2;
     dither->out_width  = (head_width + 7) / 8;
+
   }
   else
   {
