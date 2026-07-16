@@ -10,6 +10,15 @@
 #include "lprint.h"
 #ifdef LPRINT_EXPERIMENTAL
 
+// TODO: Make device-specific
+static unsigned int head_width = 128;
+
+// TODO: bottom_top should be device-dependent, columns also media-dependent (wider/narrower tape needs a bit more/less margin, 10 pixels is for 12mm).
+// bottom_top are specified in mm in docs (also in pixels, but then it becomes resolution dependent).
+// columns are specified in pixels in the docs, so keep that here (the horizontal resolution is also fixed).
+static unsigned min_bottom_top_margin = 200;
+static unsigned max_bottom_top_margin = 12700;
+static unsigned min_margin_columns = 10;
 
 //
 // Local types...
@@ -161,13 +170,13 @@ lprintBrother(
     // PT-series...
 
     // Set resolution...
+    // TODO: Different models have different resolutions
     data->num_resolution  = 1;
     data->x_resolution[0] = data->y_resolution[0] = 180;
     data->x_default       = data->y_default = data->x_resolution[0];
 
-    // Basically borderless...
-    data->left_right = 1;
-    data->bottom_top = 1;
+    data->left_right = (min_margin_columns * 2540 + data->x_resolution[0] - 1) / data->x_resolution[0];
+    data->bottom_top = min_bottom_top_margin;
 
     // Supported media...
     data->num_media = (int)(sizeof(lprint_brother_pt_media) / sizeof(lprint_brother_pt_media[0]));
@@ -365,36 +374,10 @@ lprint_brother_rendpage(
 {
   lprint_brother_t	*brother = (lprint_brother_t *)papplJobGetData(job);
 					// Brother driver data
-  unsigned char	buffer[13];		// Print Information command buffer
 
 
   // Write last line
   lprint_brother_rwriteline(job, options, device, options->header.cupsHeight, NULL);
-
-  // Send print information...
-  buffer[ 0] = 0x1b;
-  buffer[ 1] = 'i';
-  buffer[ 2] = 'z';
-  buffer[ 3] = !strncmp(options->media.type, "continuous", 10) ? 0x04 : 0x0c;
-  buffer[ 4] = 0;
-  buffer[ 5] = LPRINT_PWG_TO_MM(options->media.size_width);
-  buffer[ 6] = LPRINT_PWG_TO_MM(options->media.size_length);
-#if 1
-  buffer[ 7] = options->header.cupsHeight & 255;
-  buffer[ 8] = (options->header.cupsHeight >> 8) & 255;
-  buffer[ 9] = (options->header.cupsHeight >> 16) & 255;
-  buffer[10] = (options->header.cupsHeight >> 24) & 255;
-#else
-  buffer[ 7] = brother->count & 255;
-  buffer[ 8] = (brother->count >> 8) & 255;
-  buffer[ 9] = (brother->count >> 16) & 255;
-  buffer[10] = (brother->count >> 24) & 255;
-#endif // 1
-  buffer[11] = page == 0 ? 0 : 1;
-  buffer[12] = 0;
-
-  if (!papplDeviceWrite(device, buffer, sizeof(buffer)))
-    return (false);
 
   // Send label data...
   if (brother->num_bytes > 0 && !papplDeviceWrite(device, brother->buffer, brother->num_bytes))
@@ -482,12 +465,77 @@ lprint_brother_rstartpage(
 {
   lprint_brother_t *brother = (lprint_brother_t *)papplJobGetData(job);
 					// Brother driver data
+  unsigned char	buffer[13];		// Print Information command buffer
+  unsigned bottom_top_margin, margin_rows;              // Vertical margin, in 1/100th mm and pixels
+  unsigned left_margin_columns, right_margin_columns;   // Horizontal margins in pixels
+  unsigned raster_rows;					// Number of rows of raster data that will be sent
 
 
   if (page > 0)
     papplDevicePuts(device, "\014");	// Eject the previous page
 
-  if (!lprintDitherAlloc(&brother->dither, job, options, /*head_width*/0, CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0, /*out_mirror*/false))
+  // Hardware has a single margin for top and bottom, so apply the smallest
+  // requested margin in hardware and reduce the other margin (this might cause
+  // supplied data inside the margin to be rendered when it maybe should not,
+  // but margins should be empty anyway...
+  if (options->media.top_margin < options->media.bottom_margin)
+    bottom_top_margin = options->media.top_margin;
+  else
+    bottom_top_margin = options->media.bottom_margin;
+
+  // Too small margins messes up output on some devices, so ensure the minimum is respected
+  if (bottom_top_margin < min_bottom_top_margin)
+    bottom_top_margin = min_bottom_top_margin;
+  // Untested what happens if you exceed the maximum amount, but enforce it anyway
+  if (bottom_top_margin > max_bottom_top_margin)
+    bottom_top_margin = max_bottom_top_margin;
+
+  margin_rows = options->header.HWResolution[0] * bottom_top_margin / 2540;
+
+  // This causes the hardware to add this margin before and after the label.
+  if (!papplDevicePrintf(device, "\033id%c%c", margin_rows & 0xff, margin_rows >> 8))
+    return (false);
+
+  left_margin_columns = options->header.HWResolution[0] * (unsigned)options->media.left_margin / 2540;
+  right_margin_columns = options->header.HWResolution[0] * (unsigned)options->media.right_margin / 2540;
+  if (left_margin_columns < min_margin_columns)
+    left_margin_columns = min_margin_columns;
+  if (right_margin_columns < min_margin_columns)
+    right_margin_columns = min_margin_columns;
+
+  // Then instruct the dither code to respect the margins. For the rows, the
+  // margin is omitted for the raster data and filled in by the hardware. For
+  // the columns, this causes the margins to become white in the raster data.
+  options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxLeft]   = left_margin_columns;
+  options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxTop]    = margin_rows;
+  options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxRight]  = options->header.cupsWidth - right_margin_columns - 1;
+  options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom] = options->header.cupsHeight - margin_rows - 1;
+
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "Starting new page, margins: bottom_top_margin=%u, margin_rows=%u, left_margin_colums=%u, right_margin_colums=%u", bottom_top_margin, margin_rows, left_margin_columns, right_margin_columns);
+  papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "Imagebox: left=%u, right=%u, top=%u, bottom=%u", options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxLeft], options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxRight], options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxTop], options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom]);
+  // TODO: When not doing precut, the margin also becomes (effectively) bigger. Should we handle this somehow?
+
+  if (!lprintDitherAlloc(&brother->dither, job, options, /*head_width*/head_width, CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0, /*out_mirror*/true))
+    return (false);
+
+  raster_rows = options->header.cupsHeight - 2 * margin_rows;
+
+  // Send print information...
+  buffer[ 0] = 0x1b;
+  buffer[ 1] = 'i';
+  buffer[ 2] = 'z';
+  buffer[ 3] = !strncmp(options->media.type, "continuous", 10) ? 0x04 : 0x0c;
+  buffer[ 4] = 0;
+  buffer[ 5] = LPRINT_PWG_TO_MM(options->media.size_width);
+  buffer[ 6] = LPRINT_PWG_TO_MM(options->media.size_length);
+  buffer[ 7] = raster_rows & 255;
+  buffer[ 8] = (raster_rows >> 8) & 255;
+  buffer[ 9] = (raster_rows >> 16) & 255;
+  buffer[10] = (raster_rows >> 24) & 255;
+  buffer[11] = page == 0 ? 0 : 1;
+  buffer[12] = 0;
+
+  if (!papplDeviceWrite(device, buffer, sizeof(buffer)))
     return (false);
 
   brother->count     = 0;
