@@ -367,36 +367,10 @@ lprint_brother_rendpage(
 {
   lprint_brother_t	*brother = (lprint_brother_t *)papplJobGetData(job);
 					// Brother driver data
-  unsigned char	buffer[13];		// Print Information command buffer
 
 
   // Write last line
   lprint_brother_rwriteline(job, options, device, options->header.cupsHeight, NULL);
-
-  // Send print information...
-  buffer[ 0] = 0x1b;
-  buffer[ 1] = 'i';
-  buffer[ 2] = 'z';
-  buffer[ 3] = !strncmp(options->media.type, "continuous", 10) ? 0x04 : 0x0c;
-  buffer[ 4] = 0;
-  buffer[ 5] = LPRINT_PWG_TO_MM(options->media.size_width);
-  buffer[ 6] = LPRINT_PWG_TO_MM(options->media.size_length);
-#if 1
-  buffer[ 7] = options->header.cupsHeight & 255;
-  buffer[ 8] = (options->header.cupsHeight >> 8) & 255;
-  buffer[ 9] = (options->header.cupsHeight >> 16) & 255;
-  buffer[10] = (options->header.cupsHeight >> 24) & 255;
-#else
-  buffer[ 7] = brother->count & 255;
-  buffer[ 8] = (brother->count >> 8) & 255;
-  buffer[ 9] = (brother->count >> 16) & 255;
-  buffer[10] = (brother->count >> 24) & 255;
-#endif // 1
-  buffer[11] = page == 0 ? 0 : 1;
-  buffer[12] = 0;
-
-  if (!papplDeviceWrite(device, buffer, sizeof(buffer)))
-    return (false);
 
   // Send label data...
   if (brother->num_bytes > 0 && !papplDeviceWrite(device, brother->buffer, brother->num_bytes))
@@ -484,12 +458,31 @@ lprint_brother_rstartpage(
 {
   lprint_brother_t *brother = (lprint_brother_t *)papplJobGetData(job);
 					// Brother driver data
+  unsigned char	buffer[13];		// Print Information command buffer
 
 
   if (page > 0)
     papplDevicePuts(device, "\014");	// Eject the previous page
 
   if (!lprintDitherAlloc(&brother->dither, job, options, /*head_width*/head_width, CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0, /*out_mirror*/true))
+    return (false);
+
+  // Send print information...
+  buffer[ 0] = 0x1b;
+  buffer[ 1] = 'i';
+  buffer[ 2] = 'z';
+  buffer[ 3] = !strncmp(options->media.type, "continuous", 10) ? 0x04 : 0x0c;
+  buffer[ 4] = 0;
+  buffer[ 5] = LPRINT_PWG_TO_MM(options->media.size_width);
+  buffer[ 6] = LPRINT_PWG_TO_MM(options->media.size_length);
+  buffer[ 7] = options->header.cupsHeight & 255;
+  buffer[ 8] = (options->header.cupsHeight >> 8) & 255;
+  buffer[ 9] = (options->header.cupsHeight >> 16) & 255;
+  buffer[10] = (options->header.cupsHeight >> 24) & 255;
+  buffer[11] = page == 0 ? 0 : 1;
+  buffer[12] = 0;
+
+  if (!papplDeviceWrite(device, buffer, sizeof(buffer)))
     return (false);
 
   brother->count     = 0;
