@@ -24,8 +24,6 @@ static unsigned min_margin_columns = 10;
 
 typedef struct lprint_brother_s		// Brother driver data
 {
-  bool		is_pt_series;		// Is this a PT-series printer?
-  bool		is_ql_800;		// Is this the QL-800 printer?
   lprint_dither_t dither;		// Dither buffer
   int		count;			// Output count for print info
   size_t	alloc_bytes,		// Allocated bytes for output buffer
@@ -409,6 +407,10 @@ lprint_brother_rstartjob(
 					// Driver name
   char		buffer[400];		// Reset buffer
   int		darkness;		// Combined darkness
+  // TODO: This is a hassle to get at our driver data...
+  pappl_pr_driver_data_t data;
+  papplPrinterGetDriverData(papplJobGetPrinter(job), &data);
+  const lprint_brother_driver_data_t *brother_data = (const lprint_brother_driver_data_t*)data.extension;
 
 
   (void)options;
@@ -418,18 +420,15 @@ lprint_brother_rstartjob(
 
   // Reset the printer...
   memset(buffer, 0, sizeof(buffer));
-  if (driver_name && !strncmp(driver_name, "brother_pt-", 11))
+  if (brother_data->flags & BROTHER_FLAG_IS_PT)
   {
     // Send short reset sequence for PT-series tape printers
     papplDeviceWrite(device, buffer, 100);
-    brother->is_pt_series = true;
   }
   else
   {
     // Send long reset sequence for QL-series label printers
     papplDeviceWrite(device, buffer, sizeof(buffer));
-
-    brother->is_ql_800 = driver_name && !strcmp(driver_name, "brother_ql-800");
   }
 
   // Get status information...
@@ -519,7 +518,7 @@ lprint_brother_rstartpage(
   papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "Imagebox: left=%u, right=%u, top=%u, bottom=%u", options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxLeft], options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxRight], options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxTop], options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom]);
   // TODO: When not doing precut, the margin also becomes (effectively) bigger. Should we handle this somehow?
 
-  if (!lprintDitherAlloc(&brother->dither, job, options, /*head_width*/brother_data->head_width, CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0, /*out_mirror*/true))
+  if (!lprintDitherAlloc(&brother->dither, job, options, /*head_width*/brother_data->head_width , CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0, /*out_mirror*/true))
     return (false);
 
   raster_rows = options->header.cupsHeight - 2 * margin_rows;
@@ -564,6 +563,10 @@ lprint_brother_rwriteline(
   lprint_brother_t	*brother = (lprint_brother_t *)papplJobGetData(job);
 					// Brother driver data
   unsigned char		*bufptr;	// Pointer into page buffer
+  // TODO: This is a hassle to get at our driver data...
+  pappl_pr_driver_data_t data;
+  papplPrinterGetDriverData(papplJobGetPrinter(job), &data);
+  const lprint_brother_driver_data_t *brother_data = (const lprint_brother_driver_data_t*)data.extension;
 
 
   if (!lprintDitherLine(&brother->dither, y, line))
@@ -588,13 +591,13 @@ lprint_brother_rwriteline(
 
   bufptr = brother->buffer + brother->num_bytes;
 
-  if (brother->is_ql_800 || brother->dither.output[0] || memcmp(brother->dither.output, brother->dither.output + 1, brother->dither.out_width - 1))
+  if ((brother_data->flags & BROTHER_FLAG_RASTER_NO_Z_CMD) || brother->dither.output[0] || memcmp(brother->dither.output, brother->dither.output + 1, brother->dither.out_width - 1))
   {
     // Non-blank line...
     // TODO: Add PackBits compression support
     brother->count += 3 + brother->dither.out_width;
 
-    if (brother->is_pt_series)
+    if (brother_data->flags & BROTHER_FLAG_IS_PT)
     {
       *bufptr++ = 'G';
       *bufptr++ = brother->dither.out_width & 255;

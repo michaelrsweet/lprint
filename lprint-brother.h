@@ -11,7 +11,10 @@
 #  define LPRINT_BROTHER_H
 
 enum {
-	BROTHER_FLAG_DOUBLE_DPI = 1,         // Supports double vertical resolution
+	BROTHER_FLAG_DOUBLE_DPI = 1,               // Supports double vertical resolution
+	// TODO: Should we split this flag in "BROTHER_FLAG_RASTER_CMD_UPPER_G" and "BROTHER_FLAG_LONG_RESET" maybe?
+	BROTHER_FLAG_IS_PT = 2,                    // Is a PT-series (not a QL series)
+	BROTHER_FLAG_RASTER_NO_Z_CMD = 4,          // Do not use the Z command for empty lines
 };
 
 typedef struct lprint_brother_driver_data_s
