@@ -8,16 +8,14 @@
 //
 
 #include "lprint.h"
-#ifdef LPRINT_EXPERIMENTAL
+#include <pappl/base.h>
+#include "lprint-brother.h"
 
-// TODO: Make device-specific
-static unsigned int head_width = 128;
+#ifdef LPRINT_EXPERIMENTAL
 
 // TODO: bottom_top should be device-dependent, columns also media-dependent (wider/narrower tape needs a bit more/less margin, 10 pixels is for 12mm).
 // bottom_top are specified in mm in docs (also in pixels, but then it becomes resolution dependent).
 // columns are specified in pixels in the docs, so keep that here (the horizontal resolution is also fixed).
-static unsigned min_bottom_top_margin = 200;
-static unsigned max_bottom_top_margin = 12700;
 static unsigned min_margin_columns = 10;
 
 //
@@ -128,6 +126,7 @@ lprintBrother(
     ipp_t                  **attrs,	// O - Pointer to driver attributes
     void                   *cbdata)	// I - Callback data (not used)
 {
+  const lprint_brother_driver_data_t *brother_data = (const lprint_brother_driver_data_t*)data->extension;
   // Print callbacks...
   data->printfile_cb  = lprint_brother_printfile;
   data->rendjob_cb    = lprint_brother_rendjob;
@@ -176,7 +175,7 @@ lprintBrother(
     data->x_default       = data->y_default = data->x_resolution[0];
 
     data->left_right = (min_margin_columns * 2540 + data->x_resolution[0] - 1) / data->x_resolution[0];
-    data->bottom_top = min_bottom_top_margin;
+    data->bottom_top = brother_data->min_feed;
 
     // Supported media...
     data->num_media = (int)(sizeof(lprint_brother_pt_media) / sizeof(lprint_brother_pt_media[0]));
@@ -464,6 +463,11 @@ lprint_brother_rstartpage(
     unsigned           page)		// I - Page number
 {
   lprint_brother_t *brother = (lprint_brother_t *)papplJobGetData(job);
+  // TODO: This is a hassle to get at our driver data...
+  pappl_pr_driver_data_t data;
+  papplPrinterGetDriverData(papplJobGetPrinter(job), &data);
+  const lprint_brother_driver_data_t *brother_data = (const lprint_brother_driver_data_t*)data.extension;
+
 					// Brother driver data
   unsigned char	buffer[13];		// Print Information command buffer
   unsigned bottom_top_margin, margin_rows;              // Vertical margin, in 1/100th mm and pixels
@@ -484,11 +488,11 @@ lprint_brother_rstartpage(
     bottom_top_margin = options->media.bottom_margin;
 
   // Too small margins messes up output on some devices, so ensure the minimum is respected
-  if (bottom_top_margin < min_bottom_top_margin)
-    bottom_top_margin = min_bottom_top_margin;
+  if (bottom_top_margin < brother_data->min_feed)
+    bottom_top_margin = brother_data->min_feed;
   // Untested what happens if you exceed the maximum amount, but enforce it anyway
-  if (bottom_top_margin > max_bottom_top_margin)
-    bottom_top_margin = max_bottom_top_margin;
+  if (bottom_top_margin > brother_data->max_feed)
+    bottom_top_margin = brother_data->max_feed;
 
   margin_rows = options->header.HWResolution[0] * bottom_top_margin / 2540;
 
@@ -515,7 +519,7 @@ lprint_brother_rstartpage(
   papplLogJob(job, PAPPL_LOGLEVEL_DEBUG, "Imagebox: left=%u, right=%u, top=%u, bottom=%u", options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxLeft], options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxRight], options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxTop], options->header.cupsInteger[CUPS_RASTER_PWG_ImageBoxBottom]);
   // TODO: When not doing precut, the margin also becomes (effectively) bigger. Should we handle this somehow?
 
-  if (!lprintDitherAlloc(&brother->dither, job, options, /*head_width*/head_width, CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0, /*out_mirror*/true))
+  if (!lprintDitherAlloc(&brother->dither, job, options, /*head_width*/brother_data->head_width, CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0, /*out_mirror*/true))
     return (false);
 
   raster_rows = options->header.cupsHeight - 2 * margin_rows;

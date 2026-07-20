@@ -50,6 +50,8 @@ static pappl_system_t	*system_cb(pappl_len_t num_options, cups_option_t *options
 // Local globals...
 //
 
+#include "lprint-brother-data.h"
+
 static pappl_pr_driver_t	lprint_drivers[] =
 {					// Driver list
 #ifdef LPRINT_EXPERIMENTAL
@@ -224,6 +226,7 @@ driver_cb(
     if (!strcmp(driver_name, lprint_drivers[i].name))
     {
       cupsCopyString(data->make_and_model, lprint_drivers[i].description, sizeof(data->make_and_model));
+      data->extension = lprint_drivers[i].extension;
       break;
     }
   }
