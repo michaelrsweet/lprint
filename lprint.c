@@ -53,7 +53,7 @@ static pappl_system_t	*system_cb(pappl_len_t num_options, cups_option_t *options
 static pappl_pr_driver_t	lprint_drivers[] =
 {					// Driver list
 #ifdef LPRINT_EXPERIMENTAL
-#  include "lprint-brother.h"
+#  include "lprint-brother-drivers.h"
 #  include "lprint-cpcl.h"
 #endif // LPRINT_EXPERIMENTAL
 #include "lprint-dymo.h"
