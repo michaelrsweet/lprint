@@ -19,6 +19,7 @@ typedef struct lprint_brother_s		// Brother driver data
 {
   bool		is_pt_series;		// Is this a PT-series printer?
   bool		is_ql_800;		// Is this the QL-800 printer?
+  unsigned int	invalidate_length;	// Length of the invalidate sequence
   lprint_dither_t dither;		// Dither buffer
   int		count;			// Output count for print info
   size_t	alloc_bytes,		// Allocated bytes for output buffer
@@ -437,6 +438,33 @@ lprint_brother_rendpage(
 
 
 //
+// 'lprint_brother_invalidate()' - Send invalidate sequence.
+//
+// This will cause the printer to wait for the next command to be sent.
+// When already in that state, the printer will ignore additional zeroes.
+//
+
+static void
+lprint_brother_invalidate(
+    pappl_job_t		*job,
+    pappl_device_t	*device)
+{
+  lprint_brother_t *brother = (lprint_brother_t *)papplJobGetData(job);
+  const unsigned int MAX_INVALIDATE_LENGTH = 400;
+  unsigned int	length;
+  char		*buffer;
+
+  length = brother->invalidate_length;
+  if (!length)
+	  length = MAX_INVALIDATE_LENGTH;
+
+  buffer = calloc(1, brother->invalidate_length);
+  papplDeviceWrite(device, buffer, brother->invalidate_length);
+  free(buffer);
+}
+
+
+//
 // 'lprint_brother_rstartjob()' - Start a job.
 //
 
@@ -450,7 +478,6 @@ lprint_brother_rstartjob(
 					// Brother driver data
   const char	*driver_name = papplPrinterGetDriverName(papplJobGetPrinter(job));
 					// Driver name
-  char		buffer[400];		// Reset buffer
   int		darkness;		// Combined darkness
 
 
@@ -465,21 +492,28 @@ lprint_brother_rstartjob(
   // Save driver data...
   papplJobSetData(job, brother);
 
-  // Reset the printer...
-  memset(buffer, 0, sizeof(buffer));
   if (!strncmp(driver_name, "brother_pt-", 11))
   {
-    // Send short reset sequence for PT-series tape printers
-    papplDeviceWrite(device, buffer, 100);
     brother->is_pt_series = true;
-  }
-  else
-  {
-    // Send long reset sequence for QL-series label printers
-    papplDeviceWrite(device, buffer, sizeof(buffer));
 
-    brother->is_ql_800 = !strcmp(driver_name, "brother_ql-800");
+    if (!strncmp(driver_name, "brother_pt-e", 12))
+    {
+      /* PT-E550W / P750W / P710BT */
+      brother->invalidate_length = 100;
+    }
+    else if (!strncmp(driver_name, "brother_pt-p", 12))
+    {
+      /* PT-P900 / P900W / P950NW / P910BT */
+      brother->invalidate_length = 200;
+    }
+  } else {
+    brother->is_ql_800 = driver_name && !strcmp(driver_name, "brother_ql-800");
+
+    /* QL-800 / QL-810W / QL-820NWB */
+    brother->invalidate_length = 400;
   }
+
+  lprint_brother_invalidate(job, device);
 
   // Get status information...
   // Ignore errors, since we are not using the result yet (lprint_brother_get_status will have logged an error)
