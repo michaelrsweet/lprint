@@ -12,6 +12,11 @@
   &(lprint_brother_driver_t) {
     .resolution = 180,
   } },
+{ "brother_pt-e560bt",	"Brother PT-E560BT",
+  "MFG:Brother;CMD:PT-CBP;MDL:PT-E560BT;",
+  &(lprint_brother_driver_t) {
+    .resolution = 180,
+  } },
 { "brother_ql-500",	"Brother QL-500",
   "MFG:Brother;CMD:PT-CBP;MDL:QL-500;",
   &(lprint_brother_driver_t) {
