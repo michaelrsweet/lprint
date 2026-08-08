@@ -132,15 +132,22 @@ lprintBrother(
   // Vendor-specific format...
   data->format = LPRINT_BROTHER_PT_CBP_MIMETYPE;
 
+  unsigned int resolution;
+  // Driver name brother_pt-p900w_360dpi does not specify the printer resolution.
+  if (sscanf(driver_name, "brother_%*[^_]_%udpi", &resolution) != 1)
+  {
+    papplLog(system, PAPPL_LOGLEVEL_ERROR, "Driver name %s does not specify the printer resolution.", driver_name);
+    return (false);
+  }
+  data->num_resolution  = 1;
+  data->x_resolution[0] = data->y_resolution[0] = resolution;
+  data->x_default       = data->x_resolution[0];
+  data->y_default	= data->y_resolution[0];
+  // TODO: Add support for 300x600dpi mode for QL-570/580N/700/8xx
+
   if (!strncmp(driver_name, "brother_ql-", 11))
   {
     // QL-series...
-
-    // Set resolution...
-    // TODO: Add support for 300x600dpi mode for QL-570/580N/700/8xx
-    data->num_resolution  = 1;
-    data->x_resolution[0] = data->y_resolution[0] = 300;
-    data->x_default       = data->y_default = data->x_resolution[0];
 
     // Basically borderless...
     data->left_right = 1;
@@ -160,11 +167,6 @@ lprintBrother(
   else
   {
     // PT-series...
-
-    // Set resolution...
-    data->num_resolution  = 1;
-    data->x_resolution[0] = data->y_resolution[0] = 180;
-    data->x_default       = data->y_default = data->x_resolution[0];
 
     // Basically borderless...
     data->left_right = 1;
