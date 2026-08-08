@@ -456,12 +456,18 @@ lprint_brother_rstartjob(
 
   (void)options;
 
+  if (!driver_name)
+  {
+    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unknown driver name.");
+    return (false);
+  }
+
   // Save driver data...
   papplJobSetData(job, brother);
 
   // Reset the printer...
   memset(buffer, 0, sizeof(buffer));
-  if (driver_name && !strncmp(driver_name, "brother_pt-", 11))
+  if (!strncmp(driver_name, "brother_pt-", 11))
   {
     // Send short reset sequence for PT-series tape printers
     papplDeviceWrite(device, buffer, 100);
@@ -472,7 +478,7 @@ lprint_brother_rstartjob(
     // Send long reset sequence for QL-series label printers
     papplDeviceWrite(device, buffer, sizeof(buffer));
 
-    brother->is_ql_800 = driver_name && !strcmp(driver_name, "brother_ql-800");
+    brother->is_ql_800 = !strcmp(driver_name, "brother_ql-800");
   }
 
   // Get status information...
