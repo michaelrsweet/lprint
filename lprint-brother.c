@@ -549,12 +549,18 @@ lprint_brother_rstartpage(
 {
   lprint_brother_t *brother = (lprint_brother_t *)papplJobGetData(job);
 					// Brother driver data
-
+  double	out_gamma = 1.0;	// Output gamma correction
 
   if (page > 0)
     papplDevicePuts(device, "\014");	// Eject the previous page
 
-  if (!lprintDitherAlloc(&brother->dither, job, options, /*head_width*/0, CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0, /*out_mirror*/false))
+  // How about gamma correction for other base resolutions and high-resolution
+  // printing (PT: 180 dpi, 360 dpi, 180 x 360 dpi, 360 x 720 dpi;
+  // QL: 300 x 600 dpi)?
+  if (options->header.HWResolution[0] == 300)
+	 out_gamma = 1.2;
+
+  if (!lprintDitherAlloc(&brother->dither, job, options, /*head_width*/0, CUPS_CSPACE_K, out_gamma, /*out_mirror*/false))
     return (false);
 
   brother->count     = 0;
