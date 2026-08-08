@@ -9,8 +9,6 @@
 
 { "brother_pt-e550w",	"Brother PT-E550W",
    "MFG:Brother;CMD:PT-CBP;MDL:PT-E550W;", NULL },
-//{ "brother_pt-",	"Brother PT-",
-//  "MFG:Brother;CMD:???;MDL:PT-;", NULL },
 { "brother_ql-500",	"Brother QL-500",
   "MFG:Brother;CMD:PT-CBP;MDL:QL-500;", NULL },
 { "brother_ql-550",	"Brother QL-550",
