@@ -17,6 +17,21 @@
   &(lprint_brother_driver_t) {
     .resolution = 180,
   } },
+{ "brother_pt-p900",	"Brother PT-P900",
+  "MFG:Brother;CMD:PT-CBP;MDL:PT-P900;",
+  &(lprint_brother_driver_t) {
+    .resolution = 360,
+  } },
+{ "brother_pt-p900w",	"Brother PT-P900W",
+  "MFG:Brother;CMD:PT-CBP;MDL:PT-P900W;",
+  &(lprint_brother_driver_t) {
+    .resolution = 360,
+  } },
+{ "brother_pt-p950nw",	"Brother PT-P950NW",
+  "MFG:Brother;CMD:PT-CBP;MDL:PT-P950NW;",
+  &(lprint_brother_driver_t) {
+    .resolution = 360,
+  } },
 { "brother_ql-500",	"Brother QL-500",
   "MFG:Brother;CMD:PT-CBP;MDL:QL-500;",
   &(lprint_brother_driver_t) {
