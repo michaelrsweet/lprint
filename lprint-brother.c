@@ -515,12 +515,16 @@ lprint_brother_rstartjob(
 
   lprint_brother_invalidate(job, device);
 
+  // Initialize mode settings
+  if (!papplDevicePuts(device, "\033@"))
+    return (false);
+
   // Get status information...
   // Ignore errors, since we are not using the result yet (lprint_brother_get_status will have logged an error)
   lprint_brother_get_status(papplJobGetPrinter(job), device);
 
-  // Reset and set raster mode...
-  if (!papplDevicePuts(device, "\033@\033ia\001"))
+  // Switch dynamic command mode to raster mode
+  if (!papplDevicePuts(device, "\033ia\001"))
     return (false);
 
   // print-darkness / printer-darkness-configured
