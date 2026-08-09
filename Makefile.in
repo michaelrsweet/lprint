@@ -210,6 +210,7 @@ resheaders:
 $(OBJS) $(TESTOBJS):	config.h lprint.h Makefile
 lprint.o:	\
 		lprint-brother.h \
+		lprint-brother-drivers.h \
 		lprint-cpcl.h \
 		lprint-dymo.h \
 		lprint-epl2.h \

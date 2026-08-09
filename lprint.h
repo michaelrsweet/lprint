@@ -171,6 +171,8 @@ typedef struct lprint_extdata_s		// Per-printer extensions data
 // Functions...
 //
 
+extern void *	lprintDriverExtension(const char *driver_name);
+
 extern bool	lprintDitherAlloc(lprint_dither_t *dither, pappl_job_t *job, pappl_pr_options_t *options, unsigned head_width, cups_cspace_t out_cspace, double out_gamma, bool out_mirror);
 extern void	lprintDitherFree(lprint_dither_t *dither);
 extern bool	lprintDitherLine(lprint_dither_t *dither, unsigned y, const unsigned char *line);
@@ -201,6 +203,5 @@ extern const char *lprintTestPageCB(pappl_printer_t *printer, char *buffer, size
 extern bool	lprintTSPL(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern bool	lprintZPL(pappl_system_t *system, const char *driver_name, const char *device_uri, const char *device_id, pappl_pr_driver_data_t *data, ipp_t **attrs, void *cbdata);
 extern void	lprintZPLQueryDriver(pappl_system_t *system, const char *device_uri, char *name, size_t namesize);
-
 
 #endif // !LPRINT_H

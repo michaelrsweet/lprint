@@ -8,6 +8,7 @@
 //
 
 #include "lprint.h"
+#include "lprint-brother.h"
 #include "static-resources/lprint-de-strings.h"
 #include "static-resources/lprint-en-strings.h"
 #include "static-resources/lprint-es-strings.h"
@@ -53,7 +54,7 @@ static pappl_system_t	*system_cb(pappl_len_t num_options, cups_option_t *options
 static pappl_pr_driver_t	lprint_drivers[] =
 {					// Driver list
 #ifdef LPRINT_EXPERIMENTAL
-#  include "lprint-brother.h"
+#  include "lprint-brother-drivers.h"
 #  include "lprint-cpcl.h"
 #endif // LPRINT_EXPERIMENTAL
 #include "lprint-dymo.h"
@@ -197,6 +198,24 @@ create_cb(pappl_printer_t *printer,	// I - Printer
   papplPrinterSetDriverData(printer, &data, NULL);
 
   LPRINT_DEBUG("create_cb: data.extension=%p\n", data.extension);
+}
+
+
+//
+// 'lprintDriverExtension()' - Get extension pointer by driver name
+//
+void *
+lprintDriverExtension(
+    const char		*driver_name)	// I - Driver name
+{
+  size_t	i;
+
+  for (i = 0; i < (sizeof(lprint_drivers) / sizeof(lprint_drivers[0])); i ++)
+  {
+    if (!strcmp(driver_name, lprint_drivers[i].name))
+      return lprint_drivers[i].extension;
+  }
+  return NULL;
 }
 
 

@@ -8,6 +8,7 @@
 //
 
 #include "lprint.h"
+#include "lprint-brother.h"
 #ifdef LPRINT_EXPERIMENTAL
 
 
@@ -132,15 +133,12 @@ lprintBrother(
   // Vendor-specific format...
   data->format = LPRINT_BROTHER_PT_CBP_MIMETYPE;
 
-  unsigned int resolution;
-  // Driver name brother_pt-p900w_360dpi does not specify the printer resolution.
-  if (sscanf(driver_name, "brother_%*[^_]_%udpi", &resolution) != 1)
-  {
-    papplLog(system, PAPPL_LOGLEVEL_ERROR, "Driver name %s does not specify the printer resolution.", driver_name);
+  lprint_brother_driver_t *brother_driver = lprintDriverExtension(driver_name);
+  if (!brother_driver)
     return (false);
-  }
+
   data->num_resolution  = 1;
-  data->x_resolution[0] = data->y_resolution[0] = resolution;
+  data->x_resolution[0] = data->y_resolution[0] = brother_driver->resolution;
   data->x_default       = data->x_resolution[0];
   data->y_default	= data->y_resolution[0];
   // TODO: Add support for 300x600dpi mode for QL-570/580N/700/8xx
@@ -478,7 +476,8 @@ lprint_brother_rstartjob(
 {
   lprint_brother_t *brother = (lprint_brother_t *)calloc(1, sizeof(lprint_brother_t));
 					// Brother driver data
-  const char	*driver_name = papplPrinterGetDriverName(papplJobGetPrinter(job));
+  pappl_printer_t *printer = papplJobGetPrinter(job);
+  const char	*driver_name = papplPrinterGetDriverName(printer);
 					// Driver name
   int		darkness;		// Combined darkness
 
@@ -523,7 +522,7 @@ lprint_brother_rstartjob(
 
   // Get status information...
   // Ignore errors, since we are not using the result yet (lprint_brother_get_status will have logged an error)
-  lprint_brother_get_status(papplJobGetPrinter(job), device);
+  lprint_brother_get_status(printer, device);
 
   // Switch dynamic command mode to raster mode
   if (!papplDevicePuts(device, "\033ia\001"))
