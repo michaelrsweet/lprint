@@ -177,10 +177,8 @@ lprintBrother(
     cupsCopyString(data->media_ready[0].size_name, "oe_wide-2in-tape_1x2in", sizeof(data->media_ready[0].size_name));
     cupsCopyString(data->media_ready[0].type, "continuous", sizeof(data->media_ready[0].type));
 
-    data->num_type = 2;
+    data->num_type = 1;
     data->type[0]  = "continuous";
-    data->type[1]  = "continuous-film";
-    data->type[2]  = "continuous-removable";
   }
 
   data->num_source = 1;
