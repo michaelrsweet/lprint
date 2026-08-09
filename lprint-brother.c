@@ -155,6 +155,8 @@ lprintBrother(
     data->num_media = (int)(sizeof(lprint_brother_ql_media) / sizeof(lprint_brother_ql_media[0]));
     memcpy(data->media, lprint_brother_ql_media, sizeof(lprint_brother_ql_media));
 
+    // XXX Should be determined by what the printer reports ...
+    // XXX "roll_dk2205-continuous_2.4x3.9in" is not defined ...
     cupsCopyString(data->media_ready[0].size_name, "roll_dk2205-continuous_2.4x3.9in", sizeof(data->media_ready[0].size_name));
     cupsCopyString(data->media_ready[0].type, "continuous", sizeof(data->media_ready[0].type));
 
@@ -174,6 +176,8 @@ lprintBrother(
     data->num_media = (int)(sizeof(lprint_brother_pt_media) / sizeof(lprint_brother_pt_media[0]));
     memcpy(data->media, lprint_brother_pt_media, sizeof(lprint_brother_pt_media));
 
+    // XXX Should be determined by what the printer reports ...
+    // XXX The predefined media types don't seem to make sense ...
     cupsCopyString(data->media_ready[0].size_name, "oe_wide-2in-tape_1x2in", sizeof(data->media_ready[0].size_name));
     cupsCopyString(data->media_ready[0].type, "continuous", sizeof(data->media_ready[0].type));
 
