@@ -4,6 +4,7 @@ LPrint Change History
 v1.4.1 - YYYY-MM-DD
 -------------------
 
+- Added driver for Phomemo PM-241-BT (Issue #213)
 - Fixed build error when compiling against older versions of libcups
   (Issue #210)
 
