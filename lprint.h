@@ -78,6 +78,7 @@
 #      define cupsArrayGetLast cupsArrayLast
 #      define cupsArrayGetNext cupsArrayNext
 #      define cupsArrayGetPrev cupsArrayPrev
+#      define cupsCopyString papplCopyString
 #      define cupsCreateTempFd(prefix,suffix,buffer,bufsize) cupsTempFd(buffer,bufsize)
 #      define cupsGetError cupsLastError
 #      define cupsGetErrorString cupsLastErrorString
