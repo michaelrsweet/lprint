@@ -815,7 +815,7 @@ lprintMediaUpdate(
 
   data->num_media = i;
 
-  LPRINT_DEBUG("lprintMediaUpdate: num_media=%d\n", data->num_media);
+  LPRINT_DEBUG("lprintMediaUpdate: num_media=%u\n", (unsigned)data->num_media);
   for (i = 0; i < data->num_media; i ++)
     LPRINT_DEBUG("lprintMediaUpdate: media[%d]='%s'\n", i, data->media[i]);
 }
