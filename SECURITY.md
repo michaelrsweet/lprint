@@ -27,7 +27,7 @@ The following kinds of issues are generally treated as security
 vulnerabilities:
 
 - Daemon/service crashes/hangs caused by a network request,
-- Remote code execution through an API or other interface used by PAPPL,
+- Remote code execution through an API or other interface used by LPrint,
 - Privilege escalation that allows unauthorized actions or information
   disclosure, and
 - Common weaknesses (buffer overflow, divide-by-zero, input validation,
