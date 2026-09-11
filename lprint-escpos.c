@@ -93,10 +93,12 @@ lprintESCPOS(
   // Set pages-per-minute based on 6" of receipt; we need to report something...
   data->ppm = 60;
 
-  // ESC/POS printers operate at 203.2dpi
-  data->num_resolution  = 1;
-  data->x_resolution[0] = 203;
-  data->y_resolution[0] = 203;
+  // ESC/POS printers operate at 180 and 203.2dpi
+  data->num_resolution  = 2;
+  data->x_resolution[0] = 180;
+  data->y_resolution[0] = 180;
+  data->x_resolution[1] = 203;
+  data->y_resolution[1] = 203;
 
   data->x_default = data->y_default = 203;
 

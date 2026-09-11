@@ -5,6 +5,7 @@ v1.4.1 - YYYY-MM-DD
 -------------------
 
 - Added driver for Phomemo PM-241-BT (Issue #213)
+- Updated ESC/POS driver to support both 180 and 203dpi (Issue #220)
 - Fixed build error when compiling against older versions of libcups
   (Issue #210)
 
