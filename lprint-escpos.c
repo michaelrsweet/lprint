@@ -79,6 +79,24 @@ lprintESCPOS(
     ipp_t                  **attrs,	// O - Pointer to driver attributes
     void                   *cbdata)	// I - Callback data (not used)
 {
+  size_t	i;			// Looping var
+  int		res = 180;		// Output resolution
+  static const char * const hires_models[] =
+  {					// High resolution (203dpi) models
+    "escpos_58mm_203dpi",
+    "escpos_58mm_tm-m10",
+    "escpos_80mm_203dpi",
+    "escpos_80mm_eu-m30",
+    "escpos_80mm_tm-l100",
+    "escpos_80mm_tm-m30",
+    "escpos_80mm_tm-p20",
+    "escpos_80mm_tm-p80",
+    "escpos_80mm_tm-t81",
+    "escpos_80mm_tm-t82",
+    "escpos_80mm_tm-t100"
+  };
+
+
   data->printfile_cb  = lprint_escpos_printfile;
   data->rendjob_cb    = lprint_escpos_rendjob;
   data->rendpage_cb   = lprint_escpos_rendpage;
@@ -94,13 +112,21 @@ lprintESCPOS(
   data->ppm = 60;
 
   // ESC/POS printers operate at 180 and 203.2dpi
-  data->num_resolution  = 2;
-  data->x_resolution[0] = 180;
-  data->y_resolution[0] = 180;
-  data->x_resolution[1] = 203;
-  data->y_resolution[1] = 203;
+  for (i = 0; i < (sizeof(hires_models) / sizeof(hires_models[0])); i ++)
+  {
+    if (!strncmp(driver_name, hires_models[i], strlen(hires_models[i])))
+    {
+      // "High resolution" model...
+      res = 203;
+      break;
+    }
+  }
 
-  data->x_default = data->y_default = 203;
+  data->num_resolution  = 1;
+  data->x_resolution[0] = res;
+  data->y_resolution[0] = res;
+  data->x_default       = res;
+  data->y_default       = res;
 
   // Only one source/roll...
   data->num_source = 1;
