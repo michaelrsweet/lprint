@@ -9,11 +9,11 @@
 
 { "escpos_58mm",            "58mm/180dpi ESC/POS Receipt Printer",     NULL, NULL },
 { "escpos_58mm_203dpi",     "58mm/203dpi ESC/POS Receipt Printer",     NULL, NULL },
+{ "escpos_58mm_tm-m10",     "EPSON TM-m10 Receipt Printer",     "MFG:EPSON;MDL:TM-m10;CMD:ESC/POS;", NULL },
 { "escpos_80mm",            "80mm/180dpi ESC/POS Receipt Printer",     "CMD:ESC/POS;", NULL },
 { "escpos_80mm_203dpi",     "80mm/203dpi ESC/POS Receipt Printer",     NULL, NULL },
 { "escpos_80mm_eu-m30",	    "EPSON EU-m30 Receipt Printer",     "MFG:EPSON;MDL:EU-m30;CMD:ESC/POS;", NULL },
 { "escpos_80mm_tm-l100",    "EPSON TM-L100 Receipt Printer",    "MFG:EPSON;MDL:TM-L100;CMD:ESC/POS;", NULL },
-{ "escpos_80mm_tm-m10",     "EPSON TM-m10 Receipt Printer",     "MFG:EPSON;MDL:TM-m10;CMD:ESC/POS;", NULL },
 { "escpos_80mm_tm-m30",     "EPSON TM-m30 Receipt Printer",     "MFG:EPSON;MDL:TM-m30;CMD:ESC/POS;", NULL },
 { "escpos_80mm_tm-m30ii",   "EPSON TM-m30II Receipt Printer",   "MFG:EPSON;MDL:TM-m30II;CMD:ESC/POS;", NULL },
 { "escpos_80mm_tm-m30iii",  "EPSON TM-m30III Receipt Printer",  "MFG:EPSON;MDL:TM-m30III;CMD:ESC/POS;", NULL },
