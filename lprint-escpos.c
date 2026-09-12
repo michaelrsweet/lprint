@@ -281,7 +281,7 @@ lprint_escpos_rendpage(
   lprint_escpos_rwriteline(job, options, device, options->header.cupsHeight, NULL);
 
   // Feed 1"...
-  papplDevicePrintf(device, "\033J%c", 203);
+  papplDevicePrintf(device, "\033J%c", options->printer_resolution[1]);
 
   if (options->finishings & PAPPL_FINISHINGS_TRIM)
   {
