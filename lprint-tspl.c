@@ -103,6 +103,20 @@ static bool	lprint_tspl_rstartjob(pappl_job_t *job, pappl_pr_options_t *options,
 static bool	lprint_tspl_rstartpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page);
 static bool	lprint_tspl_rwriteline(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned y, const unsigned char *line);
 static bool	lprint_tspl_status(pappl_printer_t *printer);
+static bool	lprint_tspl_update_reasons(pappl_printer_t *printer, pappl_job_t *job, pappl_device_t *device);
+
+
+//
+// TSPL status bits returned by <ESC>!?...
+//
+
+#define TSPL_STATUS_HEAD_OPEN		0x01
+#define TSPL_STATUS_PAPER_JAM		0x02
+#define TSPL_STATUS_OUT_OF_PAPER	0x04
+#define TSPL_STATUS_OUT_OF_RIBBON	0x08
+#define TSPL_STATUS_PAUSED		0x10
+#define TSPL_STATUS_PRINTING		0x20
+#define TSPL_STATUS_OTHER_ERROR		0x80
 
 
 //
@@ -208,6 +222,9 @@ lprint_tspl_printfile(
     return (false);
   }
 
+  // Update status...
+  lprint_tspl_update_reasons(papplJobGetPrinter(job), job, device);
+
   while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
   {
     if (papplDeviceWrite(device, buffer, (size_t)bytes) < 0)
@@ -220,6 +237,9 @@ lprint_tspl_printfile(
   close(fd);
 
   papplJobSetImpressionsCompleted(job, 1);
+
+  // Update status...
+  lprint_tspl_update_reasons(papplJobGetPrinter(job), job, device);
 
   return (true);
 }
@@ -266,14 +286,26 @@ lprint_tspl_rendpage(
   (void)page;
 
   // Write last line
-  lprint_tspl_rwriteline(job, options, device, options->header.cupsHeight, NULL);
+  if (!lprint_tspl_rwriteline(job, options, device, options->header.cupsHeight, NULL))
+    return (false);
 
   // Eject
   if (options->header.NumCopies)
-    papplDevicePrintf(device, "PRINT %u,1\n", options->header.NumCopies);
-  else
-    papplDevicePuts(device, "PRINT 1,1\n");
+  {
+    if (papplDevicePrintf(device, "PRINT %u,1\n", options->header.NumCopies) < 0)
+    {
+      papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to send PRINT command.");
+      return (false);
+    }
+  }
+  else if (papplDevicePuts(device, "PRINT 1,1\n") < 0)
+  {
+    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to send PRINT command.");
+    return (false);
+  }
+
   papplDeviceFlush(device);
+  lprint_tspl_update_reasons(papplJobGetPrinter(job), job, device);
 
   // Free memory and return...
   lprintDitherFree(&tspl->dither);
@@ -324,6 +356,9 @@ lprint_tspl_rstartpage(
 
 
   (void)page;
+
+  // Update status...
+  lprint_tspl_update_reasons(papplJobGetPrinter(job), job, device);
 
   // Initialize the dither buffer...
   if (!lprintDitherAlloc(&tspl->dither, job, options, /*head_width*/0, CUPS_CSPACE_W, options->header.HWResolution[0] == 300 ? 1.2 : 1.0, /*out_mirror*/false))
@@ -404,7 +439,13 @@ lprint_tspl_rwriteline(
 
   // Dither and write the line...
   if (lprintDitherLine(&tspl->dither, y, line))
-    papplDeviceWrite(device, tspl->dither.output, tspl->dither.out_width);
+  {
+    if (papplDeviceWrite(device, tspl->dither.output, tspl->dither.out_width) < 0)
+    {
+      papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to send %u bytes to printer.", tspl->dither.out_width);
+      return (false);
+    }
+  }
 
   return (true);
 }
@@ -418,7 +459,110 @@ static bool				// O - `true` on success, `false` on failure
 lprint_tspl_status(
     pappl_printer_t *printer)		// I - Printer
 {
-  (void)printer;
+  pappl_device_t	*device;	// Connection to printer
+  bool			ret;		// Return value
+  pappl_pr_driver_data_t data;		// Driver data
+  lprint_extdata_t	*extdata;	// Driver extension data
+
+
+  // See if the status checks need to be suspended...
+  papplPrinterGetDriverData(printer, &data);
+  extdata = (lprint_extdata_t *)data.extension;
+
+  if (extdata->status_disabled || extdata->status_time >= time(NULL))
+    return (true);
+
+  // No, try talking to the printer...
+  if ((device = papplPrinterOpenDevice(printer)) == NULL)
+  {
+    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to open device for status.");
+    return (false);
+  }
+
+  // Get the printer status...
+  ret = lprint_tspl_update_reasons(printer, NULL, device);
+
+  papplPrinterCloseDevice(printer);
+
+  if (!ret)
+  {
+    // Don't try doing status updates for 5 minutes...
+    extdata->status_time = time(NULL) + 300;
+    ret = true;
+  }
+
+  return (ret);
+}
+
+
+//
+// 'lprint_tspl_update_reasons()' - Update "printer-state-reasons" values.
+//
+
+static bool				// O - `true` on success, `false` on failure
+lprint_tspl_update_reasons(
+    pappl_printer_t *printer,		// I - Printer
+    pappl_job_t     *job,		// I - Current job or `NULL` if none
+    pappl_device_t  *device)		// I - Connection to device
+{
+  unsigned char		status;		// Status byte
+  pappl_preason_t	reasons;	// "printer-state-reasons" values
+  pappl_preason_t	mask;		// Reasons managed by this driver
+  pappl_pr_driver_data_t data;		// Driver data
+  lprint_extdata_t	*extdata;	// Extension data
+
+
+  // Check the "disabled" flag in the printer's extension data...
+  papplPrinterGetDriverData(printer, &data);
+  extdata = (lprint_extdata_t *)data.extension;
+
+  if (extdata->status_disabled)
+    return (true);
+
+  // Get the printer status...
+  if (papplDevicePuts(device, "\033!?") < 0)
+  {
+    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to send TSPL status command.");
+    return (false);
+  }
+
+  if (papplDeviceRead(device, &status, 1) <= 0)
+  {
+    papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "Unable to read TSPL status response.");
+    return (false);
+  }
+
+  papplLogPrinter(printer, PAPPL_LOGLEVEL_DEBUG, "TSPL status is 0x%02X.", status);
+
+  reasons = PAPPL_PREASON_NONE;
+
+  if (status & TSPL_STATUS_HEAD_OPEN)
+    reasons |= PAPPL_PREASON_COVER_OPEN;
+
+  if (status & TSPL_STATUS_PAPER_JAM)
+    reasons |= PAPPL_PREASON_MEDIA_JAM;
+
+  if (status & TSPL_STATUS_OUT_OF_PAPER)
+    reasons |= PAPPL_PREASON_MEDIA_EMPTY;
+
+  if (status & TSPL_STATUS_OUT_OF_RIBBON)
+    reasons |= PAPPL_PREASON_MARKER_SUPPLY_EMPTY;
+
+  if (status & TSPL_STATUS_PAUSED)
+    reasons |= PAPPL_PREASON_OFFLINE;
+
+  if (status & TSPL_STATUS_OTHER_ERROR)
+    reasons |= PAPPL_PREASON_OTHER;
+
+  if (job && (reasons & PAPPL_PREASON_MEDIA_EMPTY))
+    reasons |= PAPPL_PREASON_MEDIA_NEEDED;
+
+  mask = PAPPL_PREASON_COVER_OPEN | PAPPL_PREASON_MEDIA_JAM |
+      PAPPL_PREASON_MEDIA_EMPTY | PAPPL_PREASON_MEDIA_NEEDED |
+      PAPPL_PREASON_MARKER_SUPPLY_EMPTY | PAPPL_PREASON_OFFLINE |
+      PAPPL_PREASON_OTHER;
+
+  papplPrinterSetReasons(printer, reasons, mask);
 
   return (true);
 }
