@@ -8,6 +8,7 @@
 //
 
 #include "lprint.h"
+#include "lprint-brother.h"
 #ifdef LPRINT_EXPERIMENTAL
 
 
@@ -19,6 +20,7 @@ typedef struct lprint_brother_s		// Brother driver data
 {
   bool		is_pt_series;		// Is this a PT-series printer?
   bool		is_ql_800;		// Is this the QL-800 printer?
+  unsigned int	invalidate_length;	// Length of the invalidate sequence
   lprint_dither_t dither;		// Dither buffer
   int		count;			// Output count for print info
   size_t	alloc_bytes,		// Allocated bytes for output buffer
@@ -131,15 +133,19 @@ lprintBrother(
   // Vendor-specific format...
   data->format = LPRINT_BROTHER_PT_CBP_MIMETYPE;
 
+  lprint_brother_driver_t *brother_driver = lprintDriverExtension(driver_name);
+  if (!brother_driver)
+    return (false);
+
+  data->num_resolution  = 1;
+  data->x_resolution[0] = data->y_resolution[0] = brother_driver->resolution;
+  data->x_default       = data->x_resolution[0];
+  data->y_default	= data->y_resolution[0];
+  // TODO: Add support for 300x600dpi mode for QL-570/580N/700/8xx
+
   if (!strncmp(driver_name, "brother_ql-", 11))
   {
     // QL-series...
-
-    // Set resolution...
-    // TODO: Add support for 300x600dpi mode for QL-570/580N/700/8xx
-    data->num_resolution  = 1;
-    data->x_resolution[0] = data->y_resolution[0] = 300;
-    data->x_default       = data->y_default = data->x_resolution[0];
 
     // Basically borderless...
     data->left_right = 1;
@@ -149,6 +155,8 @@ lprintBrother(
     data->num_media = (int)(sizeof(lprint_brother_ql_media) / sizeof(lprint_brother_ql_media[0]));
     memcpy(data->media, lprint_brother_ql_media, sizeof(lprint_brother_ql_media));
 
+    // XXX Should be determined by what the printer reports ...
+    // XXX "roll_dk2205-continuous_2.4x3.9in" is not defined ...
     cupsCopyString(data->media_ready[0].size_name, "roll_dk2205-continuous_2.4x3.9in", sizeof(data->media_ready[0].size_name));
     cupsCopyString(data->media_ready[0].type, "continuous", sizeof(data->media_ready[0].type));
 
@@ -160,11 +168,6 @@ lprintBrother(
   {
     // PT-series...
 
-    // Set resolution...
-    data->num_resolution  = 1;
-    data->x_resolution[0] = data->y_resolution[0] = 180;
-    data->x_default       = data->y_default = data->x_resolution[0];
-
     // Basically borderless...
     data->left_right = 1;
     data->bottom_top = 1;
@@ -173,16 +176,13 @@ lprintBrother(
     data->num_media = (int)(sizeof(lprint_brother_pt_media) / sizeof(lprint_brother_pt_media[0]));
     memcpy(data->media, lprint_brother_pt_media, sizeof(lprint_brother_pt_media));
 
-    data->num_source = 1;
-    data->source[0]  = "main-roll";
-
+    // XXX Should be determined by what the printer reports ...
+    // XXX The predefined media types don't seem to make sense ...
     cupsCopyString(data->media_ready[0].size_name, "oe_wide-2in-tape_1x2in", sizeof(data->media_ready[0].size_name));
     cupsCopyString(data->media_ready[0].type, "continuous", sizeof(data->media_ready[0].type));
 
-    data->num_type = 2;
+    data->num_type = 1;
     data->type[0]  = "continuous";
-    data->type[1]  = "continuous-film";
-    data->type[2]  = "continuous-removable";
   }
 
   data->num_source = 1;
@@ -208,38 +208,61 @@ lprint_brother_get_status(
   unsigned char		buffer[32];	// Status buffer
   pappl_preason_t	preasons;	// "printer-state-reasons" values
   const char		*media;		// "media-ready" value
+  ssize_t		rbytes;		// Bytes read in response
+  unsigned int		tries;		// Number of tries for reading response
 
 
   // Request status...
   if (!papplDevicePuts(device, "\033iS"))
+  {
+    papplLogPrinter(printer, PAPPL_LOGLEVEL_ERROR, "Failed to send status command.");
     return (false);
+  }
 
-  // Read status buffer...
-  if (papplDeviceRead(device, buffer, sizeof(buffer)) < (ssize_t)sizeof(buffer))
+  // Read status buffer...  Usually first few tries read empty
+  for (tries = 10; tries; tries --)
+  {
+    rbytes = papplDeviceRead(device, buffer, sizeof(buffer));
+    if (rbytes == (ssize_t)sizeof(buffer))
+    {
+      break;
+    }
+    else if (rbytes > 0)
+    {
+      // Never witnessed, but diagnose this just in case
+      papplLogPrinter(printer, PAPPL_LOGLEVEL_ERROR, "Receive partial status reply, read %li bytes.", rbytes);
+      return (false);
+    }
+  }
+  if (tries == 0)
+  {
+    papplLogPrinter(printer, PAPPL_LOGLEVEL_ERROR, "Status reply not received.");
     return (false);
+  }
 
   LPRINT_DEBUG("lprint_brother_get_status: Print Head Mark = %02x\n", buffer[0]);
   LPRINT_DEBUG("lprint_brother_get_status: Size = %02x\n", buffer[1]);
-  LPRINT_DEBUG("lprint_brother_get_status: Reserved = %02x\n", buffer[2]);
+  LPRINT_DEBUG("lprint_brother_get_status: Brother Code = %02x\n", buffer[2]);
   LPRINT_DEBUG("lprint_brother_get_status: Series Code = %02x\n", buffer[3]);
-  LPRINT_DEBUG("lprint_brother_get_status: Model Code = %02x %02x\n", buffer[4], buffer[5]);
-  LPRINT_DEBUG("lprint_brother_get_status: Reserved = %02x\n", buffer[6]);
-  LPRINT_DEBUG("lprint_brother_get_status: Reserved = %02x\n", buffer[7]);
+  LPRINT_DEBUG("lprint_brother_get_status: Model Code = %02x\n", buffer[4]);
+  LPRINT_DEBUG("lprint_brother_get_status: Country Code = %02x\n", buffer[5]);
+  LPRINT_DEBUG("lprint_brother_get_status: Battery Level = %02x\n", buffer[6]);
+  LPRINT_DEBUG("lprint_brother_get_status: Extended Error = %02x\n", buffer[7]);
   LPRINT_DEBUG("lprint_brother_get_status: Error Info 1 = %02x\n", buffer[8]);
   LPRINT_DEBUG("lprint_brother_get_status: Error Info 2 = %02x\n", buffer[9]);
   LPRINT_DEBUG("lprint_brother_get_status: Media Width = %02x\n", buffer[10]);
   LPRINT_DEBUG("lprint_brother_get_status: Media Type = %02x\n", buffer[11]);
-  LPRINT_DEBUG("lprint_brother_get_status: Reserved = %02x\n", buffer[12]);
-  LPRINT_DEBUG("lprint_brother_get_status: Reserved = %02x\n", buffer[13]);
-  LPRINT_DEBUG("lprint_brother_get_status: Reserved = %02x\n", buffer[14]);
+  LPRINT_DEBUG("lprint_brother_get_status: Number of Colors = %02x\n", buffer[12]);
+  LPRINT_DEBUG("lprint_brother_get_status: Fonts = %02x\n", buffer[13]);
+  LPRINT_DEBUG("lprint_brother_get_status: Japanese Fonts = %02x\n", buffer[14]);
   LPRINT_DEBUG("lprint_brother_get_status: Mode = %02x\n", buffer[15]);
-  LPRINT_DEBUG("lprint_brother_get_status: Reserved = %02x\n", buffer[16]);
+  LPRINT_DEBUG("lprint_brother_get_status: Density = %02x\n", buffer[16]);
   LPRINT_DEBUG("lprint_brother_get_status: Media Length = %02x\n", buffer[17]);
   LPRINT_DEBUG("lprint_brother_get_status: Status Type = %02x\n", buffer[18]);
   LPRINT_DEBUG("lprint_brother_get_status: Phase Type = %02x\n", buffer[19]);
   LPRINT_DEBUG("lprint_brother_get_status: Phase Number = %02x %02x\n", buffer[20], buffer[21]);
   LPRINT_DEBUG("lprint_brother_get_status: Notification # = %02x\n", buffer[22]);
-  LPRINT_DEBUG("lprint_brother_get_status: Reserved = %02x\n", buffer[23]);
+  LPRINT_DEBUG("lprint_brother_get_status: Expansion Area = %02x\n", buffer[23]);
   LPRINT_DEBUG("lprint_brother_get_status: Tape Color = %02x\n", buffer[24]);
   LPRINT_DEBUG("lprint_brother_get_status: Text Color = %02x\n", buffer[25]);
   LPRINT_DEBUG("lprint_brother_get_status: Hardware Info = %02x %02x %02x %02x\n", buffer[26], buffer[27], buffer[28], buffer[29]);
@@ -396,6 +419,11 @@ lprint_brother_rendpage(
   if (!papplDeviceWrite(device, buffer, sizeof(buffer)))
     return (false);
 
+  // Set compression mode to uncompressed (default for some devices, but not
+  // all, so always set explicitly).
+  if (!papplDeviceWrite(device, (const unsigned char *)"M\0", 2))
+    return (false);
+
   // Send label data...
   if (brother->num_bytes > 0 && !papplDeviceWrite(device, brother->buffer, brother->num_bytes))
     return (false);
@@ -412,6 +440,33 @@ lprint_brother_rendpage(
 
 
 //
+// 'lprint_brother_invalidate()' - Send invalidate sequence.
+//
+// This will cause the printer to wait for the next command to be sent.
+// When already in that state, the printer will ignore additional zeroes.
+//
+
+static void
+lprint_brother_invalidate(
+    pappl_job_t		*job,
+    pappl_device_t	*device)
+{
+  lprint_brother_t *brother = (lprint_brother_t *)papplJobGetData(job);
+  const unsigned int MAX_INVALIDATE_LENGTH = 400;
+  unsigned int	length;
+  char		*buffer;
+
+  length = brother->invalidate_length;
+  if (!length)
+	  length = MAX_INVALIDATE_LENGTH;
+
+  buffer = calloc(1, brother->invalidate_length);
+  papplDeviceWrite(device, buffer, brother->invalidate_length);
+  free(buffer);
+}
+
+
+//
 // 'lprint_brother_rstartjob()' - Start a job.
 //
 
@@ -423,40 +478,56 @@ lprint_brother_rstartjob(
 {
   lprint_brother_t *brother = (lprint_brother_t *)calloc(1, sizeof(lprint_brother_t));
 					// Brother driver data
-  const char	*driver_name = papplPrinterGetDriverName(papplJobGetPrinter(job));
+  pappl_printer_t *printer = papplJobGetPrinter(job);
+  const char	*driver_name = papplPrinterGetDriverName(printer);
 					// Driver name
-  char		buffer[400];		// Reset buffer
   int		darkness;		// Combined darkness
 
 
   (void)options;
 
+  if (!driver_name)
+  {
+    papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unknown driver name.");
+    return (false);
+  }
+
   // Save driver data...
   papplJobSetData(job, brother);
 
-  // Reset the printer...
-  memset(buffer, 0, sizeof(buffer));
-  if (driver_name && !strncmp(driver_name, "brother_pt-", 11))
+  if (!strncmp(driver_name, "brother_pt-", 11))
   {
-    // Send short reset sequence for PT-series tape printers
-    papplDeviceWrite(device, buffer, 100);
     brother->is_pt_series = true;
-  }
-  else
-  {
-    // Send long reset sequence for QL-series label printers
-    papplDeviceWrite(device, buffer, sizeof(buffer));
 
+    if (!strncmp(driver_name, "brother_pt-e", 12))
+    {
+      /* PT-E550W / P750W / P710BT */
+      brother->invalidate_length = 100;
+    }
+    else if (!strncmp(driver_name, "brother_pt-p", 12))
+    {
+      /* PT-P900 / P900W / P950NW / P910BT */
+      brother->invalidate_length = 200;
+    }
+  } else {
     brother->is_ql_800 = driver_name && !strcmp(driver_name, "brother_ql-800");
+
+    /* QL-800 / QL-810W / QL-820NWB */
+    brother->invalidate_length = 400;
   }
+
+  lprint_brother_invalidate(job, device);
+
+  // Initialize mode settings
+  if (!papplDevicePuts(device, "\033@"))
+    return (false);
 
   // Get status information...
-  lprint_brother_get_status(papplJobGetPrinter(job), device);
-//  if (!lprint_brother_get_status(papplJobGetPrinter(job), device))
-//    return (false);
+  // Ignore errors, since we are not using the result yet (lprint_brother_get_status will have logged an error)
+  lprint_brother_get_status(printer, device);
 
-  // Reset and set raster mode...
-  if (!papplDevicePuts(device, "\033@\033ia\001"))
+  // Switch dynamic command mode to raster mode
+  if (!papplDevicePuts(device, "\033ia\001"))
     return (false);
 
   // print-darkness / printer-darkness-configured
@@ -482,12 +553,18 @@ lprint_brother_rstartpage(
 {
   lprint_brother_t *brother = (lprint_brother_t *)papplJobGetData(job);
 					// Brother driver data
-
+  double	out_gamma = 1.0;	// Output gamma correction
 
   if (page > 0)
     papplDevicePuts(device, "\014");	// Eject the previous page
 
-  if (!lprintDitherAlloc(&brother->dither, job, options, /*head_width*/0, CUPS_CSPACE_K, options->header.HWResolution[0] == 300 ? 1.2 : 1.0, /*out_mirror*/false))
+  // How about gamma correction for other base resolutions and high-resolution
+  // printing (PT: 180 dpi, 360 dpi, 180 x 360 dpi, 360 x 720 dpi;
+  // QL: 300 x 600 dpi)?
+  if (options->header.HWResolution[0] == 300)
+	 out_gamma = 1.2;
+
+  if (!lprintDitherAlloc(&brother->dither, job, options, /*head_width*/0, CUPS_CSPACE_K, out_gamma, /*out_mirror*/false))
     return (false);
 
   brother->count     = 0;
