@@ -4,6 +4,7 @@ LPrint Change History
 v1.4.1 - YYYY-MM-DD
 -------------------
 
+- Added a NIIMBOT driver for the B1, B3S_P, B4, and D11_H.
 - Added driver for Phomemo PM-241-BT (Issue #213)
 - Updated ESC/POS driver to support both 180 and 203dpi (Issue #220)
 - Fixed build error when compiling against older versions of libcups

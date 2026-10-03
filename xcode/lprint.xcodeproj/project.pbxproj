@@ -14,6 +14,7 @@
 		271DBD472B56ED0D00475159 /* lprint-cpcl.c in Sources */ = {isa = PBXBuildFile; fileRef = 271DBD432B56ED0D00475159 /* lprint-cpcl.c */; };
 		272FF1992966330F008C4F4F /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 272FF1982966330F008C4F4F /* Security.framework */; };
 		273A4980276BB83B00C3B44E /* lprint-epl2.c in Sources */ = {isa = PBXBuildFile; fileRef = 273A497F276BB83B00C3B44E /* lprint-epl2.c */; };
+		A1B2C3D4276BB83B00C3B44E /* lprint-niimbot.c in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D5276BB83B00C3B44E /* lprint-niimbot.c */; };
 		273A4982276BCE3100C3B44E /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 273A4981276BCE3100C3B44E /* libjpeg.a */; };
 		275C79822772301C00BB595D /* lprint-testpage.c in Sources */ = {isa = PBXBuildFile; fileRef = 275C79812772301C00BB595D /* lprint-testpage.c */; };
 		27712E402B12A48B0032AE30 /* lprint-tspl.c in Sources */ = {isa = PBXBuildFile; fileRef = 27712E3B2B12A48B0032AE30 /* lprint-tspl.c */; };
@@ -98,6 +99,8 @@
 		2724351223A441DB00B318AF /* lprint-add.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = "lprint-add.1"; path = "../man/lprint-add.1"; sourceTree = "<group>"; };
 		272FF1982966330F008C4F4F /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		273A497F276BB83B00C3B44E /* lprint-epl2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-epl2.c"; path = "../lprint-epl2.c"; sourceTree = "<group>"; };
+		A1B2C3D5276BB83B00C3B44E /* lprint-niimbot.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-niimbot.c"; path = "../lprint-niimbot.c"; sourceTree = "<group>"; };
+		A1B2C3D6276BB83B00C3B44E /* lprint-niimbot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-niimbot.h"; path = "../lprint-niimbot.h"; sourceTree = "<group>"; };
 		273A4981276BCE3100C3B44E /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libjpeg.a; path = ../../../../../usr/local/lib/libjpeg.a; sourceTree = "<group>"; };
 		275C79802770055400BB595D /* lprint-epl2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "lprint-epl2.h"; path = "../lprint-epl2.h"; sourceTree = "<group>"; };
 		275C79812772301C00BB595D /* lprint-testpage.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "lprint-testpage.c"; path = "../lprint-testpage.c"; sourceTree = "<group>"; };
@@ -234,6 +237,8 @@
 				2715B53125FD7FC200C0BBF6 /* lprint-dymo.c */,
 				275C79802770055400BB595D /* lprint-epl2.h */,
 				273A497F276BB83B00C3B44E /* lprint-epl2.c */,
+				A1B2C3D6276BB83B00C3B44E /* lprint-niimbot.h */,
+				A1B2C3D5276BB83B00C3B44E /* lprint-niimbot.c */,
 				27712E3A2B12A48B0032AE30 /* lprint-sii.h */,
 				27712E3E2B12A48B0032AE30 /* lprint-sii.c */,
 				275C79812772301C00BB595D /* lprint-testpage.c */,
@@ -420,6 +425,7 @@
 				2715B53325FD7FC200C0BBF6 /* lprint-common.c in Sources */,
 				2715B53425FD7FC200C0BBF6 /* lprint-dymo.c in Sources */,
 				273A4980276BB83B00C3B44E /* lprint-epl2.c in Sources */,
+				A1B2C3D4276BB83B00C3B44E /* lprint-niimbot.c in Sources */,
 				27E485962B55DFCC00202288 /* lprint-sii.c in Sources */,
 				275C79822772301C00BB595D /* lprint-testpage.c in Sources */,
 				27E485972B55DFCC00202288 /* lprint-tspl.c in Sources */,

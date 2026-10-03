@@ -6,6 +6,9 @@
 /lprint
 /lprint.service
 /Makefile
+/test.log
 /testdither
+/testniimbot
+/testpackbits
 /xcode/lprint.xcodeproj/xcshareddata
 xcuserdata

@@ -58,6 +58,7 @@ static pappl_pr_driver_t	lprint_drivers[] =
 #endif // LPRINT_EXPERIMENTAL
 #include "lprint-dymo.h"
 #include "lprint-epl2.h"
+#include "lprint-niimbot.h"
 #include "lprint-escpos.h"
 #include "lprint-sii.h"
 #include "lprint-tspl.h"
@@ -112,6 +113,14 @@ autoadd_cb(const char *device_info,	// I - Device information/name (not used)
 
   if (make && !strncasecmp(make, "Zebra", 5))
     lprintZPLQueryDriver((pappl_system_t *)cbdata, device_uri, name, sizeof(name));
+  else
+  {
+    const char *niimbot = lprintNiimbotAutoAdd(device_id);
+					// Confirmed NIIMBOT model, if any
+
+    if (niimbot)
+      cupsCopyString(name, niimbot, sizeof(name));
+  }
 
   // Then loop through the driver list to find the best match...
   for (i = 0; i < (sizeof(lprint_drivers) / sizeof(lprint_drivers[0])); i ++)
@@ -280,6 +289,8 @@ driver_cb(
     ret = lprintDYMO(system, driver_name, device_uri, device_id, data, attrs, cbdata);
   else if (!strncmp(driver_name, "epl2_", 5))
     ret = lprintEPL2(system, driver_name, device_uri, device_id, data, attrs, cbdata);
+  else if (!strncmp(driver_name, "niimbot_", 8))
+    ret = lprintNiimbot(system, driver_name, device_uri, device_id, data, attrs, cbdata);
   else if (!strncmp(driver_name, "escpos_", 7))
     ret = lprintESCPOS(system, driver_name, device_uri, device_id, data, attrs, cbdata);
   else if (!strncmp(driver_name, "sii_", 4))

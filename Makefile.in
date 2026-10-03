@@ -97,6 +97,7 @@ OBJS		=	\
 			lprint-dymo.o \
 			lprint-epl2.o \
 			lprint-escpos.o \
+			lprint-niimbot.o \
 			lprint-sii.o \
 			lprint-testpage.o \
 			lprint-tspl.o \
@@ -107,9 +108,11 @@ TARGETS		=	\
 
 TESTOBJS	=	\
 			testdither.o \
+			testniimbot.o \
 			testpackbits.o
 TESTTARGETS	=	\
 			testdither \
+			testniimbot \
 			testpackbits
 
 
@@ -159,6 +162,8 @@ test:	$(TARGETS) $(TESTTARGETS)
 	date >test.log
 	echo "Running testpackbits..."
 	./testpackbits 2>>test.log
+	echo "Running testniimbot..."
+	./testniimbot 2>>test.log
 
 
 # LPrint program...
@@ -178,6 +183,16 @@ testdither: testdither.o lprint-common.o
 	if test `uname` = Darwin; then \
 	    echo "Code-signing $@..."; \
 	    codesign $(CSFLAGS) -i org.msweet.testdither $@; \
+	fi
+
+
+# NIIMBOT test program...
+testniimbot: testniimbot.o lprint-niimbot.o lprint-common.o
+	echo Linking $@...
+	$(CC) $(LDFLAGS) -o $@ testniimbot.o lprint-niimbot.o lprint-common.o $(LIBS)
+	if test `uname` = Darwin; then \
+	    echo "Code-signing $@..."; \
+	    codesign $(CSFLAGS) -i org.msweet.testniimbot $@; \
 	fi
 
 
@@ -214,6 +229,7 @@ lprint.o:	\
 		lprint-dymo.h \
 		lprint-epl2.h \
 		lprint-escpos.h \
+		lprint-niimbot.h \
 		lprint-sii.h \
 		lprint-tspl.h \
 		lprint-zpl.h \

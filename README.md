@@ -50,6 +50,7 @@ The following printers are currently supported:
 
 - DYMO LabelWriter printers
 - ESC/POS receipt printers such as the EPSON TM-series
+- NIIMBOT B1, B3S_P, B4, and D11_H label printers
 - Seiko Instruments SLP printers
 - TSPL/TSPL2 printers such as the Rollo X1038
 - Zebra/Eltron EPL2 printers
